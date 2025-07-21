@@ -89,10 +89,11 @@ Each VLAN subnet uses a structured IP allocation to prevent conflicts and ensure
 ### DHCP Implementation Evidence
 
 #### Management VLAN DHCP Configuration
-![DHCP Configuration for Management VLAN](image-2.png)
+![DHCP Configuration for Management VLAN](../images/image-2.png)
 
 #### BlueTeam VLAN DHCP Configuration  
-![DHCP Configuration for BlueTeam VLAN](image-3.png)
+
+![DHCP Configuration for BlueTeam VLAN](../images/image-3.png)
 
 ### Strategic Benefits
 ✅ **Predictable Infrastructure**: Critical systems use static IPs  
@@ -115,7 +116,7 @@ pfSense implements a **default-deny** security model where all traffic is blocke
 | ✅ **Allow** | Any | VLAN 10 Subnet | Any | Full internet access for administrative tasks |
 
 #### Management VLAN Firewall Implementation
-![Management VLAN Firewall Rules](image-4.png)
+![Management VLAN Firewall Rules](../images/image-4.png)
 
 ### Other VLANs Security Rules
 
@@ -126,7 +127,8 @@ For **BlueTeam, RedTeam, DevOps, EnterpriseLAN, and Monitoring** VLANs:
 | ✅ **Allow** | Any | VLAN [X] Subnet | Any | Full internet access for operational requirements |
 
 #### Additional VLANs Firewall Configuration
-![Other Firewall Rules](image-5.png)
+![Other Firewall Rules](../images/image-5.png)
+
 
 ### Firewall Rule Strategy
 - **Management VLAN**: Most permissive with administrative access
@@ -156,7 +158,7 @@ To enable proper internet connectivity for all VLAN segments, pfSense uses **Hyb
 | **Monitoring** | `192.168.60.0/24` | WAN Interface | ✅ Active |
 
 #### Hybrid Outbound NAT Configuration
-![Hybrid Outbound NAT](image-6.png)
+![Hybrid Outbound NAT](../images/image-6.png)
 
 ### Hybrid NAT Advantages
 ✅ **Flexibility**: Manual control over VLAN-specific NAT behavior  
@@ -181,8 +183,10 @@ The managed switch provides VLAN segmentation through strategic port assignments
 | **Port 8** | Access (Untagged) | **VLAN 60 Only** | Monitoring VLAN direct access |
 
 #### Switch Port Configuration Evidence
-![Port Configuration in Switch](image.png)
-![Port Configuration in Switch - Details](image-1.png)
+![Port Configuration in Switch](../images/image.png)
+
+![Port Configuration in Switch - Details](../images/image-1.png)
+
 
 ### Port Configuration Strategy
 - **Trunk Ports (1-2)**: Carry all VLAN traffic for infrastructure and management

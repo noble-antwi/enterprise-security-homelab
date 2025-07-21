@@ -16,11 +16,14 @@ The lab's network architecture presented a critical challenge:
 Internet ↔ ISP Router (208.59.146.187) ↔ pfSense WAN (192.168.4.32) ↔ Lab VLANs
           [NO ADMIN ACCESS]            [BEHIND DOUBLE NAT]
 ```
-![alt text](image-32.png)
 
-![alt text](image-33.png)
+![alt text](../images/image-32.png)
 
-![alt text](<simple_network_constraint (1).png>)
+
+![alt text](../images/image-33.png)
+
+
+![alt text](<../images/simple_network_constraint (1).png>)
 **Specific Issues:**
 - **No Administrative Access** to ISP-provided router
 - **pfSense behind NAT** at `192.168.4.32` instead of public IP

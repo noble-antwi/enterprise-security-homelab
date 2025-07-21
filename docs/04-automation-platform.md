@@ -43,7 +43,7 @@ The VMware Workstation Pro network configuration was customized to provide direc
 5. **VM Assignment**: Assigned `Mgmt VLAN` (VMnet4) to controller VM
 
 #### VMware Network Evidence
-![VMware VLAN Connection Configuration](image-22.png)
+![VMware VLAN Connection Configuration](../images/image-22.png)
 
 **Network Benefits:**
 ✅ **Direct VLAN Access**: VM communicates directly with Management VLAN  
@@ -166,7 +166,8 @@ ping -c 4 8.8.8.8       # Internet connectivity test
 ```
 
 #### Network Configuration Evidence
-![Netplan Configuration Files](image-23.png)
+
+![Netplan Configuration Files](../images/image-23.png)
 
 **Configuration Results:**
 ✅ **Static IP Assignment**: `192.168.10.2/24` successfully applied  
@@ -237,7 +238,8 @@ ansible-config dump --only-changed
 ```
 
 #### Ansible Installation Evidence
-![Ansible Version Confirmation](image-24.png)
+
+![Ansible Version Confirmation](../images/image-24.png)
 
 **Installation Results:**
 ✅ **Latest Version**: Ansible installed from official PPA  
@@ -278,7 +280,8 @@ The `/etc/ansible/hosts` file was configured with logical groupings:
 ```
 
 #### Inventory Structure Evidence
-![Current Hosts File Configuration](image-30.png)
+![Current Hosts File Configuration](../images/image-30.png)
+
 
 #### Group Configuration Strategy
 - **`all_in_one`**: Comprehensive group containing all managed systems
@@ -329,9 +332,9 @@ ssh-copy-id -i ~/.ssh/id_ed25519.pub nantwi@192.168.10.2
 ```
 
 #### SSH Key Distribution Evidence
-![Copying SSH Keys to Wazuh Server](image-25.png)
-![Confirmed Key Copy to Wazuh](image-26.png)
-![Copying Keys to Grafana Monitoring Server](image-27.png)
+![Copying SSH Keys to Wazuh Server](../images/image-25.png)
+![Confirmed Key Copy to Wazuh](../images/image-26.png)
+![Copying Keys to Grafana Monitoring Server](../images/image-27.png)
 
 ### SSH Host Key Management
 
@@ -381,7 +384,7 @@ ansible controller -m ping
 ```
 
 #### Ansible Connectivity Evidence
-![Running Ansible Ping Test](image-29.png)
+![Running Ansible Ping Test](../images/image-29.png)
 
 ### Connectivity Test Results
 All managed systems responded successfully with `pong`, confirming:

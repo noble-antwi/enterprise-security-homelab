@@ -72,7 +72,8 @@ network:
 ```
 
 #### Network Configuration Evidence
-![Network Configuration for Ubuntu Server](image-8.png)
+
+![Network Configuration for Ubuntu Server](../images/image-8.png)
 
 #### Connectivity Verification
 ```bash
@@ -175,7 +176,8 @@ sudo systemctl status grafana-server
 - **Default Credentials**: admin/admin (changed on first login)
 
 #### Grafana Dashboard Access
-![Grafana Dashboard - Initial Access](image-9.png)
+
+![Grafana Dashboard - Initial Access](../images/image-9.png)
 
 ### Initial Configuration Validation
 ✅ **Service Status**: Grafana-server active and running  
@@ -216,8 +218,7 @@ sudo systemctl status prometheus
 - **Configuration**: Default configuration with local metrics
 
 #### Prometheus Interface Access
-![Prometheus Dashboard - Initial Access](image-10.png)
-
+![Prometheus Dashboard - Initial Access](../images/image-10.png)
 ### Default Configuration Status
 - **Data Collection**: Self-monitoring metrics operational
 - **Storage**: Local time-series database functional

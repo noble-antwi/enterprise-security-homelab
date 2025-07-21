@@ -43,7 +43,7 @@ ip a
 - Interface `enp0s20f0u4`: **UP** (active, no IP assigned)
 
 #### Network Setup Evidence
-![Network Setup - Initial State](image-11.png)
+![Network Setup - Initial State](../images/image-11.png)
 
 ### DHCP Verification & Testing
 
@@ -93,7 +93,7 @@ sudo nmcli con mod BlueTeam-DHCP connection.id BlueTeam-Static
 ```
 
 #### Configuration Verification
-![Network Configuration - Static IP Applied](image-12.png)
+![Network Configuration - Static IP Applied](../images/image-12.png)
 
 #### Connectivity Validation
 ```bash
@@ -158,7 +158,7 @@ sudo ./wazuh-install.sh -a -i -o
 - `-o` : Remove old installations if present
 
 #### Installation Process
-![Wazuh Installation in Progress](image-13.png)
+![Wazuh Installation in Progress](../images/image-13.png)
 
 **Installation Duration**: Approximately 10-15 minutes  
 **Components Installed**:
@@ -209,7 +209,7 @@ sudo systemctl status filebeat
 ```
 
 #### Service Status Verification
-![Wazuh Services Status](image-15.png)
+![Wazuh Services Status](../images/image-15.png)
 
 **Service Status**: ✅ All services active and running properly
 
@@ -223,7 +223,7 @@ The Wazuh dashboard became accessible immediately after installation:
 **Authentication**: Admin credentials provided during installation  
 
 #### Dashboard Interface
-![Wazuh Dashboard - Initial Access](image-14.png)
+![Wazuh Dashboard - Initial Access](../images/image-14.png)
 
 ### Wazuh Version Confirmation
 - **Wazuh Version**: 4.12.0 (Latest stable release at deployment time)
