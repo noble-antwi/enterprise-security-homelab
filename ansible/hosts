@@ -1,0 +1,92 @@
+# This is the default ansible 'hosts' file.
+#
+# It should live in /etc/ansible/hosts
+#
+#   - Comments begin with the '#' character
+#   - Blank lines are ignored
+#   - Groups of hosts are delimited by [header] elements
+#   - You can enter hostnames or ip addresses
+#   - A hostname/ip can be a member of multiple groups
+
+
+
+
+# inventory.ini
+
+[all_in_one]
+#192.168.10.2   # Ansible Controller
+192.168.20.2   # Wazuh SIEM
+192.168.60.2   # Grafana/Prometheus
+192.168.10.4   #tcm-ubuntu
+
+
+[controller]
+192.168.10.2 
+# localhost ansible_connection=local
+
+[wazuh]
+192.168.20.2
+
+[tcm]
+192.168.10.4
+
+[grafana]
+192.168.60.2 
+
+[ubuntu]
+#192.168.10.2 #ansiblve controller
+192.168.60.2 #grafana/prometheus
+192.168.10.4 #tcm-ubuntu
+
+
+[rocky]
+192.168.20.2 #wazuh-siem
+
+
+
+
+
+# Ungrouped hosts, specify before any group headers:
+
+## green.example.com
+## blue.example.com
+## 192.168.100.1
+## 192.168.100.10
+
+# Ex 2: A collection of hosts belonging to the 'webservers' group:
+
+## [webservers]
+## alpha.example.org
+## beta.example.org
+## 192.168.1.100
+## 192.168.1.110
+
+# If you have multiple hosts following a pattern, you can specify
+# them like this:
+
+## www[001:006].example.com
+
+# You can also use ranges for multiple hosts: 
+
+## db-[99:101]-node.example.com
+
+# Ex 3: A collection of database servers in the 'dbservers' group:
+
+## [dbservers]
+##
+## db01.intranet.mydomain.net
+## db02.intranet.mydomain.net
+## 10.25.1.56
+## 10.25.1.57
+
+
+# Ex4: Multiple hosts arranged into groups such as 'Debian' and 'openSUSE':
+
+## [Debian]
+## alpha.example.org
+## beta.example.org
+
+## [openSUSE]
+## green.example.com
+## blue.example.com
+

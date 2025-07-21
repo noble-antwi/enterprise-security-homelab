@@ -1,0 +1,25 @@
+---
+- name: Install and Configure Apache with PHP
+  hosts: all_in_one
+  become: true
+  tasks:
+    - name: Install Apache2 Package and PHP Support for Apache
+      ansible.builtin.apt:
+        name:
+          - apache2
+          - libapache2-mod-php
+        state: latest
+        update_cache: true
+      when: ansible_distribution in ["Debian", "Ubuntu"]
+- name: Install and Configure httpd with PHP on RHEL, Rocky
+  hosts: all_in_one
+  become: true
+  tasks: 
+    - name: Install httpd Package and PHP Support for Apache
+      ansible.builtin.dnf:
+        name:
+          - httpd
+          - php
+        state: latest
+        update_cache: true
+      when: ansible_distribution in ["Rocky"]
