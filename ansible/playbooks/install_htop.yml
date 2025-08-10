@@ -1,0 +1,40 @@
+---
+- name: Install htop on all systems (Cross-Platform)
+  hosts: all_in_one
+  become: true
+  tasks:
+    - name: Install htop on Ubuntu/Debian systems
+      apt:
+        name: htop
+        state: present
+        update_cache: true
+      when: ansible_distribution in ["Ubuntu", "Debian"]
+    
+    - name: Enable EPEL repository on Rocky/RHEL systems
+      dnf:
+        name: epel-release
+        state: present
+      when: ansible_distribution in ["Rocky", "RedHat", "CentOS", "AlmaLinux"]
+    
+    - name: Install htop on Rocky/RHEL/CentOS systems (after EPEL)
+      dnf:
+        name: htop
+        state: present
+        update_cache: true
+      when: ansible_distribution in ["Rocky", "RedHat", "CentOS", "AlmaLinux"]
+    
+    - name: Verify htop installation
+      command: htop --version
+      register: htop_version
+      changed_when: false
+      failed_when: false
+    
+    - name: Display htop version
+      debug:
+        msg: "htop installed successfully: {{ htop_version.stdout }}"
+      when: htop_version.rc == 0
+    
+    - name: Display installation status for failed systems
+      debug:
+        msg: "htop installation failed or not available on this system"
+      when: htop_version.rc != 0

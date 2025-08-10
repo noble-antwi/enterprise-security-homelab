@@ -187,7 +187,6 @@ The managed switch provides VLAN segmentation through strategic port assignments
 
 ![Port Configuration in Switch - Details](../images/image-1.png)
 
-
 ### Port Configuration Strategy
 - **Trunk Ports (1-2)**: Carry all VLAN traffic for infrastructure and management
 - **Access Ports (3-8)**: Provide direct, untagged access to specific VLANs

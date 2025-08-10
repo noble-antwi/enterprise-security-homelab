@@ -4,11 +4,11 @@
 [![Lab Status](https://img.shields.io/badge/status-active-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## 🏗️ Project Overview
+##  Project Overview
 
 A comprehensive, enterprise-grade cybersecurity homelab implementing professional security practices using **pfSense**, **VLAN segmentation**, **SIEM monitoring**, and **automation**. This lab environment mimics real-world infrastructure for Blue Team operations, Red Team simulation, and DevSecOps practices.
 
-## 🏛️ Architecture Highlights
+##  Architecture Highlights
 
 - **🔥 pfSense Firewall** - Enterprise routing & security
 - **🌐 6 VLAN Segments** - Complete network isolation  
@@ -27,7 +27,7 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 | **[05-remote-access](docs/05-remote-access.md)** | Tailscale mesh VPN implementation | ✅ Complete |
 | **[troubleshooting/](troubleshooting/)** | Comprehensive troubleshooting guides organized by component | ✅ Complete |
 
-## 🏗️ Current Lab Infrastructure
+##  Current Lab Infrastructure
 
 ### VLAN Architecture
 | VLAN | Purpose | Subnet | Gateway | Services |
@@ -47,12 +47,17 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 | **Wazuh SIEM** | `192.168.20.2` | BlueTeam | Security monitoring | 🟢 Active |
 | **Grafana Server** | `192.168.60.2` | Monitoring | Observability dashboard | 🟢 Active |
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 - Dedicated hardware for pfSense
 - Managed switch with VLAN support
 - Multiple systems for service deployment
+  
+### Automation Improvements ⚡
+- **Streamlined Configuration**: Optimized `ansible.cfg` eliminates need for command-line flags
+- **Simplified Operations**: All Ansible commands now use standardized authentication
+- **Cross-Platform Support**: Playbooks handle Ubuntu and Rocky Linux systems automatically
 
 ### Quick Deployment
 1. **Network Foundation** - Follow [01-network-infrastructure](docs/01-network-infrastructure.md)
