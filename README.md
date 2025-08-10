@@ -17,8 +17,7 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 - **⚙️ Ansible Automation** - Configuration management
 - **🌍 Tailscale Mesh VPN** - Secure remote access
 
-## 🗂️ Documentation Structure
-
+## 🗂️ Documentation Structu
 | Module | Description | Status |
 |--------|-------------|--------|
 | **[01-network-infrastructure](docs/01-network-infrastructure.md)** | pfSense setup, VLAN architecture, switch configuration | ✅ Complete |
@@ -26,7 +25,7 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 | **[03-observability-stack](docs/03-observability-stack.md)** | Grafana & Prometheus monitoring deployment | ✅ Complete |
 | **[04-automation-platform](docs/04-automation-platform.md)** | Ansible controller setup and configuration | ✅ Complete |
 | **[05-remote-access](docs/05-remote-access.md)** | Tailscale mesh VPN implementation | ✅ Complete |
-| **[troubleshooting](docs/troubleshooting.md)** | Common issues and solutions | ✅ Complete |
+| **[troubleshooting/](troubleshooting/)** | Comprehensive troubleshooting guides organized by component | ✅ Complete |
 
 ## 🏗️ Current Lab Infrastructure
 
