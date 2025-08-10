@@ -4,11 +4,11 @@
 [![Lab Status](https://img.shields.io/badge/status-active-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-##  Project Overview
+## 🏗️ Project Overview
 
 A comprehensive, enterprise-grade cybersecurity homelab implementing professional security practices using **pfSense**, **VLAN segmentation**, **SIEM monitoring**, and **automation**. This lab environment mimics real-world infrastructure for Blue Team operations, Red Team simulation, and DevSecOps practices.
 
-##  Architecture Highlights
+## 🏛️ Architecture Highlights
 
 - **🔥 pfSense Firewall** - Enterprise routing & security
 - **🌐 6 VLAN Segments** - Complete network isolation  
@@ -17,7 +17,8 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 - **⚙️ Ansible Automation** - Configuration management
 - **🌍 Tailscale Mesh VPN** - Secure remote access
 
-## 🗂️ Documentation Structu
+## 🗂️ Documentation Structure
+
 | Module | Description | Status |
 |--------|-------------|--------|
 | **[01-network-infrastructure](docs/01-network-infrastructure.md)** | pfSense setup, VLAN architecture, switch configuration | ✅ Complete |
@@ -25,9 +26,10 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 | **[03-observability-stack](docs/03-observability-stack.md)** | Grafana & Prometheus monitoring deployment | ✅ Complete |
 | **[04-automation-platform](docs/04-automation-platform.md)** | Ansible controller setup and configuration | ✅ Complete |
 | **[05-remote-access](docs/05-remote-access.md)** | Tailscale mesh VPN implementation | ✅ Complete |
-| **[troubleshooting/](troubleshooting/)** | Comprehensive troubleshooting guides organized by component | ✅ Complete |
+| **[ssh-configuration](docs/ssh-configuration.md)** | SSH key management and friendly hostnames | ✅ Complete |
+| **[troubleshooting](docs/troubleshooting.md)** | Common issues and solutions | ✅ Complete |
 
-##  Current Lab Infrastructure
+## 🏗️ Current Lab Infrastructure
 
 ### VLAN Architecture
 | VLAN | Purpose | Subnet | Gateway | Services |
@@ -47,24 +49,27 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 | **Wazuh SIEM** | `192.168.20.2` | BlueTeam | Security monitoring | 🟢 Active |
 | **Grafana Server** | `192.168.60.2` | Monitoring | Observability dashboard | 🟢 Active |
 
-##  Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
 - Dedicated hardware for pfSense
 - Managed switch with VLAN support
 - Multiple systems for service deployment
-  
-### Automation Improvements ⚡
-- **Streamlined Configuration**: Optimized `ansible.cfg` eliminates need for command-line flags
-- **Simplified Operations**: All Ansible commands now use standardized authentication
-- **Cross-Platform Support**: Playbooks handle Ubuntu and Rocky Linux systems automatically
+
+### Recent Automation Enhancements ⚡
+- **Optimized SSH Configuration**: Custom key naming and friendly hostnames for all systems
+- **Streamlined Operations**: `ssh wazuh-server` instead of IP addresses
+- **Professional Workflow**: Enterprise-grade infrastructure management practices
+- **Enhanced Security**: Purpose-specific SSH keys with automatic selection
+- **Cross-Platform Automation**: Unified playbooks for Ubuntu and Rocky Linux systems
 
 ### Quick Deployment
 1. **Network Foundation** - Follow [01-network-infrastructure](docs/01-network-infrastructure.md)
 2. **Security Monitoring** - Deploy using [02-security-monitoring](docs/02-security-monitoring.md)
 3. **Observability** - Set up monitoring with [03-observability-stack](docs/03-observability-stack.md)
 4. **Automation** - Configure Ansible from [04-automation-platform](docs/04-automation-platform.md)
-5. **Remote Access** - Enable Tailscale via [05-remote-access](docs/05-remote-access.md)
+5. **SSH Configuration** - Implement friendly hostnames via [ssh-configuration](docs/ssh-configuration.md)
+6. **Remote Access** - Enable Tailscale via [05-remote-access](docs/05-remote-access.md)
 
 ## 🔧 Technology Stack
 
@@ -79,9 +84,10 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 - **Log Management**: Integrated with Wazuh
 
 ### Automation & Management
-- **Configuration Management**: Ansible
+- **Configuration Management**: Ansible with optimized SSH configuration
 - **Remote Access**: Tailscale Mesh VPN
 - **Operating Systems**: Ubuntu 24.04 LTS, Rocky Linux 9.6
+- **SSH Management**: Custom key naming with friendly hostnames
 
 ## 🎯 Use Cases
 
@@ -90,6 +96,12 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 - ✅ **Incident Response** - Centralized log analysis  
 - ✅ **Infrastructure Monitoring** - Grafana dashboards
 - ✅ **Secure Remote Access** - Tailscale mesh network
+
+### DevOps & Automation
+- ✅ **Configuration Management** - Ansible automation across all systems
+- ✅ **Cross-Platform Support** - Ubuntu and Rocky Linux unified management
+- ✅ **SSH Optimization** - Friendly hostnames and streamlined access
+- ✅ **Infrastructure as Code** - Version-controlled automation workflows
 
 ### Red Team Simulation *(Planned)*
 - 🚧 **Attack Simulation** - Dedicated RedTeam VLAN
@@ -107,7 +119,7 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 - **Network Segmentation**: 6 VLANs configured
 - **Security Monitoring**: Wazuh SIEM operational
 - **Observability**: Grafana + Prometheus active
-- **Automation**: Ansible managing 4 systems
+- **Automation**: Ansible managing 4 systems with friendly hostnames
 - **Remote Access**: Tailscale mesh network deployed
 
 ### Security Posture
@@ -115,6 +127,13 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 - **Access Control**: pfSense firewall rules
 - **Monitoring Coverage**: All VLANs monitored
 - **Secure Remote Access**: WireGuard encryption
+- **SSH Security**: ED25519 keys with custom naming and automatic selection
+
+### Automation Capabilities
+- **Cross-Platform Management**: Ubuntu and Rocky Linux unified automation
+- **Friendly Hostnames**: `ssh wazuh-server`, `ssh monitoring-server`
+- **Streamlined Operations**: No command-line flags needed for Ansible
+- **Professional Workflow**: Enterprise-grade configuration management
 
 ## 🛠️ Maintenance & Updates
 
@@ -123,9 +142,10 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 - Wazuh rule tuning and alert optimization
 - Grafana dashboard refinement
 - Ansible playbook maintenance
+- SSH key management and rotation
 
 ### Monitoring
-- All systems accessible via Tailscale
+- All systems accessible via Tailscale and friendly hostnames
 - Centralized logging through Wazuh
 - Infrastructure metrics via Prometheus
 - Visual dashboards in Grafana
@@ -147,7 +167,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Wazuh Team** - Comprehensive SIEM solution
 - **Tailscale** - Revolutionary mesh networking
 - **Grafana Labs** - Outstanding observability tools
+- **Ansible Community** - Powerful automation framework
 
 ---
 
-*Last Updated: July 2025 | Status: Active Development | Next Phase: Red Team Tools*
+*Last Updated: August 2025 | Status: Active Development with Enhanced SSH Configuration | Next Phase: Red Team Tools*

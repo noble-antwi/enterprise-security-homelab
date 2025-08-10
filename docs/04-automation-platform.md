@@ -424,6 +424,184 @@ Individual group testing confirmed granular control capabilities:
 ✅ **Verification**: Comprehensive connectivity testing  
 ✅ **Documentation**: All configuration changes documented  
 
+## 🔧 Ansible Configuration Optimization
+
+### Configuration File Enhancement
+To streamline automation operations and eliminate the need for repetitive command-line flags, the Ansible configuration file was optimized for production-ready automation.
+
+#### Global Configuration Implementation
+```bash
+# Edit the global Ansible configuration
+sudo nano /etc/ansible/ansible.cfg
+```
+
+#### Production-Ready Configuration
+```ini
+[defaults]
+inventory = hosts
+private_key_file = ~/.ssh/ansible-homelab-key
+remote_user = nantwi
+ask_pass = false
+ask_sudo_pass = true
+interpreter_python = auto_silent
+host_key_checking = false
+```
+
+#### Configuration Benefits
+✅ **Automatic SSH Key Usage** - No need to specify key file in commands  
+✅ **Consistent User Context** - All operations use standardized user account  
+✅ **Automatic Sudo Prompting** - Eliminates need for `--ask-become-pass` flag  
+✅ **Clean Command Syntax** - Simplified Ansible command execution  
+✅ **Python Auto-Detection** - Suppresses interpreter warnings  
+✅ **Lab-Optimized Settings** - Configured for development environment  
+
+#### Verification and Testing
+```bash
+# Verify configuration is loaded correctly
+ansible-config dump --only-changed | grep -E "(PRIVATE_KEY|REMOTE_USER|ASK_SUDO_PASS)"
+
+# Test streamlined command execution
+ansible all_in_one -m shell -a "sudo whoami"
+
+# Run playbooks without additional flags
+ansible-playbook ansible/playbooks/install_apache.yml
+```
+
+### Operational Impact
+The configuration optimization dramatically simplifies Ansible operations:
+
+**Before Configuration:**
+```bash
+ansible all_in_one -m ping --private-key ~/.ssh/id_ed25519 --user nantwi --ask-become-pass
+ansible-playbook playbook.yml --ask-become-pass
+```
+
+**After Configuration:**
+```bash
+ansible all_in_one -m ping
+ansible-playbook playbook.yml
+```
+
+## 📦 Cross-Platform Package Management
+
+### htop Installation Playbook
+A demonstration playbook showcasing cross-platform package management across different operating systems has been implemented.
+
+#### Multi-OS Support Features
+- **Ubuntu/Debian Systems**: Uses `apt` package manager with automatic cache updates
+- **Rocky Linux/RHEL Systems**: Enables EPEL repository and uses `dnf` package manager
+- **OS Detection**: Automatic distribution detection and conditional task execution
+- **Verification**: Post-installation verification and status reporting
+
+#### Playbook Structure
+```yaml
+# OS-specific package installation
+- name: Install htop on Ubuntu/Debian systems
+  apt:
+    name: htop
+    state: present
+    update_cache: true
+  when: ansible_distribution in ["Ubuntu", "Debian"]
+
+# EPEL repository enablement for Rocky Linux
+- name: Enable EPEL repository on Rocky/RHEL systems
+  dnf:
+    name: epel-release
+    state: present
+  when: ansible_distribution in ["Rocky", "RedHat", "CentOS"]
+```
+
+#### Execution and Verification
+```bash
+# Execute cross-platform installation
+ansible-playbook ansible/playbooks/install_htop.yml
+
+# Verify installation across all systems
+ansible all_in_one -m shell -a "htop --version"
+
+# Test functionality
+ansible all_in_one -m shell -a "which htop"
+```
+
+### Automation Platform Maturity
+The enhanced configuration and cross-platform playbook demonstrate the evolution from basic setup to production-ready automation platform:
+
+✅ **Streamlined Operations** - Single command execution without flags  
+✅ **Cross-Platform Support** - Unified management of diverse operating systems  
+✅ **Error Handling** - Graceful handling of OS-specific differences  
+✅ **Verification Framework** - Automatic validation of automation results  
+✅ **Production Practices** - Industry-standard configuration management  
+
+## 🔑 SSH Configuration Enhancement
+
+### Advanced SSH Key Management
+To improve operational efficiency and security, the SSH configuration was enhanced with custom key naming and friendly hostname support.
+
+#### Custom SSH Key Implementation
+```bash
+# Renamed default SSH key for better identification
+mv ~/.ssh/id_ed25519 ~/.ssh/ansible-homelab-key
+mv ~/.ssh/id_ed25519.pub ~/.ssh/ansible-homelab-key.pub
+
+# Updated Ansible configuration to reference custom key
+private_key_file = ~/.ssh/ansible-homelab-key
+```
+
+#### SSH Configuration File Setup
+**Location**: `~/.ssh/config`
+
+```bash
+# Lab Infrastructure SSH Configuration
+Host 192.168.*
+    IdentityFile ~/.ssh/ansible-homelab-key
+    User nantwi
+    IdentitiesOnly yes
+
+# Friendly Hostname Aliases
+Host wazuh-server
+    HostName 192.168.20.2
+    IdentityFile ~/.ssh/ansible-homelab-key
+    User nantwi
+
+Host monitoring-server
+    HostName 192.168.60.2
+    IdentityFile ~/.ssh/ansible-homelab-key
+    User nantwi
+
+Host tcm-ubuntu
+    HostName 192.168.10.4
+    IdentityFile ~/.ssh/ansible-homelab-key
+    User nantwi
+```
+
+#### Operational Benefits
+✅ **Friendly Hostnames**: Use memorable names instead of IP addresses  
+✅ **Automatic Key Selection**: SSH automatically chooses correct key  
+✅ **Professional Workflow**: Enterprise-grade infrastructure management  
+✅ **Ansible Integration**: Seamless automation with optimized authentication  
+
+#### Usage Examples
+```bash
+# Direct SSH access with friendly names
+ssh wazuh-server
+ssh monitoring-server
+ssh tcm-ubuntu
+
+# File operations with hostnames
+scp config.yml wazuh-server:/tmp/
+rsync -av /backup/ monitoring-server:/data/
+
+# Ansible operations remain unchanged
+ansible all_in_one -m ping
+ansible wazuh-server -m shell -a "systemctl status wazuh-manager"
+```
+
+### SSH Security Model
+The implementation maintains separation between different key purposes:
+- **Infrastructure Key**: `ansible-homelab-key` for lab system access
+- **GitHub Key**: `blueteam-homelab-github` for repository operations
+- **Automatic Selection**: SSH config ensures proper key usage per destination
+
 ## 📊 Automation Platform Status
 
 ### Current Operational Capabilities
@@ -565,119 +743,6 @@ The automation platform is architected to support:
 - **Complex Workflows**: Support for sophisticated automation workflows
 - **Integration**: Connection with external automation tools and services
 
-## 🔧 Ansible Configuration Optimization
-
-### Configuration File Enhancement
-To streamline automation operations and eliminate the need for repetitive command-line flags, the Ansible configuration file was optimized for production-ready automation.
-
-#### Global Configuration Implementation
-```bash
-# Edit the global Ansible configuration
-sudo nano /etc/ansible/ansible.cfg
-```
-
-#### Production-Ready Configuration
-```ini
-[defaults]
-inventory = hosts
-private_key_file = ~/.ssh/id_ed25519
-remote_user = nantwi
-ask_pass = false
-ask_sudo_pass = true
-interpreter_python = auto_silent
-host_key_checking = false
-```
-
-#### Configuration Benefits
-✅ **Automatic SSH Key Usage** - No need to specify key file in commands  
-✅ **Consistent User Context** - All operations use standardized user account  
-✅ **Automatic Sudo Prompting** - Eliminates need for `--ask-become-pass` flag  
-✅ **Clean Command Syntax** - Simplified Ansible command execution  
-✅ **Python Auto-Detection** - Suppresses interpreter warnings  
-✅ **Lab-Optimized Settings** - Configured for development environment  
-
-#### Verification and Testing
-```bash
-# Verify configuration is loaded correctly
-ansible-config dump --only-changed | grep -E "(PRIVATE_KEY|REMOTE_USER|ASK_SUDO_PASS)"
-
-# Test streamlined command execution
-ansible all_in_one -m shell -a "sudo whoami"
-
-# Run playbooks without additional flags
-ansible-playbook ansible/playbooks/install_apache.yml
-```
-
-### Operational Impact
-The configuration optimization dramatically simplifies Ansible operations:
-
-**Before Configuration:**
-```bash
-ansible all_in_one -m ping --private-key ~/.ssh/id_ed25519 --user nantwi --ask-become-pass
-ansible-playbook playbook.yml --ask-become-pass
-```
-
-**After Configuration:**
-```bash
-ansible all_in_one -m ping
-ansible-playbook playbook.yml
-```
-
-## 📦 Cross-Platform Package Management
-
-### htop Installation Playbook
-A demonstration playbook showcasing cross-platform package management across different operating systems has been implemented.
-
-#### Multi-OS Support Features
-- **Ubuntu/Debian Systems**: Uses `apt` package manager with automatic cache updates
-- **Rocky Linux/RHEL Systems**: Enables EPEL repository and uses `dnf` package manager
-- **OS Detection**: Automatic distribution detection and conditional task execution
-- **Verification**: Post-installation verification and status reporting
-
-#### Playbook Structure
-```yaml
-# OS-specific package installation
-- name: Install htop on Ubuntu/Debian systems
-  apt:
-    name: htop
-    state: present
-    update_cache: true
-  when: ansible_distribution in ["Ubuntu", "Debian"]
-
-# EPEL repository enablement for Rocky Linux
-- name: Enable EPEL repository on Rocky/RHEL systems
-  dnf:
-    name: epel-release
-    state: present
-  when: ansible_distribution in ["Rocky", "RedHat", "CentOS"]
-```
-
-#### Execution and Verification
-```bash
-# Execute cross-platform installation
-ansible-playbook ansible/playbooks/install_htop.yml
-
-# Verify installation across all systems
-ansible all_in_one -m shell -a "htop --version"
-
-# Test functionality
-ansible all_in_one -m shell -a "which htop"
-```
-
-### Automation Platform Maturity
-The enhanced configuration and cross-platform playbook demonstrate the evolution from basic setup to production-ready automation platform:
-
-✅ **Streamlined Operations** - Single command execution without flags  
-✅ **Cross-Platform Support** - Unified management of diverse operating systems  
-✅ **Error Handling** - Graceful handling of OS-specific differences  
-✅ **Verification Framework** - Automatic validation of automation results  
-✅ **Production Practices** - Industry-standard configuration management  
-
----
-
-*Automation Platform Enhancement Status: ✅ Complete and Optimized*  
-*Configuration Management: Production-Ready*
-
 ## 📋 Current Deployment Summary
 
 ### Successfully Implemented Components
@@ -701,4 +766,5 @@ The enhanced configuration and cross-platform playbook demonstrate the evolution
 ---
 
 *Automation Platform Status: ✅ Complete and Operational*  
+*Configuration Management: Production-Ready with SSH Enhancement*  
 *Next Phase: [Remote Access Implementation](05-remote-access.md)*
