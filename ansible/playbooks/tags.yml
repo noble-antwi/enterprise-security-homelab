@@ -1,0 +1,25 @@
+---
+- name: Install common tools and EPEL on Rocky Linux hosts
+  hosts: all_in_one
+  become: true
+  tags: rocky
+  tasks:
+
+    - name: Ensure host is a Rocky/RedHat-based system
+      ansible.builtin.debug:
+        msg: "Host is RedHat-based, proceeding..."
+      when: ansible_facts['os_family'] == "RedHat"
+
+    - name: Install EPEL repository on Rocky
+      ansible.builtin.dnf:
+        name: epel-release
+        state: present
+      when: ansible_facts['os_family'] == "RedHat"
+
+    - name: Install htop and nmap (Rocky)
+      ansible.builtin.dnf:
+        name:
+          - htop
+          - nmap
+        state: present
+      when: ansible_facts['os_family'] == "RedHat"
