@@ -1,0 +1,51 @@
+---
+# ===================================================================
+# SYSTEM UPDATES ROLE - MAIN TASKS
+# ===================================================================
+# 
+# PURPOSE: Updates package cache across different operating systems
+# SCOPE: Cross-platform package cache updates
+# DEPENDENCIES: None
+# ===================================================================
+
+- name: Display system update info
+  ansible.builtin.debug:
+    msg: |
+      === UPDATING SYSTEM PACKAGES ===
+      Target: {{ ansible_hostname }}
+      OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+      Package Manager: {{ 'apt' if ansible_distribution in ['Ubuntu', 'Debian'] else 'dnf' }}
+      ===================================
+  tags: system_updates
+
+# ===============================================================
+# UBUNTU/DEBIAN SYSTEMS
+# ===============================================================
+
+- name: Update package cache (Ubuntu/Debian)
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: "{{ apt_cache_valid_time }}"
+  when: ansible_distribution in ["Ubuntu", "Debian"]
+  tags: system_updates
+
+# ===============================================================
+# ROCKY/RHEL SYSTEMS  
+# ===============================================================
+
+- name: Update package cache (Rocky/RHEL)
+  ansible.builtin.dnf:
+    update_cache: true
+  when: ansible_distribution in ["Rocky", "RedHat", "CentOS"]
+  tags: system_updates
+
+# ===============================================================
+# VERIFICATION
+# ===============================================================
+
+- name: Display update completion
+  ansible.builtin.debug:
+    msg: |
+      Package cache updated successfully on {{ ansible_hostname }}
+      Operating System: {{ ansible_distribution }} {{ ansible_distribution_version }}
+  tags: system_updates

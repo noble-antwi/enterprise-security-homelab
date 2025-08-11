@@ -1,0 +1,35 @@
+---
+# ===================================================================
+# SERVICE ACCOUNT ROLE - DEFAULT VARIABLES (FIXED VERSION)
+# ===================================================================
+# 
+# PURPOSE: Default values for service account configuration
+# USAGE: These can be overridden in playbooks or inventory
+# SCOPE: User account settings, SSH configuration, sudo setup
+# ===================================================================
+
+# Service Account Configuration
+service_account_user: ansible
+service_account_comment: "Ansible Automation Service Account"
+service_account_home: "/home/{{ service_account_user }}"
+
+# Group Memberships (OS-specific - fixed to prevent group errors)
+service_account_groups: >-
+  {%- if ansible_distribution in ['Ubuntu', 'Debian'] -%}
+  ['sudo']
+  {%- elif ansible_distribution in ['Rocky', 'RedHat', 'CentOS'] -%}
+  ['wheel']
+  {%- else -%}
+  []
+  {%- endif -%}
+
+# SSH Configuration
+service_account_ssh_key: "{{ lookup('file', '~/.ssh/ansible-homelab-key.pub') }}"
+
+# Sudo Configuration
+service_account_sudo_nopasswd: true
+service_account_sudo_requiretty: false
+
+# Service Account Validation
+service_account_validate_sudo: true
+service_account_validate_ssh: true

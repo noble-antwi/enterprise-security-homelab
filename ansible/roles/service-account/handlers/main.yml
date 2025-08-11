@@ -1,0 +1,16 @@
+---
+# ===================================================================
+# SERVICE ACCOUNT ROLE - HANDLERS
+# ===================================================================
+# 
+# PURPOSE: Event-driven tasks triggered by changes in main tasks
+# USAGE: Handlers run when notified by tasks that make changes
+# SCOPE: Service restarts, configuration reloads
+# ===================================================================
+
+- name: restart_ssh
+  ansible.builtin.systemd:
+    name: "{{ 'ssh' if ansible_distribution in ['Ubuntu', 'Debian'] else 'sshd' }}"
+    state: restarted
+  become: true
+  tags: service_account

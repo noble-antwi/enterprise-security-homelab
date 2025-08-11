@@ -1,0 +1,68 @@
+---
+# ===================================================================
+# COMMON TOOLS ROLE - MAIN TASKS
+# ===================================================================
+# 
+# PURPOSE: Installs common automation and development tools
+# SCOPE: Cross-platform package installation
+# DEPENDENCIES: system-updates role (package cache should be current)
+# ===================================================================
+
+- name: Display tools installation info
+  ansible.builtin.debug:
+    msg: |
+      === INSTALLING COMMON TOOLS ===
+      Target: {{ ansible_hostname }}
+      OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+      Tools: {{ common_tools_packages | join(', ') }}
+      ================================
+  tags: common_tools
+
+# ===============================================================
+# UBUNTU/DEBIAN SYSTEMS
+# ===============================================================
+
+- name: Install common automation tools (Ubuntu/Debian)
+  ansible.builtin.apt:
+    name: "{{ common_tools_packages }}"
+    state: present
+  when: ansible_distribution in ["Ubuntu", "Debian"]
+  tags: common_tools
+
+# ===============================================================
+# ROCKY/RHEL SYSTEMS
+# ===============================================================
+
+- name: Enable EPEL repository (Rocky/RHEL)
+  ansible.builtin.dnf:
+    name: epel-release
+    state: present
+  when: ansible_distribution in ["Rocky", "RedHat", "CentOS"]
+  tags: common_tools
+
+- name: Install common automation tools (Rocky/RHEL)
+  ansible.builtin.dnf:
+    name: "{{ common_tools_packages }}"
+    state: present
+  when: ansible_distribution in ["Rocky", "RedHat", "CentOS"]
+  tags: common_tools
+
+# ===============================================================
+# VERIFICATION
+# ===============================================================
+
+- name: Verify tool installation
+  ansible.builtin.shell: |
+    {% for tool in common_tools_verify %}
+    echo "{{ tool }}: $({{ tool }} --version 2>/dev/null | head -1 || echo 'Not found')"
+    {% endfor %}
+  register: tools_verification
+  changed_when: false
+  tags: common_tools
+
+- name: Display installed tools
+  ansible.builtin.debug:
+    msg: |
+      ✅ Tools installed on {{ ansible_hostname }}:
+      {{ tools_verification.stdout }}
+  tags: common_tools

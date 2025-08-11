@@ -1,0 +1,14 @@
+---
+# ===================================================================
+# SYSTEM UPDATES ROLE - DEFAULT VARIABLES
+# ===================================================================
+
+# APT Configuration
+apt_cache_valid_time: 3600  # Cache valid for 1 hour
+
+# DNF Configuration
+dnf_update_cache: true
+
+# Update Behavior
+force_update: false
+update_all_packages: false

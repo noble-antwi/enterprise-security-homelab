@@ -1,0 +1,53 @@
+---
+# ===================================================================
+# COMMON TOOLS ROLE - DEFAULT VARIABLES
+# ===================================================================
+
+# Common packages to install across all systems
+common_tools_packages:
+  - python3
+  - python3-pip
+  - curl
+  - wget
+  - unzip
+  - git
+  - htop
+  - vim
+  - nano
+  - tree
+
+# Tools to verify installation (must have --version flag)
+common_tools_verify:
+  - python3
+  - pip3
+  - curl
+  - wget
+  - git
+  - htop
+
+# Additional tools (can be enabled by setting to true)
+install_development_tools: false
+install_network_tools: false
+install_security_tools: false
+
+# Development tools (enabled when install_development_tools: true)
+development_tools:
+  - build-essential  # Ubuntu
+  - gcc             # Rocky
+  - make
+  - nodejs
+  - npm
+
+# Network tools (enabled when install_network_tools: true)  
+network_tools:
+  - nmap
+  - netcat
+  - tcpdump
+  - wireshark-common
+
+# Security tools (enabled when install_security_tools: true)
+security_tools:
+  - fail2ban
+  - ufw           # Ubuntu
+  - firewalld     # Rocky
+  - aide

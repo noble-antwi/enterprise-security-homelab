@@ -1,0 +1,126 @@
+---
+# ===================================================================
+# SERVICE ACCOUNT ROLE - MAIN TASKS
+# ===================================================================
+# 
+# PURPOSE: Creates and configures a dedicated Ansible service account
+# SCOPE: User creation, SSH setup, sudo configuration
+# DEPENDENCIES: Requires SSH public key file
+# ===================================================================
+
+- name: Display service account creation info
+  ansible.builtin.debug:
+    msg: |
+      === CREATING SERVICE ACCOUNT ===
+      Target: {{ ansible_hostname }} ({{ ansible_default_ipv4.address }})
+      OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+      Service User: {{ service_account_user }}
+      ===================================
+  tags: service_account
+
+# ===============================================================
+# USER ACCOUNT CREATION
+# ===============================================================
+
+- name: Create ansible service user account
+  ansible.builtin.user:
+    name: "{{ service_account_user }}"
+    comment: "{{ service_account_comment }}"
+    shell: /bin/bash
+    home: "{{ service_account_home }}"
+    create_home: true
+    groups: "{{ service_account_groups }}"
+    append: true
+    state: present
+  tags: service_account
+
+# ===============================================================
+# SSH CONFIGURATION
+# ===============================================================
+
+- name: Create .ssh directory for service account
+  ansible.builtin.file:
+    path: "{{ service_account_home }}/.ssh"
+    state: directory
+    owner: "{{ service_account_user }}"
+    group: "{{ service_account_user }}"
+    mode: '0700'
+  tags: service_account
+
+- name: Install SSH public key for service account
+  ansible.builtin.authorized_key:
+    user: "{{ service_account_user }}"
+    key: "{{ service_account_ssh_key }}"
+    comment: "Ansible Controller Key - {{ ansible_date_time.date }}"
+    state: present
+  tags: service_account
+
+# ===============================================================
+# SUDO CONFIGURATION
+# ===============================================================
+
+- name: Create sudoers file for service account
+  ansible.builtin.template:
+    src: sudoers.j2
+    dest: "/etc/sudoers.d/{{ service_account_user }}"
+    owner: root
+    group: root
+    mode: '0440'
+    validate: 'visudo -cf %s'
+  notify: restart_ssh
+  tags: service_account
+
+# ===============================================================
+# SSH SERVICE VERIFICATION
+# ===============================================================
+
+- name: Ensure SSH service is running (Ubuntu/Debian)
+  ansible.builtin.systemd:
+    name: ssh
+    enabled: true
+    state: started
+  when: ansible_distribution in ["Ubuntu", "Debian"]
+  tags: service_account
+
+- name: Ensure SSH service is running (Rocky/RHEL)
+  ansible.builtin.systemd:
+    name: sshd
+    enabled: true
+    state: started
+  when: ansible_distribution in ["Rocky", "RedHat", "CentOS"]
+  tags: service_account
+
+# ===============================================================
+# VERIFICATION
+# ===============================================================
+
+- name: Test service account sudo access
+  ansible.builtin.shell: |
+    sudo -u {{ service_account_user }} sudo -n whoami
+  register: sudo_test
+  changed_when: false
+  failed_when: sudo_test.stdout != "root"
+  tags: service_account
+
+- name: Display sudo verification result
+  ansible.builtin.debug:
+    msg: "✅ Service account sudo test: {{ sudo_test.stdout }} (Expected: root)"
+  when: sudo_test.stdout == "root"
+  tags: service_account
+
+- name: Generate service account completion report
+  ansible.builtin.debug:
+    msg: |
+      ========================================
+      ✅ SERVICE ACCOUNT CONFIGURATION COMPLETE
+      ========================================
+      
+      🎯 CREATED:
+      • User: {{ service_account_user }}
+      • Home: {{ service_account_home }}
+      • SSH Access: Configured
+      • Sudo: Passwordless (NOPASSWD: ALL)
+      
+      🖥️ SYSTEM: {{ ansible_hostname }} ({{ ansible_default_ipv4.address }})
+      ========================================
+  tags: service_account

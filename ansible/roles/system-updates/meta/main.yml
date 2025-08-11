@@ -1,0 +1,24 @@
+---
+galaxy_info:
+  author: "Homelab Infrastructure Team"
+  description: "Cross-platform system package cache updates"
+  company: "Enterprise Homelab"
+  license: "MIT"
+  min_ansible_version: "2.12"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - "20.04"
+        - "22.04"
+        - "24.04"
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+  galaxy_tags:
+    - system
+    - updates
+    - packages
+    - cross-platform
+
+dependencies: []

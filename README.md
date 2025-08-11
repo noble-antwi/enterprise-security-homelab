@@ -3,11 +3,12 @@
 [![Documentation](https://img.shields.io/badge/docs-complete-brightgreen.svg)](docs/)
 [![Lab Status](https://img.shields.io/badge/status-active-brightgreen.svg)]()
 [![Automation](https://img.shields.io/badge/automation-enterprise--grade-blue.svg)]()
+[![Ansible Roles](https://img.shields.io/badge/ansible-roles--based-purple.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## 🏗️ Project Overview
 
-A comprehensive, enterprise-grade cybersecurity homelab implementing professional security practices using **pfSense**, **VLAN segmentation**, **SIEM monitoring**, **automation**, and **service account management**. This lab environment mimics real-world infrastructure for Blue Team operations, Red Team simulation, and DevSecOps practices with professional automation workflows.
+A comprehensive, enterprise-grade cybersecurity homelab implementing professional security practices using **pfSense**, **VLAN segmentation**, **SIEM monitoring**, **role-based automation**, and **modular infrastructure management**. This lab environment showcases both monolithic and role-based automation approaches, demonstrating the evolution from basic playbooks to enterprise-grade automation practices.
 
 ## 🏛️ Architecture Highlights
 
@@ -15,7 +16,8 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 - **🌐 6 VLAN Segments** - Complete network isolation  
 - **🔍 Wazuh SIEM** - Security monitoring & incident response
 - **📊 Grafana/Prometheus** - Infrastructure observability
-- **⚙️ Ansible Automation** - Enterprise service account configuration
+- **⚙️ Ansible Automation** - Dual implementation (monolithic + role-based)
+- **🧩 Modular Roles** - Enterprise-grade automation architecture
 - **🔐 Service Account Management** - Professional automation practices
 - **🌍 Tailscale Mesh VPN** - Secure remote access
 
@@ -29,6 +31,7 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 | **[04-automation-platform](docs/04-automation-platform.md)** | Ansible controller setup and configuration | ✅ Complete |
 | **[05-remote-access](docs/05-remote-access.md)** | Tailscale mesh VPN implementation | ✅ Complete |
 | **[06-ansible-service-account](docs/06-ansible-service-account.md)** | Enterprise automation service account setup | ✅ Complete |
+| **[07-ansible-roles-architecture](docs/07-ansible-roles-architecture.md)** | Modular role-based automation framework | ✅ Complete |
 | **[ssh-configuration](docs/ssh-configuration.md)** | SSH key management and friendly hostnames | ✅ Complete |
 | **[troubleshooting](docs/troubleshooting.md)** | Common issues and solutions | ✅ Complete |
 
@@ -49,6 +52,7 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 |--------|------------|------|---------|--------|
 | **pfSense Firewall** | `192.168.10.1` | Management | Network gateway & security | 🟢 Active |
 | **Ansible Controller** | `192.168.10.2` | Management | Automation & configuration | 🟢 Active |
+| **TCM Ubuntu** | `192.168.10.4` | Management | Testing and development | 🟢 Active |
 | **Wazuh SIEM** | `192.168.20.2` | BlueTeam | Security monitoring | 🟢 Active |
 | **Grafana Server** | `192.168.60.2` | Monitoring | Observability dashboard | 🟢 Active |
 
@@ -60,11 +64,12 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 - Multiple systems for service deployment
 
 ### Recent Automation Enhancements ⚡
-- **Enterprise Service Account**: Dedicated `ansible` user for professional automation
-- **Passwordless Automation**: No sudo password prompts during automation workflows
-- **Cross-Platform Support**: Unified automation across Ubuntu and Rocky Linux
-- **Enhanced Security**: Clear separation between personal and automated operations
-- **Professional Workflow**: Enterprise-grade infrastructure management practices
+- **Enterprise Role Architecture**: Modular, reusable automation components
+- **Dual Implementation Strategy**: Both monolithic and role-based approaches
+- **Professional Service Account**: Dedicated `ansible` user with passwordless automation
+- **Cross-Platform Compatibility**: Unified automation across Ubuntu and Rocky Linux
+- **Advanced Template Usage**: Dynamic configuration generation with Jinja2
+- **Comprehensive Testing**: Both dry-run and verification playbooks
 
 ### Quick Deployment
 1. **Network Foundation** - Follow [01-network-infrastructure](docs/01-network-infrastructure.md)
@@ -72,8 +77,9 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 3. **Observability** - Set up monitoring with [03-observability-stack](docs/03-observability-stack.md)
 4. **Automation** - Configure Ansible from [04-automation-platform](docs/04-automation-platform.md)
 5. **Service Account** - Implement enterprise automation via [06-ansible-service-account](docs/06-ansible-service-account.md)
-6. **SSH Configuration** - Implement friendly hostnames via [ssh-configuration](docs/ssh-configuration.md)
-7. **Remote Access** - Enable Tailscale via [05-remote-access](docs/05-remote-access.md)
+6. **Role Architecture** - Deploy modular automation with [07-ansible-roles-architecture](docs/07-ansible-roles-architecture.md)
+7. **SSH Configuration** - Implement friendly hostnames via [ssh-configuration](docs/ssh-configuration.md)
+8. **Remote Access** - Enable Tailscale via [05-remote-access](docs/05-remote-access.md)
 
 ## 🔧 Technology Stack
 
@@ -88,7 +94,7 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 - **Log Management**: Integrated with Wazuh
 
 ### Automation & Management
-- **Configuration Management**: Ansible with enterprise service account
+- **Configuration Management**: Ansible with enterprise role architecture
 - **Service Account**: Dedicated `ansible` user with passwordless sudo
 - **Remote Access**: Tailscale Mesh VPN
 - **Operating Systems**: Ubuntu 24.04 LTS, Rocky Linux 9.6
@@ -103,10 +109,11 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 - ✅ **Secure Remote Access** - Tailscale mesh network
 
 ### DevOps & Automation
-- ✅ **Enterprise Automation** - Service account with passwordless privilege escalation
+- ✅ **Enterprise Role Architecture** - Modular, reusable automation components
+- ✅ **Dual Implementation Strategy** - Both simple and advanced automation approaches
 - ✅ **Cross-Platform Management** - Ubuntu and Rocky Linux unified automation
 - ✅ **Professional Workflows** - Separation of personal and automated operations
-- ✅ **Configuration Management** - Infrastructure as code practices
+- ✅ **Infrastructure as Code** - Version-controlled automation workflows
 - ✅ **SSH Optimization** - Friendly hostnames and streamlined access
 
 ### Red Team Simulation *(Planned)*
@@ -125,7 +132,7 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 - **Network Segmentation**: 6 VLANs configured
 - **Security Monitoring**: Wazuh SIEM operational
 - **Observability**: Grafana + Prometheus active
-- **Automation**: Enterprise service account managing 4 systems
+- **Automation**: Enterprise role architecture managing 5 systems
 - **Remote Access**: Tailscale mesh network deployed
 
 ### Security Posture
@@ -136,19 +143,48 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 - **Automation Security**: Service account separation and audit trails
 
 ### Automation Capabilities
+- **Role Architecture**: Modular, enterprise-grade automation components
 - **Service Account**: Dedicated `ansible` user across all systems
 - **Passwordless Operations**: Zero-prompt automation workflows
 - **Cross-Platform Support**: Ubuntu and Rocky Linux unified management
 - **Professional Standards**: Enterprise-grade automation practices
-- **Scalable Foundation**: Ready for complex orchestration workflows
+- **Dual Implementation**: Both monolithic and role-based approaches available
 
 ## 🛠️ Ansible Automation
+
+### Role-Based Architecture
+```
+roles/
+├── service-account/     # User and access management
+├── system-updates/      # Cross-platform package management
+└── common-tools/        # Automation tool installation
+```
 
 ### Service Account Structure
 | Account | Purpose | Access Level | Sudo Requirements |
 |---------|---------|--------------|-------------------|
 | **nantwi** | Personal admin, development | Full administrative | Password required |
 | **ansible** | Automation service | Automation tasks only | Passwordless (NOPASSWD) |
+
+### Available Automation Approaches
+
+#### Role-Based Implementation (Recommended)
+```bash
+# Enterprise-grade modular automation
+ansible-playbook ansible/playbooks/bootstrap-service-account-roles.yml --ask-become-pass
+ansible-playbook ansible/playbooks/verify-service-account-roles.yml
+
+# Individual role execution
+ansible-playbook bootstrap-service-account-roles.yml --tags service_account
+ansible-playbook bootstrap-service-account-roles.yml --skip-tags tools
+```
+
+#### Monolithic Implementation (Educational)
+```bash
+# Traditional single-file approach
+ansible-playbook ansible/playbooks/bootstrap-ansible-service-account.yml --ask-become-pass
+ansible-playbook ansible/playbooks/verify-ansible-service-account.yml
+```
 
 ### Quick Automation Commands
 ```bash
@@ -167,13 +203,15 @@ ansible all_in_one -m package -a "name=curl state=present"
 ```
 
 ### Available Playbooks
-| Playbook | Purpose | Usage |
-|----------|---------|-------|
-| **bootstrap-ansible-service-account.yml** | Create automation service account | `ansible-playbook bootstrap-ansible-service-account.yml --ask-become-pass` |
-| **verify-ansible-service-account.yml** | Verify service account setup | `ansible-playbook verify-ansible-service-account.yml` |
-| **install_htop.yml** | Cross-platform htop installation | `ansible-playbook install_htop.yml` |
-| **install_apache.yml** | Cross-platform Apache installation | `ansible-playbook install_apache.yml` |
-| **remove_apache.yml** | Cross-platform Apache removal | `ansible-playbook remove_apache.yml` |
+| Playbook | Type | Purpose | Usage |
+|----------|------|---------|-------|
+| **bootstrap-service-account-roles.yml** | Role-based | Enterprise service account creation | `ansible-playbook bootstrap-service-account-roles.yml --ask-become-pass` |
+| **verify-service-account-roles.yml** | Role-based | Comprehensive role verification | `ansible-playbook verify-service-account-roles.yml` |
+| **bootstrap-ansible-service-account.yml** | Monolithic | Educational service account setup | `ansible-playbook bootstrap-ansible-service-account.yml --ask-become-pass` |
+| **verify-ansible-service-account.yml** | Monolithic | Basic verification testing | `ansible-playbook verify-ansible-service-account.yml` |
+| **install_htop.yml** | Utility | Cross-platform htop installation | `ansible-playbook install_htop.yml` |
+| **install_apache.yml** | Utility | Cross-platform Apache installation | `ansible-playbook install_apache.yml` |
+| **remove_apache.yml** | Utility | Cross-platform Apache removal | `ansible-playbook remove_apache.yml` |
 
 ## 🛠️ Maintenance & Updates
 
@@ -181,15 +219,15 @@ ansible all_in_one -m package -a "name=curl state=present"
 - Security updates across all systems via automation
 - Wazuh rule tuning and alert optimization
 - Grafana dashboard refinement
-- Ansible playbook maintenance and development
-- Service account monitoring and maintenance
+- Ansible role development and maintenance
+- Service account monitoring and security review
 
 ### Monitoring
 - All systems accessible via Tailscale and friendly hostnames
 - Centralized logging through Wazuh
 - Infrastructure metrics via Prometheus
 - Visual dashboards in Grafana
-- Automated health checks via Ansible
+- Automated health checks via Ansible roles
 
 ## 🤝 Contributing
 
@@ -197,6 +235,7 @@ This project serves as a reference implementation for enterprise-grade homelabs.
 - Fork and adapt for your environment
 - Submit improvements via pull requests
 - Share feedback and suggestions
+- Contribute additional Ansible roles
 
 ## 📄 License
 
@@ -208,8 +247,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Wazuh Team** - Comprehensive SIEM solution
 - **Tailscale** - Revolutionary mesh networking
 - **Grafana Labs** - Outstanding observability tools
-- **Ansible Community** - Powerful automation framework
+- **Ansible Community** - Powerful automation framework and role architecture
 
 ---
 
-*Last Updated: August 2025 | Status: Active Development with Enterprise Service Account | Next Phase: Advanced Automation Workflows*
+*Last Updated: August 2025 | Status: Active Development with Enterprise Role Architecture | Next Phase: Advanced Role Integration and CI/CD Pipeline*
