@@ -2,11 +2,12 @@
 
 [![Documentation](https://img.shields.io/badge/docs-complete-brightgreen.svg)](docs/)
 [![Lab Status](https://img.shields.io/badge/status-active-brightgreen.svg)]()
+[![Automation](https://img.shields.io/badge/automation-enterprise--grade-blue.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## 🏗️ Project Overview
 
-A comprehensive, enterprise-grade cybersecurity homelab implementing professional security practices using **pfSense**, **VLAN segmentation**, **SIEM monitoring**, and **automation**. This lab environment mimics real-world infrastructure for Blue Team operations, Red Team simulation, and DevSecOps practices.
+A comprehensive, enterprise-grade cybersecurity homelab implementing professional security practices using **pfSense**, **VLAN segmentation**, **SIEM monitoring**, **automation**, and **service account management**. This lab environment mimics real-world infrastructure for Blue Team operations, Red Team simulation, and DevSecOps practices with professional automation workflows.
 
 ## 🏛️ Architecture Highlights
 
@@ -14,7 +15,8 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 - **🌐 6 VLAN Segments** - Complete network isolation  
 - **🔍 Wazuh SIEM** - Security monitoring & incident response
 - **📊 Grafana/Prometheus** - Infrastructure observability
-- **⚙️ Ansible Automation** - Configuration management
+- **⚙️ Ansible Automation** - Enterprise service account configuration
+- **🔐 Service Account Management** - Professional automation practices
 - **🌍 Tailscale Mesh VPN** - Secure remote access
 
 ## 🗂️ Documentation Structure
@@ -26,6 +28,7 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 | **[03-observability-stack](docs/03-observability-stack.md)** | Grafana & Prometheus monitoring deployment | ✅ Complete |
 | **[04-automation-platform](docs/04-automation-platform.md)** | Ansible controller setup and configuration | ✅ Complete |
 | **[05-remote-access](docs/05-remote-access.md)** | Tailscale mesh VPN implementation | ✅ Complete |
+| **[06-ansible-service-account](docs/06-ansible-service-account.md)** | Enterprise automation service account setup | ✅ Complete |
 | **[ssh-configuration](docs/ssh-configuration.md)** | SSH key management and friendly hostnames | ✅ Complete |
 | **[troubleshooting](docs/troubleshooting.md)** | Common issues and solutions | ✅ Complete |
 
@@ -57,19 +60,20 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 - Multiple systems for service deployment
 
 ### Recent Automation Enhancements ⚡
-- **Optimized SSH Configuration**: Custom key naming and friendly hostnames for all systems
-- **Streamlined Operations**: `ssh wazuh-server` instead of IP addresses
+- **Enterprise Service Account**: Dedicated `ansible` user for professional automation
+- **Passwordless Automation**: No sudo password prompts during automation workflows
+- **Cross-Platform Support**: Unified automation across Ubuntu and Rocky Linux
+- **Enhanced Security**: Clear separation between personal and automated operations
 - **Professional Workflow**: Enterprise-grade infrastructure management practices
-- **Enhanced Security**: Purpose-specific SSH keys with automatic selection
-- **Cross-Platform Automation**: Unified playbooks for Ubuntu and Rocky Linux systems
 
 ### Quick Deployment
 1. **Network Foundation** - Follow [01-network-infrastructure](docs/01-network-infrastructure.md)
 2. **Security Monitoring** - Deploy using [02-security-monitoring](docs/02-security-monitoring.md)
 3. **Observability** - Set up monitoring with [03-observability-stack](docs/03-observability-stack.md)
 4. **Automation** - Configure Ansible from [04-automation-platform](docs/04-automation-platform.md)
-5. **SSH Configuration** - Implement friendly hostnames via [ssh-configuration](docs/ssh-configuration.md)
-6. **Remote Access** - Enable Tailscale via [05-remote-access](docs/05-remote-access.md)
+5. **Service Account** - Implement enterprise automation via [06-ansible-service-account](docs/06-ansible-service-account.md)
+6. **SSH Configuration** - Implement friendly hostnames via [ssh-configuration](docs/ssh-configuration.md)
+7. **Remote Access** - Enable Tailscale via [05-remote-access](docs/05-remote-access.md)
 
 ## 🔧 Technology Stack
 
@@ -84,7 +88,8 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 - **Log Management**: Integrated with Wazuh
 
 ### Automation & Management
-- **Configuration Management**: Ansible with optimized SSH configuration
+- **Configuration Management**: Ansible with enterprise service account
+- **Service Account**: Dedicated `ansible` user with passwordless sudo
 - **Remote Access**: Tailscale Mesh VPN
 - **Operating Systems**: Ubuntu 24.04 LTS, Rocky Linux 9.6
 - **SSH Management**: Custom key naming with friendly hostnames
@@ -98,10 +103,11 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 - ✅ **Secure Remote Access** - Tailscale mesh network
 
 ### DevOps & Automation
-- ✅ **Configuration Management** - Ansible automation across all systems
-- ✅ **Cross-Platform Support** - Ubuntu and Rocky Linux unified management
+- ✅ **Enterprise Automation** - Service account with passwordless privilege escalation
+- ✅ **Cross-Platform Management** - Ubuntu and Rocky Linux unified automation
+- ✅ **Professional Workflows** - Separation of personal and automated operations
+- ✅ **Configuration Management** - Infrastructure as code practices
 - ✅ **SSH Optimization** - Friendly hostnames and streamlined access
-- ✅ **Infrastructure as Code** - Version-controlled automation workflows
 
 ### Red Team Simulation *(Planned)*
 - 🚧 **Attack Simulation** - Dedicated RedTeam VLAN
@@ -110,7 +116,7 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 
 ### DevSecOps Integration *(Planned)*
 - 🚧 **CI/CD Pipeline** - Automated security testing
-- 🚧 **Infrastructure as Code** - Ansible automation
+- 🚧 **Infrastructure as Code** - Advanced Ansible automation
 - 🚧 **Security Scanning** - Integrated vulnerability assessment
 
 ## 📊 Lab Metrics
@@ -119,7 +125,7 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 - **Network Segmentation**: 6 VLANs configured
 - **Security Monitoring**: Wazuh SIEM operational
 - **Observability**: Grafana + Prometheus active
-- **Automation**: Ansible managing 4 systems with friendly hostnames
+- **Automation**: Enterprise service account managing 4 systems
 - **Remote Access**: Tailscale mesh network deployed
 
 ### Security Posture
@@ -127,28 +133,63 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 - **Access Control**: pfSense firewall rules
 - **Monitoring Coverage**: All VLANs monitored
 - **Secure Remote Access**: WireGuard encryption
-- **SSH Security**: ED25519 keys with custom naming and automatic selection
+- **Automation Security**: Service account separation and audit trails
 
 ### Automation Capabilities
-- **Cross-Platform Management**: Ubuntu and Rocky Linux unified automation
-- **Friendly Hostnames**: `ssh wazuh-server`, `ssh monitoring-server`
-- **Streamlined Operations**: No command-line flags needed for Ansible
-- **Professional Workflow**: Enterprise-grade configuration management
+- **Service Account**: Dedicated `ansible` user across all systems
+- **Passwordless Operations**: Zero-prompt automation workflows
+- **Cross-Platform Support**: Ubuntu and Rocky Linux unified management
+- **Professional Standards**: Enterprise-grade automation practices
+- **Scalable Foundation**: Ready for complex orchestration workflows
+
+## 🛠️ Ansible Automation
+
+### Service Account Structure
+| Account | Purpose | Access Level | Sudo Requirements |
+|---------|---------|--------------|-------------------|
+| **nantwi** | Personal admin, development | Full administrative | Password required |
+| **ansible** | Automation service | Automation tasks only | Passwordless (NOPASSWD) |
+
+### Quick Automation Commands
+```bash
+# Basic connectivity test
+ansible all_in_one -m ping
+
+# System information gathering
+ansible all_in_one -m shell -a "uptime"
+
+# Service management
+ansible wazuh-server -m systemd -a "name=wazuh-manager state=restarted"
+ansible monitoring-server -m systemd -a "name=grafana-server state=restarted"
+
+# Cross-platform package management
+ansible all_in_one -m package -a "name=curl state=present"
+```
+
+### Available Playbooks
+| Playbook | Purpose | Usage |
+|----------|---------|-------|
+| **bootstrap-ansible-service-account.yml** | Create automation service account | `ansible-playbook bootstrap-ansible-service-account.yml --ask-become-pass` |
+| **verify-ansible-service-account.yml** | Verify service account setup | `ansible-playbook verify-ansible-service-account.yml` |
+| **install_htop.yml** | Cross-platform htop installation | `ansible-playbook install_htop.yml` |
+| **install_apache.yml** | Cross-platform Apache installation | `ansible-playbook install_apache.yml` |
+| **remove_apache.yml** | Cross-platform Apache removal | `ansible-playbook remove_apache.yml` |
 
 ## 🛠️ Maintenance & Updates
 
 ### Regular Tasks
-- Security updates across all systems
+- Security updates across all systems via automation
 - Wazuh rule tuning and alert optimization
 - Grafana dashboard refinement
-- Ansible playbook maintenance
-- SSH key management and rotation
+- Ansible playbook maintenance and development
+- Service account monitoring and maintenance
 
 ### Monitoring
 - All systems accessible via Tailscale and friendly hostnames
 - Centralized logging through Wazuh
 - Infrastructure metrics via Prometheus
 - Visual dashboards in Grafana
+- Automated health checks via Ansible
 
 ## 🤝 Contributing
 
@@ -171,4 +212,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-*Last Updated: August 2025 | Status: Active Development with Enhanced SSH Configuration | Next Phase: Red Team Tools*
+*Last Updated: August 2025 | Status: Active Development with Enterprise Service Account | Next Phase: Advanced Automation Workflows*
