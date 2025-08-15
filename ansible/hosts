@@ -8,17 +8,35 @@
 #   - You can enter hostnames or ip addresses
 #   - A hostname/ip can be a member of multiple groups
 
-
-
+# ===================================================================
+# ENTERPRISE HOMELAB INVENTORY - CROSS-PLATFORM AUTOMATION
+# ===================================================================
+# 
+# PURPOSE: Unified management of Linux and Windows infrastructure
+# ARCHITECTURE: 6 systems across 6 VLANs with cross-platform support
+# AUTHENTICATION: 
+#   - Linux: SSH with ansible service account
+#   - Windows: WinRM with ansible local user account
+# 
+# AUTOMATION CAPABILITIES:
+#   - Cross-platform package management
+#   - Service management across all OS types
+#   - Configuration deployment to mixed environments
+#   - Security automation and compliance checking
+# ===================================================================
 
 # inventory.ini
 
 [all_in_one]
-#192.168.10.2   # Ansible Controller
-192.168.20.2   # Wazuh SIEM
-192.168.60.2   # Grafana/Prometheus
-192.168.10.4   #tcm-ubuntu
+192.168.20.2   # Wazuh SIEM (Rocky Linux 9.6)
+192.168.60.2   # Grafana/Prometheus (Ubuntu 24.04)
+192.168.10.4   # TCM Ubuntu (Ubuntu 24.04)
+192.168.10.2   # Ansible Controller (Ubuntu 24.04)
 
+[infrastructure] # Managed systems only (excludes controller)
+192.168.20.2
+192.168.60.2
+192.168.10.4
 
 [controller]
 192.168.10.2 
@@ -34,17 +52,65 @@
 192.168.60.2 
 
 [ubuntu]
-#192.168.10.2 #ansiblve controller
-192.168.60.2 #grafana/prometheus
-192.168.10.4 #tcm-ubuntu
-
+192.168.60.2 # grafana/prometheus
+192.168.10.4 # tcm-ubuntu
+192.168.10.2 # ansible-controller
 
 [rocky]
-192.168.20.2 #wazuh-siem
+192.168.20.2 # wazuh-siem
 
+# ===================================================================
+# WINDOWS INFRASTRUCTURE
+# ===================================================================
+# 
+# Windows systems managed via WinRM protocol
+# Authentication: Local ansible user with administrator privileges
+# Configuration: Group variables in group_vars/windows.yml
+# 
+# Requirements:
+#   - WinRM service enabled and configured
+#   - Windows Firewall rule for port 5985
+#   - ansible user account with admin privileges
+#   - PowerShell execution policy configured
+# ===================================================================
 
+[windows]
+192.168.10.3   # Windows 11 Pro
 
+# ===================================================================
+# COMBINED GROUPS FOR CROSS-PLATFORM AUTOMATION
+# ===================================================================
 
+# All systems group (Linux + Windows)
+[all_systems:children]
+all_in_one
+windows
+
+# Linux-only systems
+[linux:children]
+all_in_one
+
+# Operating system specific groups
+[linux_ubuntu:children]
+ubuntu
+
+[linux_rocky:children]
+rocky
+
+# ===================================================================
+# EXAMPLE GROUP USAGE:
+# 
+# ansible all_systems -m ping          # Test all systems (requires cross-platform playbook)
+# ansible linux -m ping                # Test only Linux systems
+# ansible windows -m win_ping          # Test only Windows systems
+# ansible ubuntu -m apt -a "name=curl state=present"    # Ubuntu package management
+# ansible rocky -m dnf -a "name=curl state=present"     # Rocky Linux package management
+# ansible windows -m win_chocolatey -a "name=curl state=present"  # Windows package management
+# 
+# Cross-platform automation examples:
+# ansible-playbook playbooks/ping_all_systems.yml       # Cross-platform connectivity test
+# ansible-playbook playbooks/system_info_cross_platform.yml  # Mixed environment info gathering
+# ===================================================================
 
 # Ungrouped hosts, specify before any group headers:
 
@@ -79,7 +145,6 @@
 ## 10.25.1.56
 ## 10.25.1.57
 
-
 # Ex4: Multiple hosts arranged into groups such as 'Debian' and 'openSUSE':
 
 ## [Debian]
@@ -89,4 +154,3 @@
 ## [openSUSE]
 ## green.example.com
 ## blue.example.com
-

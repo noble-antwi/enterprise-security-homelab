@@ -1,24 +1,30 @@
-# 🔧 Troubleshooting Guide
+#  Troubleshooting Guide
 
-## 📖 Quick Issue Finder
+##  Quick Issue Finder
 
-### 🚨 Critical Issues (Immediate Action Required)
+###  Critical Issues (Immediate Action Required)
 - [Lost pfSense Access](network-infrastructure.md#issue-1-lost-administrative-access-after-interface-changes)
 - [Complete Tailscale Connectivity Loss](remote-access.md#issue-1-complete-connectivity-loss-after-isp-migration)
 
-### 🌐 Network & Connectivity Issues
+###  Network & Connectivity Issues
 - [pfSense Access Problems](network-infrastructure.md#lost-administrative-access-after-interface-changes)
 - [ICMP Connectivity Failures](network-infrastructure.md#windows-client-icmp-connectivity-failures)
 - [Inter-VLAN Communication](network-infrastructure.md#inter-vlan-communication-challenges)
 - [VMware Network Bridge](network-infrastructure.md#vmware-network-bridge-configuration)
 
-### 🌍 Remote Access & VPN
+###  Remote Access & VPN
 - [ISP Migration Issues](remote-access.md#complete-connectivity-loss-after-isp-migration)
 
-### 🖥️ System Configuration
+###  System Configuration
 - [Netplan Gateway Warnings](system-administration.md#netplan-gateway-deprecation-warnings)
 - [SSH Authentication Problems](system-administration.md#ssh-host-key-verification-failures)
 - [Package Installation Conflicts](system-administration.md#rocky-linux-package-installation-conflicts)
+
+###  Windows Integration
+- [WinRM Connection Timeouts](windows-integration.md#issue-1-winrm-connection-timeouts)
+- [Python Package Installation](windows-integration.md#issue-2-python-package-installation-for-windows-support)
+- [Windows User Account Creation](windows-integration.md#issue-3-windows-user-account-creation-methods)
+- [Cross-Platform Module Conflicts](windows-integration.md#issue-6-cross-platform-module-conflicts)
 
 ## 🔍 Quick Diagnostic Commands
 
@@ -53,7 +59,7 @@ tailscale status
 ping 100.81.37.60
 ```
 
-## 📚 Documentation by Component
+##  Documentation by Component
 
 | Component | Troubleshooting Guide | Based on Real Issues |
 |-----------|----------------------|---------------------|
@@ -61,7 +67,7 @@ ping 100.81.37.60
 | **Remote Access** | [remote-access.md](remote-access.md) | ISP migration, Tailscale conflicts |
 | **System Administration** | [system-administration.md](system-administration.md) | SSH, Netplan, package issues |
 
-## 🎯 How to Use This Guide
+##  How to Use This Guide
 
 ### If You're Experiencing...
 - **Can't access pfSense** → Start with [Network Infrastructure](network-infrastructure.md)

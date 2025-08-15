@@ -1,0 +1,69 @@
+---
+# ===================================================================
+# WINDOWS GROUP VARIABLES - ANSIBLE AUTOMATION CONFIGURATION
+# ===================================================================
+# 
+# PURPOSE: Centralized Windows connection and authentication settings
+# SCOPE: Applied to all hosts in the [windows] inventory group
+# AUTHENTICATION: Local ansible user account with administrator privileges
+# 
+# SECURITY NOTES:
+# - Password stored in plain text for lab environment
+# - Production environments should use ansible-vault for encryption
+# - WinRM configured for HTTP (can be upgraded to HTTPS)
+# - Basic authentication used (can be upgraded to certificate-based)
+# ===================================================================
+
+# Windows Remote Management (WinRM) Connection Settings
+ansible_connection: winrm
+ansible_winrm_transport: basic
+ansible_winrm_server_cert_validation: ignore
+ansible_port: 5985
+ansible_winrm_scheme: http
+
+# Authentication Credentials
+ansible_user: ansible
+ansible_password: AnsiblePass123!
+
+# WinRM Protocol Settings
+ansible_winrm_read_timeout_sec: 60
+ansible_winrm_operation_timeout_sec: 60
+
+# ===================================================================
+# CONFIGURATION NOTES:
+# 
+# CONNECTION REQUIREMENTS:
+# - WinRM service must be enabled on Windows hosts
+# - Windows Firewall rule required for port 5985
+# - PowerShell execution policy set to RemoteSigned
+# - ansible user account created with administrator privileges
+# 
+# AUTHENTICATION METHOD:
+# - Basic authentication over HTTP
+# - Suitable for lab environments within trusted networks
+# - For production, consider certificate-based authentication
+# 
+# SECURITY ENHANCEMENTS (Future):
+# - Encrypt password using: ansible-vault encrypt group_vars/windows.yml
+# - Upgrade to HTTPS: ansible_winrm_scheme: https, ansible_port: 5986
+# - Certificate authentication: ansible_winrm_transport: certificate
+# ===================================================================
+
+# Windows-Specific Automation Settings
+ansible_shell_type: powershell
+
+# ===================================================================
+# USAGE EXAMPLES:
+# 
+# Basic connectivity test:
+# ansible windows -m win_ping
+# 
+# Windows information gathering:
+# ansible windows -m win_shell -a "Get-ComputerInfo | Select-Object WindowsProductName,TotalPhysicalMemory"
+# 
+# Service management:
+# ansible windows -m win_service -a "name=WinRM state=restarted"
+# 
+# Software installation (requires Chocolatey):
+# ansible windows -m win_chocolatey -a "name=git state=present"
+# ===================================================================

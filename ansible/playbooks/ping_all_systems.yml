@@ -1,0 +1,158 @@
+---
+# ===================================================================
+# CROSS-PLATFORM PING PLAYBOOK - UNIFIED CONNECTIVITY TESTING
+# ===================================================================
+# 
+# PURPOSE: Test connectivity across mixed Linux and Windows infrastructure
+# SCOPE: All systems in all_systems group (Linux + Windows)
+# APPROACH: Conditional tasks based on operating system detection
+# 
+# USAGE: ansible-playbook playbooks/ping_all_systems.yml
+# 
+# TECHNICAL NOTES:
+# - Linux systems use 'ping' module
+# - Windows systems use 'win_ping' module  
+# - gather_facts: true required for ansible_os_family detection
+# - Demonstrates enterprise cross-platform automation practices
+# ===================================================================
+
+- name: Ping All Systems (Cross-Platform)
+  hosts: all_systems
+  gather_facts: true
+  tasks:
+    
+    # ===============================================================
+    # PLAYBOOK INITIALIZATION
+    # ===============================================================
+    
+    - name: Display cross-platform automation start
+      debug:
+        msg: |
+          ========================================
+           CROSS-PLATFORM CONNECTIVITY TEST
+          ========================================
+          Target: {{ inventory_hostname }}
+          IP: {{ ansible_default_ipv4.address | default('N/A') }}
+          OS Family: {{ ansible_os_family }}
+          Distribution: {{ ansible_distribution | default('N/A') }}
+          ========================================
+      tags: always
+
+    # ===============================================================
+    # LINUX SYSTEMS CONNECTIVITY
+    # ===============================================================
+    
+    - name: Ping Linux systems
+      ping:
+      when: ansible_os_family != "Windows"
+      register: linux_ping_result
+      
+    - name: Display Linux ping result
+      debug:
+        msg: " Linux system {{ inventory_hostname }} responded successfully"
+      when: 
+        - ansible_os_family != "Windows"
+        - linux_ping_result is succeeded
+
+    # ===============================================================
+    # WINDOWS SYSTEMS CONNECTIVITY  
+    # ===============================================================
+    
+    - name: Ping Windows systems
+      win_ping:
+      when: ansible_os_family == "Windows"
+      register: windows_ping_result
+      
+    - name: Display Windows ping result
+      debug:
+        msg: " Windows system {{ inventory_hostname }} responded successfully"
+      when: 
+        - ansible_os_family == "Windows"
+        - windows_ping_result is succeeded
+
+    # ===============================================================
+    # SYSTEM INFORMATION GATHERING
+    # ===============================================================
+    
+    - name: Gather Linux system information
+      shell: |
+        echo "Hostname: $(hostname)"
+        echo "Uptime: $(uptime -p 2>/dev/null || uptime)"
+        echo "Kernel: $(uname -r)"
+        echo "Memory: $(free -h | grep Mem | awk '{print $2}' 2>/dev/null || echo 'N/A')"
+      register: linux_info
+      when: ansible_os_family != "Windows"
+      changed_when: false
+
+    - name: Display Linux system information
+      debug:
+        msg: |
+          📋 Linux System Information:
+          {{ linux_info.stdout_lines | join('\n') }}
+      when: ansible_os_family != "Windows"
+
+    - name: Gather Windows system information
+      win_shell: |
+        Write-Host "Hostname: $env:COMPUTERNAME"
+        Write-Host "OS: $(Get-WmiObject -Class Win32_OperatingSystem | Select-Object -ExpandProperty Caption)"
+        $uptime = (Get-Date) - (Get-CimInstance -ClassName win32_operatingsystem | Select-Object -ExpandProperty LastBootUpTime)
+        Write-Host "Uptime: $($uptime.Days) days, $($uptime.Hours) hours"
+        $memory = [math]::Round((Get-WmiObject -Class Win32_ComputerSystem).TotalPhysicalMemory / 1GB, 2)
+        Write-Host "Memory: $memory GB"
+      register: windows_info
+      when: ansible_os_family == "Windows"
+      changed_when: false
+
+    - name: Display Windows system information
+      debug:
+        msg: |
+          📋 Windows System Information:
+          {{ windows_info.stdout_lines | join('\n') }}
+      when: ansible_os_family == "Windows"
+
+# ===============================================================
+# POST-TASKS - SUMMARY REPORT
+# ===============================================================
+
+  post_tasks:
+    - name: Generate cross-platform connectivity summary
+      debug:
+        msg: |
+          ========================================
+          ✅ CROSS-PLATFORM CONNECTIVITY COMPLETE
+          ========================================
+          
+          🎯 TESTED SYSTEMS:
+          {% for host in groups['all_systems'] %}
+          • {{ host }} - {{ hostvars[host]['ansible_os_family'] | default('Unknown') }}
+          {% endfor %}
+          
+          📊 PLATFORM SUMMARY:
+          • Linux Systems: {{ groups['all_in_one'] | length }} systems
+          • Windows Systems: {{ groups['windows'] | length }} system(s)  
+          • Total Managed: {{ groups['all_systems'] | length }} systems
+          
+           ENTERPRISE AUTOMATION STATUS:
+          All systems accessible via unified Ansible platform
+          Cross-platform management operational
+          Hybrid infrastructure automation ready
+          ========================================
+      run_once: true
+      tags: always
+
+# ===================================================================
+# PLAYBOOK USAGE EXAMPLES:
+# 
+# Basic execution:
+# ansible-playbook playbooks/ping_all_systems.yml
+# 
+# Verbose output for troubleshooting:
+# ansible-playbook playbooks/ping_all_systems.yml -v
+# 
+# Target specific platform only:
+# ansible-playbook playbooks/ping_all_systems.yml --limit linux
+# ansible-playbook playbooks/ping_all_systems.yml --limit windows
+# 
+# Skip information gathering:
+# ansible-playbook playbooks/ping_all_systems.yml --skip-tags always
+# ===================================================================
