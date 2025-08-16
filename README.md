@@ -1,10 +1,10 @@
-# Enterprise-Grade Blue Team Security Lab
+# Enterprise Information Security Lab
 
 [![Documentation](https://img.shields.io/badge/docs-complete-brightgreen.svg)](docs/)
 [![Lab Status](https://img.shields.io/badge/status-active-brightgreen.svg)]()
 [![Platform Coverage](https://img.shields.io/badge/platforms-Linux%2BWindows-blue.svg)]()
 [![Automation](https://img.shields.io/badge/automation-Ansible-red.svg)]()
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 
 ##  Project Overview
 
