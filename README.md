@@ -20,17 +20,21 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 - **Windows Integration** - Professional Windows automation via WinRM and service accounts
 - **Enterprise Security** - VLAN isolation, professional authentication, centralized monitoring
 
-## Documentation Structure
+   ## Documentation Structure
 
 | Module | Description | Status |
 |--------|-------------|--------|
-| **[01-network-infrastructure](docs/01-network-infrastructure.md)** | pfSense setup, VLAN architecture, switch configuration | ✅ Complete |
-| **[02-security-monitoring](docs/02-security-monitoring.md)** | Wazuh SIEM deployment and BlueTeam VLAN setup | ✅ Complete |
-| **[03-observability-stack](docs/03-observability-stack.md)** | Grafana & Prometheus monitoring deployment | ✅ Complete |
-| **[04-automation-platform](docs/04-automation-platform.md)** | Cross-platform Ansible automation with Linux & Windows | ✅ Complete |
-| **[05-remote-access](docs/05-remote-access.md)** | Tailscale mesh VPN implementation | ✅ Complete |
-| **[06-windows-automation](docs/06-windows-automation.md)** | Windows automation & bootstrap implementation | ✅ Complete |
-|**[troubleshooting](https://github.com/noble-antwi/enterprise-security-homelab/blob/cc3c899eb47ee932d6b944dc95592cd39e619fe3/troubleshooting)**| Comprehensive troubleshooting guide | ✅ Complete |
+| **[01-network-infrastructure](docs/01-network-infrastructure.md)** | pfSense setup, VLAN architecture, switch configuration | Complete |
+| **[02-security-monitoring](docs/02-security-monitoring.md)** | Wazuh SIEM deployment and BlueTeam VLAN setup | Complete |
+| **[03-observability-stack](docs/03-observability-stack.md)** | Grafana & Prometheus monitoring deployment | Complete |
+| **[04-automation-platform](docs/04-automation-platform.md)** | Cross-platform Ansible automation with Linux & Windows | Complete |
+| **[05-remote-access](docs/05-remote-access.md)** | Tailscale mesh VPN implementation | Complete |
+| **[06-ansible-service-account](docs/06-ansible-service-account.md)** | Ansible service account implementation for automation | Complete |
+| **[07-ansible-roles-architecture](docs/07-ansible-roles-architecture.md)** | Role-based automation architecture | Complete |
+| **[08-windows-integration](docs/08-windows-integration.md)** | Windows automation & integration implementation | Complete |
+| **[09-bootstrap-procedures](docs/09-bootstrap-procedures.md)** | Standardized bootstrap procedures for new systems | Complete |
+| **[ssh-configuration](docs/ssh-configuration.md)** | SSH configuration and key management guide | Complete |
+| **[troubleshooting](troubleshooting/)** | Comprehensive troubleshooting guides by component | Complete |
 
 ## 🗂️ Current Lab Infrastructure
 
