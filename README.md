@@ -32,7 +32,6 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 | **[06-ansible-service-account](docs/06-ansible-service-account.md)** | Ansible service account implementation for automation | Complete |
 | **[07-ansible-roles-architecture](docs/07-ansible-roles-architecture.md)** | Role-based automation architecture | Complete |
 | **[08-windows-integration](docs/08-windows-integration.md)** | Windows automation & integration implementation | Complete |
-Standardized bootstrap procedures for new systems | Complete |
 | **[ssh-configuration](docs/ssh-configuration.md)** | SSH configuration and key management guide | Complete |
 | **[troubleshooting](troubleshooting/)** | Comprehensive troubleshooting guides by component | Complete |
 
