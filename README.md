@@ -32,7 +32,7 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 | **[06-ansible-service-account](docs/06-ansible-service-account.md)** | Ansible service account implementation for automation | Complete |
 | **[07-ansible-roles-architecture](docs/07-ansible-roles-architecture.md)** | Role-based automation architecture | Complete |
 | **[08-windows-integration](docs/08-windows-integration.md)** | Windows automation & integration implementation | Complete |
-| **[09-bootstrap-procedures](docs/09-bootstrap-procedures.md)** | Standardized bootstrap procedures for new systems | Complete |
+Standardized bootstrap procedures for new systems | Complete |
 | **[ssh-configuration](docs/ssh-configuration.md)** | SSH configuration and key management guide | Complete |
 | **[troubleshooting](troubleshooting/)** | Comprehensive troubleshooting guides by component | Complete |
 
@@ -87,10 +87,13 @@ For adding new systems to the infrastructure:
 #### Linux Systems
 ```bash
 # Distribute SSH keys and add to inventory
-ssh-copy-id -i ~/.ssh/id_ed25519.pub user@[IP_ADDRESS]
+ssh-copy-id -i ~/.ssh/ansible-homelab-key.pub user@[IP_ADDRESS]
 echo "[IP_ADDRESS]   # [DESCRIPTION] - $(date)" >> /etc/ansible/hosts
 ansible [IP_ADDRESS] -m ping
 ```
+**Bootstrap Methods:**
+- **Service Account Setup**: See [06-ansible-service-account.md](docs/06-ansible-service-account.md)
+- **Role-Based Bootstrap**: See [07-ansible-roles-architecture.md](docs/07-ansible-roles-architecture.md)
 
 #### Windows Systems
 ```bash
@@ -101,13 +104,12 @@ ansible-playbook bootstrap_windows.yml \
     -e "initial_password=[ADMIN_PASSWORD]" \
     -e "ansible_service_password=Password123"
 ```
-
-See [09-bootstrap-procedures](docs/09-bootstrap-procedures.md) for complete step-by-step procedures.
+**Windows Integration Guide**: See [08-windows-integration.md](docs/08-windows-integration.md)
 
 ### Quick Validation Commands
 ```bash
 # Verify all systems status
-ansible all_systems -m ping        # Linux systems
+ansible all_in_one -m ping        # Linux systems
 ansible windows -m win_ping        # Windows systems
 
 # Check service health across platforms
@@ -148,42 +150,42 @@ ansible windows -m win_service -a "name=WinRM"
 - **Service Accounts**: Professional separation between personal and automation access
 - **Remote Management**: Secure global access via Tailscale to all lab resources
 
-## 🎯 Use Cases & Capabilities
+## Use Cases & Capabilities
 
 ### Blue Team Operations
-- ✅ **Comprehensive Threat Detection** - Wazuh SIEM monitoring across all platforms
-- ✅ **Cross-Platform Incident Response** - Centralized log analysis from Linux and Windows
-- ✅ **Infrastructure Health Monitoring** - Grafana dashboards for system performance
-- ✅ **Secure Global Access** - Tailscale mesh network for remote operations
-- ✅ **Automated Configuration Management** - Consistent security posture via Ansible
-- ✅ **Professional Authentication** - Enterprise-grade access controls and service accounts
+- **Comprehensive Threat Detection** - Wazuh SIEM monitoring across all platforms
+- **Cross-Platform Incident Response** - Centralized log analysis from Linux and Windows
+- **Infrastructure Health Monitoring** - Grafana dashboards for system performance
+- **Secure Global Access** - Tailscale mesh network for remote operations
+- **Automated Configuration Management** - Consistent security posture via Ansible
+- **Professional Authentication** - Enterprise-grade access controls and service accounts
 
 ### Cross-Platform Management
-- ✅ **Unified Automation** - Single Ansible controller managing Linux and Windows systems
-- ✅ **Consistent Configuration** - Standardized management processes across platforms
-- ✅ **Professional Authentication** - Platform-appropriate security standards implemented
-- ✅ **Scalable Architecture** - Easy addition of new systems via automated bootstrap procedures
-- ✅ **Operational Efficiency** - Reduced manual configuration through systematic automation
-- ✅ **Enterprise Standards** - Professional service account management and variable architecture
+-  **Unified Automation** - Single Ansible controller managing Linux and Windows systems
+-  **Consistent Configuration** - Standardized management processes across platforms
+-  **Professional Authentication** - Platform-appropriate security standards implemented
+-  **Scalable Architecture** - Easy addition of new systems via automated bootstrap procedures
+-  **Operational Efficiency** - Reduced manual configuration through systematic automation
+- **Enterprise Standards** - Professional service account management and variable architecture
 
 ### Red Team Simulation *(Planned Expansion)*
-- 🚧 **Controlled Attack Simulation** - Dedicated RedTeam VLAN for isolated testing
-- 🚧 **Penetration Testing Environment** - Safe space for security tool development
-- 🚧 **Purple Team Exercises** - Coordinated Red/Blue team training scenarios
+- **Controlled Attack Simulation** - Dedicated RedTeam VLAN for isolated testing
+- **Penetration Testing Environment** - Safe space for security tool development
+- **Purple Team Exercises** - Coordinated Red/Blue team training scenarios
 
 ### DevSecOps Integration *(Future Development)*
-- 🚧 **CI/CD Security Pipeline** - Automated security testing in deployment workflows
-- ✅ **Infrastructure as Code** - Ansible automation with version-controlled configurations
-- 🚧 **Integrated Vulnerability Assessment** - Automated scanning and remediation workflows
-- 🚧 **Compliance Automation** - Regulatory compliance monitoring and reporting
+- **CI/CD Security Pipeline** - Automated security testing in deployment workflows
+- **Infrastructure as Code** - Ansible automation with version-controlled configurations
+- **Integrated Vulnerability Assessment** - Automated scanning and remediation workflows
+- **Compliance Automation** - Regulatory compliance monitoring and reporting
 
 ### Security Research & Development
-- ✅ **Multi-Platform Testing** - Security tools and configurations across Linux/Windows
-- ✅ **Network Segmentation Testing** - VLAN isolation and firewall rule validation
-- ✅ **Monitoring System Development** - Custom dashboards and alerting mechanisms
-- ✅ **Automation Development** - Cross-platform configuration management playbooks
+- **Multi-Platform Testing** - Security tools and configurations across Linux/Windows
+- **Network Segmentation Testing** - VLAN isolation and firewall rule validation
+- **Monitoring System Development** - Custom dashboards and alerting mechanisms
+- **Automation Development** - Cross-platform configuration management playbooks
 
-## 📊 Lab Metrics & Status
+## Lab Metrics & Status
 
 ### Implementation Status
 - **Network Segmentation**: 6 VLANs configured with 3 actively utilized
@@ -213,12 +215,12 @@ ansible windows -m win_service -a "name=WinRM"
 ### Platform Coverage Metrics
 | Platform | Systems | Authentication | Management | Status |
 |----------|---------|---------------|------------|--------|
-| **Linux** | 4 systems | SSH Keys (ED25519) | Ansible + SSH | 🟢 100% Managed |
-| **Windows** | 2 systems | WinRM + Service Accounts | Ansible + WinRM | 🟢 100% Managed |
-| **Network** | pfSense + Switch | Web UI + SSH | Manual + Automation | 🟢 Fully Operational |
-| **Total** | 7 systems | Multi-method | Cross-platform | 🟢 Enterprise-Ready |
+| **Linux** | 4 systems | SSH Keys (ED25519) | Ansible + SSH |  100% Managed |
+| **Windows** | 2 systems | WinRM + Service Accounts | Ansible + WinRM |  100% Managed |
+| **Network** | pfSense + Switch | Web UI + SSH | Manual + Automation |  Fully Operational |
+| **Total** | 7 systems | Multi-method | Cross-platform |  Enterprise-Ready |
 
-## 🛠️ Maintenance & Operations
+##  Maintenance & Operations
 
 ### Regular Maintenance Tasks
 - **Security Updates**: Automated and manual patching across Linux and Windows systems
@@ -244,34 +246,34 @@ ansible windows -m win_service -a "name=WinRM"
 - **Geographic Distribution**: Tailscale mesh supports global lab expansion
 - **Platform Diversity**: Architecture supports additional operating systems and platforms
 
-## 🔄 Development Roadmap
+## Development Roadmap
 
-### Phase 1: Foundation ✅ Complete
-- ✅ Network infrastructure with VLAN segmentation
-- ✅ Security monitoring with Wazuh SIEM
-- ✅ Cross-platform automation with Ansible
-- ✅ Remote access via Tailscale mesh VPN
-- ✅ Observability stack with Grafana/Prometheus
+### Phase 1: Foundation  Complete
+- Network infrastructure with VLAN segmentation
+-  Security monitoring with Wazuh SIEM
+-  Cross-platform automation with Ansible
+-  Remote access via Tailscale mesh VPN
+-  Observability stack with Grafana/Prometheus
 
-### Phase 2: Advanced Security 🚧 In Progress
-- 🔄 Wazuh agent deployment across all platforms
-- 🔄 Custom detection rules and automated response
-- 🔄 Advanced Grafana dashboards for security metrics
-- 🔄 Integration of security tools across platforms
+### Phase 2: Advanced Security  In Progress
+-  Wazuh agent deployment across all platforms
+-  Custom detection rules and automated response
+-  Advanced Grafana dashboards for security metrics
+-  Integration of security tools across platforms
 
-### Phase 3: Red Team Capabilities 📋 Planned
-- 📋 RedTeam VLAN activation and tool deployment
-- 📋 Attack simulation and penetration testing environment
-- 📋 Purple team exercise frameworks
-- 📋 Security tool development and testing
+### Phase 3: Red Team Capabilities Planned
+-  RedTeam VLAN activation and tool deployment
+-  Attack simulation and penetration testing environment
+-  Purple team exercise frameworks
+-  Security tool development and testing
 
-### Phase 4: DevSecOps Integration 📋 Future
-- 📋 CI/CD pipeline integration with security scanning
-- 📋 Infrastructure as Code enhancement
-- 📋 Automated compliance checking and reporting
-- 📋 Advanced automation workflows and orchestration
+### Phase 4: DevSecOps Integration  Future
+-  CI/CD pipeline integration with security scanning
+-  Infrastructure as Code enhancement
+-  Automated compliance checking and reporting
+-  Advanced automation workflows and orchestration
 
-## 🤝 Contributing
+##  Contributing
 
 This project serves as a comprehensive reference implementation for enterprise-grade security homelabs. Community involvement is welcomed:
 
@@ -286,25 +288,15 @@ This project serves as a comprehensive reference implementation for enterprise-g
 - Test thoroughly across both Linux and Windows platforms where applicable
 - Follow existing documentation structure and formatting standards
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - **pfSense Community** - Outstanding firewall platform with comprehensive VLAN and routing capabilities
 - **Wazuh Team** - Exceptional SIEM solution with powerful threat detection and analysis features
 - **Tailscale** - Revolutionary mesh networking solution that transformed remote access capabilities
 - **Grafana Labs** - Excellent observability platform with powerful visualization and monitoring tools
 - **Ansible Community** - Robust automation platform with outstanding cross-platform support
-- **Open Source Community** - Countless contributors whose work makes enterprise-grade homelabs possible
 
----
-
-*Last Updated: August 2025 | Status: Active Development & Expansion*  
-*Current Phase: Advanced Security Integration | Next: Red Team Capabilities*
-
-## 📞 Quick Status Overview
+## Quick Status Overview
 
 The enterprise homelab demonstrates professional security practices, comprehensive cross-platform automation, and advanced monitoring capabilities in a scalable, well-documented infrastructure. The implementation showcases real-world enterprise security operations, making it suitable for Blue Team training, security research, professional development, and demonstrating advanced cybersecurity capabilities.
 
