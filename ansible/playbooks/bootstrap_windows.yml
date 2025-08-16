@@ -1,0 +1,148 @@
+---
+- name: Bootstrap New Windows Machine for Enterprise Ansible Management
+  hosts: "{{ target_host }}"
+  gather_facts: true
+  vars:
+    ansible_user: "{{ initial_user }}"
+    ansible_password: "{{ initial_password }}"
+    ansible_connection: winrm
+    ansible_winrm_transport: basic
+    ansible_winrm_server_cert_validation: ignore
+    ansible_port: 5985
+    ansible_service_user: ansible
+    ansible_service_password: AnsibleMgmt2024!
+    
+  tasks:
+    - name: Test initial connectivity to target system
+      win_ping:
+      register: initial_ping
+      
+    - name: Display connection confirmation
+      debug:
+        msg: "Successfully connected to {{ target_host }} as {{ initial_user }}"
+      when: initial_ping is succeeded
+      
+    - name: Configure PowerShell execution policy for remote management
+      win_shell: |
+        Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine -Force
+        Get-ExecutionPolicy -List
+      register: execution_policy
+      
+    - name: Display PowerShell execution policy status
+      debug:
+        var: execution_policy.stdout_lines
+        
+    - name: Create dedicated ansible service account
+      win_user:
+        name: "{{ ansible_service_user }}"
+        password: "{{ ansible_service_password }}"
+        groups:
+          - Administrators
+        password_never_expires: true
+        user_cannot_change_password: true
+        description: "Ansible Automation Service Account"
+        state: present
+      register: user_creation
+      
+    - name: Configure WinRM service for Ansible management
+      win_shell: |
+        # Enable WinRM service
+        Enable-PSRemoting -Force -SkipNetworkProfileCheck
+        
+        # Configure WinRM for basic authentication
+        winrm set winrm/config/service/auth '@{Basic="true"}'
+        
+        # Allow unencrypted traffic (for lab environment)
+        winrm set winrm/config/service '@{AllowUnencrypted="true"}'
+        
+        # Set maximum memory per shell
+        winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="512"}'
+        
+        # Display WinRM configuration
+        winrm get winrm/config
+      register: winrm_config
+      
+    - name: Configure Windows Firewall rules for WinRM HTTP
+      win_firewall_rule:
+        name: "WinRM HTTP Inbound (Ansible)"
+        localport: 5985
+        action: allow
+        direction: in
+        protocol: tcp
+        description: "Allow WinRM HTTP for Ansible management"
+        state: present
+        
+    - name: Configure Windows Firewall rules for WinRM HTTPS
+      win_firewall_rule:
+        name: "WinRM HTTPS Inbound (Ansible)"
+        localport: 5986
+        action: allow
+        direction: in
+        protocol: tcp
+        description: "Allow WinRM HTTPS for Ansible management"
+        state: present
+        
+    - name: Create Ansible management directory
+      win_file:
+        path: C:\Ansible
+        state: directory
+        
+    - name: Create bootstrap completion marker
+      win_copy:
+        content: |
+          Bootstrap completed: {{ ansible_date_time.iso8601 }}
+          Ansible Controller: {{ inventory_hostname }}
+          Service Account: {{ ansible_service_user }}
+          Bootstrap User: {{ initial_user }}
+        dest: C:\Ansible\bootstrap_info.txt
+        
+    - name: Test ansible service account connectivity
+      win_ping:
+      vars:
+        ansible_user: "{{ ansible_service_user }}"
+        ansible_password: "{{ ansible_service_password }}"
+      register: service_account_test
+      
+    - name: Gather system information for inventory
+      win_shell: |
+        $info = Get-ComputerInfo
+        "Hostname: $($info.CsName)"
+        "OS: $($info.WindowsProductName)"
+        "Domain: $($info.CsDomain)"
+        "Architecture: $($info.CsProcessors[0].Architecture)"
+        "Total Memory: $([math]::Round($info.TotalPhysicalMemory/1GB,2)) GB"
+        "IP Address: $((Get-NetIPAddress -AddressFamily IPv4 -Type Unicast | Where-Object {$_.IPAddress -notlike '169.254.*' -and $_.IPAddress -ne '127.0.0.1'}).IPAddress -join ', ')"
+      register: system_info
+      vars:
+        ansible_user: "{{ ansible_service_user }}"
+        ansible_password: "{{ ansible_service_password }}"
+        
+    - name: Display bootstrap completion summary
+      debug:
+        msg: |
+          Windows Bootstrap Completed Successfully:
+          
+          Target System: {{ target_host }}
+          Service Account: {{ ansible_service_user }} (Created)
+          WinRM Status: Configured and Active
+          Firewall Rules: Configured
+          
+          System Information:
+          {{ system_info.stdout_lines | join('\n          ') }}
+          
+          Next Steps:
+          1. Update group_vars/windows.yml if needed
+          2. Test: ansible windows -m win_ping
+          
+    - name: Create inventory entry suggestion
+      debug:
+        msg: |
+          Your group_vars/windows.yml should contain:
+          
+          ansible_connection: winrm
+          ansible_user: {{ ansible_service_user }}
+          ansible_password: {{ ansible_service_password }}
+          ansible_winrm_transport: basic
+          ansible_winrm_server_cert_validation: ignore
+          ansible_port: 5985
+      when: system_info is succeeded
