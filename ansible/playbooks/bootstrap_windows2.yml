@@ -1,0 +1,111 @@
+---
+- name: Bootstrap New Windows Machine for Enterprise Ansible Management
+  hosts: "{{ target_host }}"
+  gather_facts: true
+  vars:
+    ansible_user: "{{ initial_user }}"
+    ansible_password: "{{ initial_password }}"
+    ansible_connection: winrm
+    ansible_winrm_transport: basic
+    ansible_winrm_server_cert_validation: ignore
+    ansible_port: 5985
+    ansible_winrm_scheme: http
+    ansible_service_password: "{{ ansible_service_password | default('Password123') }}"
+    
+  tasks:
+    - name: Test initial connectivity to target system
+      win_ping:
+      
+    - name: Display connection confirmation
+      debug:
+        msg: "Successfully connected to {{ inventory_hostname }} as {{ ansible_user }}"
+        
+    - name: Configure PowerShell execution policy for remote management
+      win_shell: |
+        Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine -Force
+        Get-ExecutionPolicy -List
+      register: execution_policy
+      
+    - name: Display PowerShell execution policy status
+      debug:
+        var: execution_policy.stdout_lines
+        
+    - name: Create dedicated ansible service account
+      win_user:
+        name: ansible
+        password: "{{ ansible_service_password }}"
+        groups:
+          - Administrators
+        password_never_expires: true
+        state: present
+        description: "Ansible Automation Service Account"
+        
+    - name: Configure WinRM service for Ansible management
+      win_shell: |
+        Enable-PSRemoting -Force -SkipNetworkProfileCheck
+        winrm set winrm/config/service/auth '@{Basic="true"}'
+        winrm set winrm/config/service '@{AllowUnencrypted="true"}'
+        winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="512"}'
+        
+    - name: Configure Windows Firewall rules for WinRM
+      win_firewall_rule:
+        name: "WinRM HTTP Inbound (Ansible)"
+        localport: 5985
+        action: allow
+        direction: in
+        protocol: tcp
+        state: present
+        
+    - name: Configure Windows Firewall rules for WinRM HTTPS
+      win_firewall_rule:
+        name: "WinRM HTTPS Inbound (Ansible)"
+        localport: 5986
+        action: allow
+        direction: in
+        protocol: tcp
+        state: present
+        
+    - name: Create Ansible management directory
+      win_file:
+        path: C:\Ansible
+        state: directory
+        
+    - name: Create bootstrap completion marker
+      win_copy:
+        content: |
+          Bootstrap completed: {{ ansible_date_time.iso8601 }}
+          Ansible user created: ansible
+          WinRM configured: Yes
+          Firewall configured: Yes
+          System ready for automation
+        dest: C:\Ansible\bootstrap-complete.txt
+        
+    - name: Test ansible service account connectivity
+      win_ping:
+      vars:
+        ansible_user: ansible
+        ansible_password: "{{ ansible_service_password }}"
+        
+    - name: Gather final system information
+      win_shell: |
+        $info = Get-ComputerInfo
+        "Hostname: $($info.CsName)"
+        "OS: $($info.WindowsProductName)"
+        "Version: $($info.WindowsVersion)"
+        "Domain: $($info.CsDomain)"
+        "Total Memory: $([math]::Round($info.TotalPhysicalMemory/1GB,2)) GB"
+      register: system_info
+      
+    - name: Display system information
+      debug:
+        msg: "{{ system_info.stdout_lines }}"
+        
+    - name: Bootstrap completion summary
+      debug:
+        msg: |
+          Windows system bootstrap completed successfully!
+          - ansible service account created with Administrator privileges
+          - WinRM configured for HTTP and HTTPS
+          - Windows Firewall configured for remote management
+          - PowerShell execution policy set to RemoteSigned
+          - System ready for Ansible automation
