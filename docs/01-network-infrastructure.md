@@ -1,10 +1,10 @@
 # Network Infrastructure & pfSense Configuration
 
-## 📖 Overview
+##  Overview
 
 This document details the complete network infrastructure setup using **pfSense** as the core firewall and routing platform, implementing enterprise-grade **VLAN segmentation** with a **TP-Link TL-SG108E managed switch**. The architecture provides isolated network segments for different security functions while maintaining centralized control and monitoring.
 
-## 💻 Hardware Architecture
+##  Hardware Architecture
 
 ### Core Components
 - **pfSense Firewall**: Dedicated desktop machine with 2 NICs
