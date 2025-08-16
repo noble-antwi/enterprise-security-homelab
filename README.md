@@ -36,7 +36,8 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 | **[ssh-configuration](docs/ssh-configuration.md)** | SSH configuration and key management guide | Complete |
 | **[troubleshooting](troubleshooting/)** | Comprehensive troubleshooting guides by component | Complete |
 
-## 🗂️ Current Lab Infrastructure
+
+##  Current Lab Infrastructure
 
 ### VLAN Architecture
 | VLAN | Purpose | Subnet | Gateway | Services |
@@ -48,16 +49,19 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 | **50 - EnterpriseLAN** | Business Services | `192.168.50.0/24` | `.1` | *Reserved for Future* |
 | **60 - Monitoring** | Observability | `192.168.60.0/24` | `.1` | Grafana, Prometheus |
 
+![VLAN Structure](<images/11. vlans structure.png>)
+VLAN struture Implementation with WAN Interface.
+
 ### Current Deployed Systems
 | System | IP Address | VLAN | Platform | Purpose | Status |
 |--------|------------|------|----------|---------|--------|
-| **pfSense Firewall** | `192.168.10.1` | Management | FreeBSD | Network gateway & security | 🟢 Active |
-| **Ansible Controller** | `192.168.10.2` | Management | Ubuntu 24.04 | Cross-platform automation | 🟢 Active |
-| **Windows Host Laptop** | `192.168.10.3` | Management | Windows 10/11 | Development/Testing | 🟢 Active |
-| **TCM Ubuntu** | `192.168.10.4` | Management | Ubuntu 24.04 | Training/Development | 🟢 Active |
-| **Windows Server 2022** | `192.168.10.5` | Management | Windows Server | Enterprise Services | 🟢 Active |
-| **Wazuh SIEM** | `192.168.20.2` | BlueTeam | Rocky Linux 9.6 | Security monitoring | 🟢 Active |
-| **Grafana Server** | `192.168.60.2` | Monitoring | Ubuntu 24.04 | Observability dashboard | 🟢 Active |
+| **pfSense Firewall** | `192.168.10.1` | Management | FreeBSD | Network gateway & security |  Active |
+| **Ansible Controller** | `192.168.10.2` | Management | Ubuntu 24.04 | Cross-platform automation |  Active |
+| **Windows Host Laptop** | `192.168.10.3` | Management | Windows 10/11 | Development/Testing |  Active |
+| **TCM Ubuntu** | `192.168.10.4` | Management | Ubuntu 24.04 | Training/Development |  Active |
+| **Windows Server 2022** | `192.168.10.5` | Management | Windows Server | Enterprise Services |  Active |
+| **Wazuh SIEM** | `192.168.20.2` | BlueTeam | Rocky Linux 9.6 | Security monitoring |  Active |
+| **Grafana Server** | `192.168.60.2` | Monitoring | Ubuntu 24.04 | Observability dashboard |  Active |
 
 ### Infrastructure Overview
 - **Total Systems**: 7 managed systems across 3 active VLANs
@@ -67,7 +71,7 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 - **Security Monitoring**: Wazuh SIEM operational across all platforms
 - **Observability**: Grafana/Prometheus stack with comprehensive metrics
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 - Dedicated hardware for pfSense firewall
@@ -76,13 +80,6 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 - Basic networking and virtualization knowledge
 - Understanding of both Linux and Windows administration
 
-### Quick Deployment Path
-1. **Network Foundation** - Follow [01-network-infrastructure](docs/01-network-infrastructure.md)
-2. **Security Monitoring** - Deploy using [02-security-monitoring](docs/02-security-monitoring.md)
-3. **Observability** - Set up monitoring with [03-observability-stack](docs/03-observability-stack.md)
-4. **Automation Platform** - Configure cross-platform Ansible from [04-automation-platform](docs/04-automation-platform.md)
-5. **Windows Integration** - Add Windows systems via [06-windows-automation](docs/06-windows-automation.md)
-6. **Remote Access** - Enable global access with [05-remote-access](docs/05-remote-access.md)
 
 ### Bootstrap New Systems
 For adding new systems to the infrastructure:
