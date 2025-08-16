@@ -6,21 +6,21 @@
 [![Automation](https://img.shields.io/badge/automation-Ansible-red.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## 🏗️ Project Overview
+##  Project Overview
 
 A comprehensive, enterprise-grade cybersecurity homelab implementing professional security practices using **pfSense**, **VLAN segmentation**, **cross-platform automation**, **SIEM monitoring**, and **remote access**. This lab environment mimics real-world infrastructure for Blue Team operations, Red Team simulation, and DevSecOps practices across both Linux and Windows platforms.
 
-## 🏛️ Architecture Highlights
+##  Architecture Highlights
 
-- **🔥 pfSense Firewall** - Enterprise routing & security with 6-VLAN segmentation
-- **🌐 Cross-Platform Automation** - Ansible managing Linux and Windows systems seamlessly
-- **🔍 Wazuh SIEM** - Security monitoring & incident response across all platforms
-- **📊 Grafana/Prometheus** - Infrastructure observability and performance monitoring
-- **🌍 Tailscale Mesh VPN** - Secure remote access to all lab resources globally
-- **💻 Windows Integration** - Professional Windows automation via WinRM and service accounts
-- **🛡️ Enterprise Security** - VLAN isolation, professional authentication, centralized monitoring
+- **pfSense Firewall** - Enterprise routing & security with 6-VLAN segmentation
+- **Cross-Platform Automation** - Ansible managing Linux and Windows systems seamlessly
+- **Wazuh SIEM** - Security monitoring & incident response across all platforms
+- **Grafana/Prometheus** - Infrastructure observability and performance monitoring
+- **Tailscale Mesh VPN** - Secure remote access to all lab resources globally
+- **Windows Integration** - Professional Windows automation via WinRM and service accounts
+- **Enterprise Security** - VLAN isolation, professional authentication, centralized monitoring
 
-## 📚 Documentation Structure
+## Documentation Structure
 
 | Module | Description | Status |
 |--------|-------------|--------|
@@ -30,8 +30,7 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 | **[04-automation-platform](docs/04-automation-platform.md)** | Cross-platform Ansible automation with Linux & Windows | ✅ Complete |
 | **[05-remote-access](docs/05-remote-access.md)** | Tailscale mesh VPN implementation | ✅ Complete |
 | **[06-windows-automation](docs/06-windows-automation.md)** | Windows automation & bootstrap implementation | ✅ Complete |
-| **[09-bootstrap-procedures](docs/09-bootstrap-procedures.md)** | Standardized bootstrap procedures for new systems | ✅ Complete |
-| **[troubleshooting](docs/troubleshooting.md)** | Comprehensive troubleshooting guide | ✅ Complete |
+|**[troubleshooting](https://github.com/noble-antwi/enterprise-security-homelab/blob/cc3c899eb47ee932d6b944dc95592cd39e619fe3/troubleshooting)**| Comprehensive troubleshooting guide | ✅ Complete |
 
 ## 🗂️ Current Lab Infrastructure
 
