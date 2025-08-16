@@ -121,7 +121,7 @@ ansible windows -m win_service -a "name=WinRM"
 # Grafana: http://192.168.60.2:3000
 ```
 
-## 🔧 Technology Stack
+## Technology Stack
 
 ### Core Infrastructure
 - **Firewall**: pfSense (FreeBSD-based) with advanced VLAN routing
