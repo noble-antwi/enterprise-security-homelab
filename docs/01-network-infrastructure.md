@@ -9,7 +9,7 @@ This document details the complete network infrastructure setup using **pfSense*
 ### Core Components
 - **pfSense Firewall**: Dedicated desktop machine with 2 NICs
 - **TP-Link TL-SG108E**: 8-Port Gigabit Smart Managed Switch
-- **Primary Laptop**: Administrative access and VM host (2 NICs)
+- **Primary Laptop**: Administrative access and VM host (2 NICs with more to be added)
 - **Additional Systems**: Reserved for service deployment
 
 ### Physical Topology
@@ -19,8 +19,32 @@ Internet ↔ Home Router ↔ pfSense (WAN/LAN) ↔ Managed Switch ↔ VLAN Segme
                                     ↕
                             All Lab Infrastructure
 ```
+## Network Architecture Diagram
 
-## 🔧 pfSense Configuration
+### Visual Overview
+
+![Network Infrastructure Architecture](<../images/12. network-architecture.png>)
+
+*Complete pfSense network infrastructure showing physical topology, VLAN segmentation, switch port configuration, and security zones*
+
+### Interactive Architecture Diagram
+For a detailed interactive view with hover effects and clickable elements, see the [Interactive Network Architecture Diagram](../network-architecture.html).
+
+        **Interactive Features:**
+        -  **Hover Effects**: Mouse over elements for enhanced visibility
+        -  **Clickable VLANs**: Click on VLAN segments for detailed information
+        -  **Live Configuration Data**: Real-time display of IP ranges and port assignments
+        -  **Color-Coded Zones**: Visual distinction between security domains
+
+### Architecture Highlights
+- **pfSense Firewall**: Enterprise-grade routing and security with 2 NICs
+- ** Managed Switch**: TP-Link TL-SG108E with 8 ports supporting VLAN tagging
+- **VLAN Segmentation**: 6 isolated network zones for different security functions
+- **Security Model**: Default-deny firewall with explicit rules for each VLAN
+- **Hybrid NAT**: Controlled outbound access for all network segments
+
+
+## pfSense Configuration
 
 ### Interface Configuration
 
@@ -42,7 +66,7 @@ Internet ↔ Home Router ↔ pfSense (WAN/LAN) ↔ Managed Switch ↔ VLAN Segme
 | **VLAN 50** | Virtual | EnterpriseLAN | `192.168.50.1` |
 | **VLAN 60** | Virtual | Monitoring stack | `192.168.60.1` |
 
-## 🧱 VLAN & Subnet Architecture
+## VLAN & Subnet Architecture
 
 ### Design Philosophy
 The network implements **VLAN-based segmentation** where each VLAN represents a separate logical security zone. This approach ensures:
@@ -50,7 +74,8 @@ The network implements **VLAN-based segmentation** where each VLAN represents a 
 - **Granular firewall control** via pfSense rules
 - **Enhanced monitoring** and policy enforcement
 - **Clear separation** between Blue Team and Red Team activities
-
+![Vlans](<../images/11. vlans structure.png>)
+*VLAN Configured on Pfsense*
 ### Complete VLAN Specification
 
 | **VLAN Name** | **VLAN ID** | **Subnet** | **Gateway IP** | **Purpose & Use Case** |
@@ -63,12 +88,12 @@ The network implements **VLAN-based segmentation** where each VLAN represents a 
 | **Monitoring** | `60` | `192.168.60.0/24` | `192.168.60.1` | Dedicated observability stack hosting Prometheus, Grafana, Loki, and out-of-band monitoring systems. |
 
 ### Network Segmentation Benefits
-- 🔐 **Enhanced Security**: Layer 2 isolation with pfSense firewall control
-- 🔍 **Clear Visibility**: Each team/function has dedicated network space
-- 🧪 **Safe Testing**: Attack simulations contained within RedTeam VLAN
-- 📊 **Monitoring**: Centralized observability without network interference
+- **Enhanced Security**: Layer 2 isolation with pfSense firewall control
+- **Clear Visibility**: Each team/function has dedicated network space
+- **Safe Testing**: Attack simulations contained within RedTeam VLAN
+- **Monitoring**: Centralized observability without network interference
 
-## 🗂️ DHCP Configuration Strategy
+## DHCP Configuration Strategy
 
 ### IP Address Allocation Plan
 Each VLAN subnet uses a structured IP allocation to prevent conflicts and ensure predictable addressing:
@@ -101,7 +126,7 @@ Each VLAN subnet uses a structured IP allocation to prevent conflicts and ensure
 ✅ **Scalability**: Significant room for future growth  
 ✅ **Consistency**: Identical pattern across all VLANs  
 
-## 🔥 Firewall Rules & Access Control
+## Firewall Rules & Access Control
 
 ### Security Model
 pfSense implements a **default-deny** security model where all traffic is blocked unless explicitly allowed. Each VLAN has customized firewall rules based on its security requirements and operational needs.
@@ -110,10 +135,10 @@ pfSense implements a **default-deny** security model where all traffic is blocke
 
 | Action | Protocol | Source | Destination | Purpose |
 |--------|----------|--------|-------------|---------|
-| ✅ **Allow** | ICMP | VLAN 10 Subnet | Any | Network troubleshooting and connectivity testing |
-| ✅ **Allow** | TCP/UDP | VLAN 10 Subnet | This Firewall | Access to pfSense Web UI (HTTPS) |
-| ✅ **Allow** | UDP | VLAN 10 Subnet | Any (Port 53) | DNS resolution services |
-| ✅ **Allow** | Any | VLAN 10 Subnet | Any | Full internet access for administrative tasks |
+| **Allow** | ICMP | VLAN 10 Subnet | Any | Network troubleshooting and connectivity testing |
+| **Allow** | TCP/UDP | VLAN 10 Subnet | This Firewall | Access to pfSense Web UI (HTTPS) |
+| **Allow** | UDP | VLAN 10 Subnet | Any (Port 53) | DNS resolution services |
+| **Allow** | Any | VLAN 10 Subnet | Any | Full internet access for administrative tasks |
 
 #### Management VLAN Firewall Implementation
 ![Management VLAN Firewall Rules](../images/image-4.png)
@@ -124,7 +149,7 @@ For **BlueTeam, RedTeam, DevOps, EnterpriseLAN, and Monitoring** VLANs:
 
 | Action | Protocol | Source | Destination | Purpose |
 |--------|----------|--------|-------------|---------|
-| ✅ **Allow** | Any | VLAN [X] Subnet | Any | Full internet access for operational requirements |
+| **Allow** | Any | VLAN [X] Subnet | Any | Full internet access for operational requirements |
 
 #### Additional VLANs Firewall Configuration
 ![Other Firewall Rules](../images/image-5.png)
@@ -136,7 +161,7 @@ For **BlueTeam, RedTeam, DevOps, EnterpriseLAN, and Monitoring** VLANs:
 - **Inter-VLAN Communication**: Controlled by specific rules as needed
 - **Default Behavior**: All traffic denied unless explicitly permitted
 
-## 🌍 Outbound NAT Configuration
+## Outbound NAT Configuration
 
 ### NAT Implementation Approach
 To enable proper internet connectivity for all VLAN segments, pfSense uses **Hybrid Outbound NAT** mode, providing explicit control over network address translation while maintaining automatic rule generation for standard interfaces.
@@ -150,23 +175,23 @@ To enable proper internet connectivity for all VLAN segments, pfSense uses **Hyb
 
 | VLAN Name | Source Subnet | Translation Target | Status |
 |-----------|---------------|-------------------|--------|
-| **Management** | `192.168.10.0/24` | WAN Interface | ✅ Active |
-| **BlueTeam** | `192.168.20.0/24` | WAN Interface | ✅ Active |
-| **RedTeam** | `192.168.30.0/24` | WAN Interface | ✅ Active |
-| **DevOps** | `192.168.40.0/24` | WAN Interface | ✅ Active |
-| **EnterpriseLAN** | `192.168.50.0/24` | WAN Interface | ✅ Active |
-| **Monitoring** | `192.168.60.0/24` | WAN Interface | ✅ Active |
+| **Management** | `192.168.10.0/24` | WAN Interface | Active |
+| **BlueTeam** | `192.168.20.0/24` | WAN Interface | Active |
+| **RedTeam** | `192.168.30.0/24` | WAN Interface | Active |
+| **DevOps** | `192.168.40.0/24` | WAN Interface | Active |
+| **EnterpriseLAN** | `192.168.50.0/24` | WAN Interface | Active |
+| **Monitoring** | `192.168.60.0/24` | WAN Interface | Active |
 
 #### Hybrid Outbound NAT Configuration
 ![Hybrid Outbound NAT](../images/image-6.png)
 
 ### Hybrid NAT Advantages
-✅ **Flexibility**: Manual control over VLAN-specific NAT behavior  
-✅ **Compatibility**: Retains pfSense default rules for other interfaces  
-✅ **Scalability**: Easy to modify or restrict specific VLANs  
-✅ **Visibility**: Clear understanding of NAT translations  
+**Flexibility**: Manual control over VLAN-specific NAT behavior  
+**Compatibility**: Retains pfSense default rules for other interfaces  
+**Scalability**: Easy to modify or restrict specific VLANs  
+**Visibility**: Clear understanding of NAT translations  
 
-## 🔌 Switch Port Configuration
+## Switch Port Configuration
 
 ### TP-Link TL-SG108E Port Mapping
 The managed switch provides VLAN segmentation through strategic port assignments, supporting both trunk and access port configurations.
@@ -193,7 +218,7 @@ The managed switch provides VLAN segmentation through strategic port assignments
 - **Device Placement**: End devices automatically assigned to appropriate VLAN
 - **Scalability**: Additional devices easily added to any VLAN segment
 
-## 🔒 Security Implementation
+## Security Implementation
 
 ### Network Security Measures
 - **LAN Interface Isolation**: Original `ue0` interface secured with no DHCP or routing
@@ -207,7 +232,7 @@ The managed switch provides VLAN segmentation through strategic port assignments
 - **Firewall Protection**: All traffic subject to pfSense security rules
 - **Default Deny**: Implicit denial of all traffic not explicitly permitted
 
-## 🐛 Implementation Challenges & Solutions
+## Implementation Challenges & Solutions
 
 ### Key Issues Resolved
 
@@ -231,7 +256,7 @@ The managed switch provides VLAN segmentation through strategic port assignments
 **Verification**: Confirmed GUI accessible via `http://192.168.10.1` on VLAN 10  
 **Result**: Administrative access properly secured and functional  
 
-## ✅ Implementation Verification
+## Implementation Verification
 
 ### Network Connectivity Tests
 - **VLAN Gateway Access**: All VLANs can reach their respective gateways
@@ -245,7 +270,7 @@ The managed switch provides VLAN segmentation through strategic port assignments
 - **Access Controls**: Administrative functions properly restricted
 - **NAT Translation**: Proper address translation for internet access
 
-## 🚀 Next Phase Integration
+## Next Phase Integration
 
 ### Prepared Infrastructure
 The network foundation now supports:
@@ -262,5 +287,5 @@ The network foundation now supports:
 
 ---
 
-*Network Infrastructure Status: ✅ Complete and Operational*  
+*Network Infrastructure Status: Complete and Operational*  
 *Next Phase: [Security Monitoring Stack Deployment](02-security-monitoring.md)*

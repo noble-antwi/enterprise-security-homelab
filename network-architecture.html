@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pfSense Network Infrastructure Architecture</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding-bottom: 30px;
+            border-bottom: 3px solid #e9ecef;
+        }
+        
+        .header h1 {
+            font-size: 3.2em;
+            font-weight: 700;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, #667eea, #764ba2, #3498db);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease-in-out infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .header p {
+            font-size: 1.3em;
+            color: #6c757d;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1em;
+            color: #868e96;
+            font-style: italic;
+        }
+        
+        .diagram-container {
+            position: relative;
+            width: 100%;
+            height: 1000px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 3px solid #dee2e6;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: inset 0 8px 16px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .network-element {
+            position: absolute;
+            border-radius: 15px;
+            padding: 18px;
+            font-weight: 600;
+            text-align: center;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .network-element:hover {
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+        }
+
+        .network-element:active {
+            transform: translateY(-4px) scale(1.02);
+        }
+        
+        .internet {
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 140px;
+            height: 70px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f, #e74c3c);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        
+        .home-router {
+            top: 140px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 160px;
+            height: 70px;
+            background: linear-gradient(135deg, #4ecdc4, #44a08d, #2ecc71);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        
+        .pfsense {
+            top: 250px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 90px;
+            background: linear-gradient(135deg, #667eea, #764ba2, #8e44ad);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+        }
+        
+        .switch {
+            top: 380px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 240px;
+            height: 90px;
+            background: linear-gradient(135deg, #ffecd2, #fcb69f, #f39c12);
+            color: #2c3e50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        
+        .vlan {
+            width: 180px;
+            height: 140px;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            line-height: 1.4;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vlan::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: inherit;
+            opacity: 0.9;
+            z-index: -1;
+        }
+        
+        .vlan-management {
+            top: 520px;
+            left: 100px;
+            background: linear-gradient(135deg, #a8edea, #fed6e3, #ff9a9e);
+            color: #2c3e50;
+        }
+        
+        .vlan-blueteam {
+            top: 520px;
+            left: 320px;
+            background: linear-gradient(135deg, #3b82f6, #1e40af, #1e3a8a);
+        }
+        
+        .vlan-redteam {
+            top: 520px;
+            left: 540px;
+            background: linear-gradient(135deg, #ef4444, #dc2626, #b91c1c);
+        }
+        
+        .vlan-devops {
+            top: 700px;
+            left: 100px;
+            background: linear-gradient(135deg, #10b981, #059669, #047857);
+        }
+        
+        .vlan-enterprise {
+            top: 700px;
+            left: 320px;
+            background: linear-gradient(135deg, #f59e0b, #d97706, #b45309);
+        }
+        
+        .vlan-monitoring {
+            top: 700px;
+            left: 540px;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed, #6d28d9);
+        }
+        
+        .laptop {
+            top: 380px;
+            left: 900px;
+            width: 160px;
+            height: 70px;
+            background: linear-gradient(135deg, #2c3e50, #34495e, #4a5568);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+        }
+        
+        .connection {
+            position: absolute;
+            background: linear-gradient(45deg, #34495e, #2c3e50);
+            z-index: 1;
+            border-radius: 2px;
+        }
+        
+        .connection-vertical {
+            width: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .connection-horizontal {
+            height: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .connection-diagonal {
+            background: linear-gradient(45deg, #34495e, #2c3e50);
+            border-radius: 3px;
+        }
+        
+        .info-panel {
+            position: absolute;
+            right: 30px;
+            top: 30px;
+            width: 320px;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .info-panel h3 {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 12px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        
+        .info-item {
+            margin-bottom: 12px;
+            font-size: 13px;
+            line-height: 1.5;
+            padding: 8px 12px;
+            background: rgba(248, 249, 250, 0.8);
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .info-item strong {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .legend {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .legend-color {
+            width: 25px;
+            height: 25px;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .port-info {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            width: 700px;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .port-info h3 {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #f39c12;
+            padding-bottom: 12px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        
+        .port-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .port-table th, .port-table td {
+            border: 1px solid #e9ecef;
+            padding: 12px 10px;
+            text-align: left;
+        }
+        
+        .port-table th {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            font-weight: 700;
+            color: #2c3e50;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .trunk-port {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            font-weight: 600;
+        }
+        
+        .access-port {
+            background: linear-gradient(135deg, #f3e5f5, #e1bee7);
+            font-weight: 600;
+        }
+
+        .performance-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 12px;
+            height: 12px;
+            background: #2ecc71;
+            border-radius: 50%;
+            box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+        }
+
+        .network-element .subtitle {
+            font-size: 11px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        .click-indicator {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            font-size: 10px;
+            opacity: 0.7;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏗️ pfSense Network Infrastructure Architecture</h1>
+            <p>Enterprise-Grade VLAN Segmentation with TP-Link Managed Switch</p>
+            <div class="subtitle">Professional Network Design • Layer 2 Security • Centralized Management</div>
+        </div>
+        
+        <div class="diagram-container">
+            <!-- Enhanced Connection Lines -->
+            <div class="connection connection-vertical" style="top: 100px; height: 40px;"></div>
+            <div class="connection connection-vertical" style="top: 210px; height: 40px;"></div>
+            <div class="connection connection-vertical" style="top: 340px; height: 40px;"></div>
+            <div class="connection connection-horizontal" style="left: 720px; width: 180px; top: 422px;"></div>
+            
+            <!-- VLAN Connection Lines with Enhanced Styling -->
+            <div class="connection connection-diagonal" style="top: 470px; left: 190px; width: 6px; height: 50px;"></div>
+            <div class="connection connection-diagonal" style="top: 470px; left: 410px; width: 6px; height: 50px;"></div>
+            <div class="connection connection-diagonal" style="top: 470px; left: 630px; width: 6px; height: 50px;"></div>
+            <div class="connection connection-diagonal" style="top: 470px; left: 190px; width: 6px; height: 230px;"></div>
+            <div class="connection connection-diagonal" style="top: 470px; left: 410px; width: 6px; height: 230px;"></div>
+            <div class="connection connection-diagonal" style="top: 470px; left: 630px; width: 6px; height: 230px;"></div>
+            
+            <!-- Network Infrastructure Elements -->
+            <div class="network-element internet">
+                <div class="performance-indicator"></div>
+                <div>🌐 INTERNET</div>
+                <div class="subtitle">External Network</div>
+                <div class="click-indicator">ℹ️</div>
+            </div>
+            
+            <div class="network-element home-router">
+                <div class="performance-indicator"></div>
+                <div>🏠 Home Router</div>
+                <div class="subtitle">ISP Gateway</div>
+                <div class="click-indicator">ℹ️</div>
+            </div>
+            
+            <div class="network-element pfsense">
+                <div class="performance-indicator"></div>
+                <div>🔥 pfSense Firewall</div>
+                <div class="subtitle">WAN: DHCP • LAN: 192.168.99.1</div>
+                <div class="click-indicator">📋</div>
+            </div>
+            
+            <div class="network-element switch">
+                <div class="performance-indicator"></div>
+                <div>🔌 TP-Link TL-SG108E</div>
+                <div class="subtitle">8-Port Gigabit Smart Managed</div>
+                <div class="click-indicator">🔧</div>
+            </div>
+            
+            <div class="network-element laptop">
+                <div class="performance-indicator"></div>
+                <div>💻 Primary Laptop</div>
+                <div class="subtitle">2 NICs + VM Host</div>
+                <div class="click-indicator">ℹ️</div>
+            </div>
+            
+            <!-- Enhanced VLAN Segments -->
+            <div class="network-element vlan vlan-management">
+                <div class="performance-indicator"></div>
+                <div><strong>🛠️ Management</strong></div>
+                <div>VLAN 10</div>
+                <div>192.168.10.0/24</div>
+                <div>pfSense Administration</div>
+                <div class="subtitle">Switch Port 3</div>
+                <div class="click-indicator">📊</div>
+            </div>
+            
+            <div class="network-element vlan vlan-blueteam">
+                <div class="performance-indicator"></div>
+                <div><strong>🛡️ BlueTeam</strong></div>
+                <div>VLAN 20</div>
+                <div>192.168.20.0/24</div>
+                <div>Security Monitoring</div>
+                <div class="subtitle">Switch Port 4</div>
+                <div class="click-indicator">📊</div>
+            </div>
+            
+            <div class="network-element vlan vlan-redteam">
+                <div class="performance-indicator"></div>
+                <div><strong>⚔️ RedTeam</strong></div>
+                <div>VLAN 30</div>
+                <div>192.168.30.0/24</div>
+                <div>Penetration Testing</div>
+                <div class="subtitle">Switch Port 5</div>
+                <div class="click-indicator">📊</div>
+            </div>
+            
+            <div class="network-element vlan vlan-devops">
+                <div class="performance-indicator"></div>
+                <div><strong>🚀 DevOps</strong></div>
+                <div>VLAN 40</div>
+                <div>192.168.40.0/24</div>
+                <div>CI/CD Pipeline</div>
+                <div class="subtitle">Switch Port 6</div>
+                <div class="click-indicator">📊</div>
+            </div>
+            
+            <div class="network-element vlan vlan-enterprise">
+                <div class="performance-indicator"></div>
+                <div><strong>🏢 EnterpriseLAN</strong></div>
+                <div>VLAN 50</div>
+                <div>192.168.50.0/24</div>
+                <div>Business Services</div>
+                <div class="subtitle">Switch Port 7</div>
+                <div class="click-indicator">📊</div>
+            </div>
+            
+            <div class="network-element vlan vlan-monitoring">
+                <div class="performance-indicator"></div>
+                <div><strong>📊 Monitoring</strong></div>
+                <div>VLAN 60</div>
+                <div>192.168.60.0/24</div>
+                <div>Observability Stack</div>
+                <div class="subtitle">Switch Port 8</div>
+                <div class="click-indicator">📊</div>
+            </div>
+            
+            <!-- Enhanced Configuration Summary Panel -->
+            <div class="info-panel">
+                <h3>🔧 Configuration Summary</h3>
+                <div class="info-item"><strong>Security Model:</strong> Default-Deny with explicit allow rules</div>
+                <div class="info-item"><strong>NAT Configuration:</strong> Hybrid Outbound NAT mode</div>
+                <div class="info-item"><strong>DHCP Strategy:</strong> .50-.100 dynamic pool per VLAN</div>
+                <div class="info-item"><strong>Static Allocation:</strong> .2-.49 reserved for infrastructure</div>
+                <div class="info-item"><strong>Management Access:</strong> VLAN 10 exclusive access</div>
+                <div class="info-item"><strong>Inter-VLAN Policy:</strong> Firewall controlled isolation</div>
+                <div class="info-item"><strong>Internet Access:</strong> All VLANs via pfSense NAT</div>
+                <div class="info-item"><strong>Admin Interface:</strong> http://192.168.10.1</div>
+                <div class="info-item"><strong>Status:</strong> <span style="color: #2ecc71; font-weight: bold;">✅ Fully Operational</span></div>
+            </div>
+            
+            <!-- Enhanced Switch Port Configuration Table -->
+            <div class="port-info">
+                <h3>🔌 Switch Port Configuration Matrix</h3>
+                <table class="port-table">
+                    <thead>
+                        <tr>
+                            <th>Port</th>
+                            <th>Configuration Type</th>
+                            <th>VLAN Assignment</th>
+                            <th>Connected Device/Purpose</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="trunk-port">
+                            <td><strong>Port 1</strong></td>
+                            <td>Trunk (Tagged)</td>
+                            <td>ALL VLANs (10,20,30,40,50,60)</td>
+                            <td>pfSense ue0 Interface Connection</td>
+                            <td><span style="color: #2ecc71;">🟢 Active</span></td>
+                        </tr>
+                        <tr class="trunk-port">
+                            <td><strong>Port 2</strong></td>
+                            <td>Trunk (Tagged)</td>
+                            <td>ALL VLANs (10,20,30,40,50,60)</td>
+                            <td>Laptop USB NIC (VM Management)</td>
+                            <td><span style="color: #2ecc71;">🟢 Active</span></td>
+                        </tr>
+                        <tr class="access-port">
+                            <td><strong>Port 3</strong></td>
+                            <td>Access (Untagged)</td>
+                            <td>VLAN 10 Management Only</td>
+                            <td>Direct Management Network Access</td>
+                            <td><span style="color: #2ecc71;">🟢 Ready</span></td>
+                        </tr>
+                        <tr class="access-port">
+                            <td><strong>Port 4</strong></td>
+                            <td>Access (Untagged)</td>
+                            <td>VLAN 20 BlueTeam Only</td>
+                            <td>Security Monitoring Infrastructure</td>
+                            <td><span style="color: #2ecc71;">🟢 Ready</span></td>
+                        </tr>
+                        <tr class="access-port">
+                            <td><strong>Port 5</strong></td>
+                            <td>Access (Untagged)</td>
+                            <td>VLAN 30 RedTeam Only</td>
+                            <td>Isolated Penetration Testing</td>
+                            <td><span style="color: #2ecc71;">🟢 Ready</span></td>
+                        </tr>
+                        <tr class="access-port">
+                            <td><strong>Port 6</strong></td>
+                            <td>Access (Untagged)</td>
+                            <td>VLAN 40 DevOps Only</td>
+                            <td>CI/CD and Development Tools</td>
+                            <td><span style="color: #2ecc71;">🟢 Ready</span></td>
+                        </tr>
+                        <tr class="access-port">
+                            <td><strong>Port 7</strong></td>
+                            <td>Access (Untagged)</td>
+                            <td>VLAN 50 EnterpriseLAN Only</td>
+                            <td>Business Application Services</td>
+                            <td><span style="color: #2ecc71;">🟢 Ready</span></td>
+                        </tr>
+                        <tr class="access-port">
+                            <td><strong>Port 8</strong></td>
+                            <td>Access (Untagged)</td>
+                            <td>VLAN 60 Monitoring Only</td>
+                            <td>Observability and Metrics Stack</td>
+                            <td><span style="color: #2ecc71;">🟢 Ready</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Enhanced Legend with Professional Styling -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(45deg, #ff6b6b, #ee5a6f);"></div>
+                <span><strong>Internet/External</strong> - Public network connectivity</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(45deg, #667eea, #764ba2);"></div>
+                <span><strong>pfSense Firewall</strong> - Core security and routing</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(45deg, #ffecd2, #fcb69f);"></div>
+                <span><strong>Managed Switch</strong> - VLAN segmentation hub</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(45deg, #a8edea, #fed6e3);"></div>
+                <span><strong>Management VLAN</strong> - Administrative access zone</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(45deg, #3b82f6, #ef4444);"></div>
+                <span><strong>Security VLANs</strong> - Blue/Red team operations</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(45deg, #10b981, #8b5cf6);"></div>
+                <span><strong>Operational VLANs</strong> - DevOps, Enterprise, Monitoring</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Professional enhanced interactive features for browser use
+        const networkDetails = {
+            'internet': {
+                title: '🌐 Internet Connectivity',
+                content: `
+<div style="font-family: 'Segoe UI', sans-serif; line-height: 1.6;">
+<h4 style="color: #e74c3c; margin-bottom: 15px;">🌐 External Network Configuration</h4>
+
+<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>🔗 Connection Details:</strong><br>
+• <strong>Provider:</strong> Internet Service Provider<br>
+• <strong>Type:</strong> Broadband/Cable/Fiber connection<br>
+• <strong>Protocol:</strong> DHCP assignment from ISP<br>
+• <strong>Security:</strong> External firewall protection via pfSense
+</div>
+
+<div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>📊 Network Flow:</strong><br>
+• All internal traffic routes through pfSense firewall<br>
+• NAT translation for all VLAN segments<br>
+• Centralized internet access control<br>
+• Traffic monitoring and logging enabled
+</div>
+
+<div style="background: #fff3cd; padding: 15px; border-radius: 8px;">
+<strong>🛡️ Security Measures:</strong><br>
+• Default-deny firewall policy<br>
+• Deep packet inspection<br>
+• Intrusion detection capabilities<br>
+• Bandwidth monitoring and QoS
+</div>
+</div>
+                `
+            },
+            'home-router': {
+                title: '🏠 Home Router Gateway',
+                content: `
+<div style="font-family: 'Segoe UI', sans-serif; line-height: 1.6;">
+<h4 style="color: #27ae60; margin-bottom: 15px;">🏠 ISP Gateway Configuration</h4>
+
+<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>🔧 Basic Configuration:</strong><br>
+• <strong>Function:</strong> ISP provided gateway device<br>
+• <strong>Mode:</strong> Bridge/Passthrough to pfSense<br>
+• <strong>DHCP:</strong> Disabled (handled by pfSense)<br>
+• <strong>WiFi:</strong> Disabled for security
+</div>
+
+<div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>📡 Network Role:</strong><br>
+• Provides WAN connectivity to pfSense<br>
+• Minimal configuration for security<br>
+• Acts as transparent bridge<br>
+• ISP DHCP assignment forwarded
+</div>
+
+<div style="background: #fff3cd; padding: 15px; border-radius: 8px;">
+<strong>🔒 Security Considerations:</strong><br>
+• All routing handled by pfSense<br>
+• No direct device access<br>
+• Reduced attack surface<br>
+• Enterprise-grade firewall protection
+</div>
+</div>
+                `
+            },
+            'pfsense': {
+                title: '🔥 pfSense Firewall Configuration',
+                content: `
+<div style="font-family: 'Segoe UI', sans-serif; line-height: 1.6;">
+<h4 style="color: #8e44ad; margin-bottom: 15px;">🔥 Enterprise Firewall & Router</h4>
+
+<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>🖥️ Hardware Configuration:</strong><br>
+• <strong>Platform:</strong> Dedicated desktop machine<br>
+• <strong>NICs:</strong> 2 x Gigabit Ethernet interfaces<br>
+• <strong>WAN:</strong> DHCP assignment from ISP<br>
+• <strong>LAN:</strong> 192.168.99.1/24 (VLAN parent interface)
+</div>
+
+<div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>🛡️ Security Architecture:</strong><br>
+• <strong>Firewall Policy:</strong> Default-deny with explicit allow rules<br>
+• <strong>VLAN Segmentation:</strong> 6 isolated network zones<br>
+• <strong>NAT Configuration:</strong> Hybrid outbound mode<br>
+• <strong>Admin Access:</strong> Management VLAN (10) only
+</div>
+
+<div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>🌐 VLAN Implementation:</strong><br>
+• <strong>Management (10):</strong> 192.168.10.0/24 - pfSense GUI access<br>
+• <strong>BlueTeam (20):</strong> 192.168.20.0/24 - Security monitoring<br>
+• <strong>RedTeam (30):</strong> 192.168.30.0/24 - Penetration testing<br>
+• <strong>DevOps (40):</strong> 192.168.40.0/24 - CI/CD infrastructure<br>
+• <strong>Enterprise (50):</strong> 192.168.50.0/24 - Business services<br>
+• <strong>Monitoring (60):</strong> 192.168.60.0/24 - Observability stack
+</div>
+
+<div style="background: #fff3cd; padding: 15px; border-radius: 8px;">
+<strong>⚙️ Advanced Features:</strong><br>
+• DHCP server for all VLANs (.50-.100 dynamic pools)<br>
+• Static IP allocation (.2-.49 per VLAN)<br>
+• Inter-VLAN routing with firewall control<br>
+• Web GUI: <strong>http://192.168.10.1</strong><br>
+• Status: <span style="color: #27ae60; font-weight: bold;">✅ Fully Operational</span>
+</div>
+</div>
+                `
+            },
+            'switch': {
+                title: '🔌 TP-Link TL-SG108E Configuration',
+                content: `
+<div style="font-family: 'Segoe UI', sans-serif; line-height: 1.6;">
+<h4 style="color: #f39c12; margin-bottom: 15px;">🔌 Smart Managed Switch Configuration</h4>
+
+<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>🔧 Hardware Specifications:</strong><br>
+• <strong>Model:</strong> TP-Link TL-SG108E<br>
+• <strong>Ports:</strong> 8 x Gigabit Ethernet (10/100/1000 Mbps)<br>
+• <strong>Features:</strong> VLAN tagging, Smart managed<br>
+• <strong>Management:</strong> Web-based configuration interface
+</div>
+
+<div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>🏗️ Trunk Port Configuration (Ports 1-2):</strong><br>
+• <strong>Port 1:</strong> pfSense ue0 interface → ALL VLANs tagged<br>
+• <strong>Port 2:</strong> Laptop USB NIC → ALL VLANs tagged<br>
+• <strong>VLAN IDs:</strong> 10, 20, 30, 40, 50, 60<br>
+• <strong>Purpose:</strong> Carry multiple VLAN traffic
+</div>
+
+<div style="background: #f3e5f5; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>🎯 Access Port Configuration (Ports 3-8):</strong><br>
+• <strong>Port 3:</strong> Management VLAN 10 (untagged)<br>
+• <strong>Port 4:</strong> BlueTeam VLAN 20 (untagged)<br>
+• <strong>Port 5:</strong> RedTeam VLAN 30 (untagged)<br>
+• <strong>Port 6:</strong> DevOps VLAN 40 (untagged)<br>
+• <strong>Port 7:</strong> EnterpriseLAN VLAN 50 (untagged)<br>
+• <strong>Port 8:</strong> Monitoring VLAN 60 (untagged)
+</div>
+
+<div style="background: #e8f5e8; padding: 15px; border-radius: 8px;">
+<strong>📊 Benefits & Features:</strong><br>
+• Layer 2 VLAN isolation between ports<br>
+• Easy device assignment to specific VLANs<br>
+• Scalable network segmentation<br>
+• Professional network management<br>
+• Status: <span style="color: #27ae60; font-weight: bold;">✅ All Ports Operational</span>
+</div>
+</div>
+                `
+            },
+            'laptop': {
+                title: '💻 Primary Laptop Configuration',
+                content: `
+<div style="font-family: 'Segoe UI', sans-serif; line-height: 1.6;">
+<h4 style="color: #34495e; margin-bottom: 15px;">💻 Administrative Workstation</h4>
+
+<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>🖥️ Hardware Configuration:</strong><br>
+• <strong>Primary NIC:</strong> Built-in Ethernet interface<br>
+• <strong>Secondary NIC:</strong> USB Ethernet adapter<br>
+• <strong>Connection:</strong> Switch Port 2 (Trunk)<br>
+• <strong>VLAN Access:</strong> All VLANs (10,20,30,40,50,60)
+</div>
+
+<div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>🔧 Network Configuration:</strong><br>
+• <strong>Trunk Connection:</strong> Tagged VLAN traffic<br>
+• <strong>VM Management:</strong> Virtual machine hosting<br>
+• <strong>Administrative Access:</strong> Full network control<br>
+• <strong>Management GUI:</strong> pfSense administration
+</div>
+
+<div style="background: #fff3cd; padding: 15px; border-radius: 8px;">
+<strong>🎯 Operational Use:</strong><br>
+• Virtual machine deployment across VLANs<br>
+• Network administration and monitoring<br>
+• Security testing coordination<br>
+• DevOps pipeline management<br>
+• Status: <span style="color: #27ae60; font-weight: bold;">✅ Ready for Deployment</span>
+</div>
+</div>
+                `
+            }
+        };
+
+        // VLAN detailed configurations
+        const vlanDetails = {
+            'vlan-management': {
+                title: '🛠️ Management VLAN (VLAN 10)',
+                content: `
+<div style="font-family: 'Segoe UI', sans-serif; line-height: 1.6;">
+<h4 style="color: #2c3e50; margin-bottom: 15px;">🛠️ Network Management & Administration</h4>
+
+<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>📋 Network Configuration:</strong><br>
+• <strong>VLAN ID:</strong> 10<br>
+• <strong>Subnet:</strong> 192.168.10.0/24<br>
+• <strong>Gateway:</strong> 192.168.10.1 (pfSense)<br>
+• <strong>DHCP Pool:</strong> 192.168.10.50 - 192.168.10.100<br>
+• <strong>Static Range:</strong> 192.168.10.2 - 192.168.10.49
+</div>
+
+<div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>🎯 Primary Functions:</strong><br>
+• pfSense Web GUI administration<br>
+• Network device management access<br>
+• Administrative system monitoring<br>
+• Trusted device network access<br>
+• Infrastructure management tools
+</div>
+
+<div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>🔒 Security Profile:</strong><br>
+• <strong>Access Level:</strong> Most permissive<br>
+• <strong>Internet Access:</strong> Full unrestricted<br>
+• <strong>pfSense GUI:</strong> Exclusive access<br>
+• <strong>Firewall Rules:</strong> ICMP, DNS, HTTP/HTTPS allowed<br>
+• <strong>Device Restriction:</strong> Trusted administrators only
+</div>
+
+<div style="background: #fff3cd; padding: 15px; border-radius: 8px;">
+<strong>🔌 Physical Access:</strong><br>
+• <strong>Switch Port:</strong> Port 3 (Access/Untagged)<br>
+• <strong>Connection Type:</strong> Direct device access<br>
+• <strong>Usage:</strong> Administrative workstations<br>
+• Status: <span style="color: #27ae60; font-weight: bold;">✅ Operational</span>
+</div>
+</div>
+                `
+            },
+            'vlan-blueteam': {
+                title: '🛡️ BlueTeam Security VLAN (VLAN 20)',
+                content: `
+<div style="font-family: 'Segoe UI', sans-serif; line-height: 1.6;">
+<h4 style="color: #1e40af; margin-bottom: 15px;">🛡️ Defensive Security Operations</h4>
+
+<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>📋 Network Configuration:</strong><br>
+• <strong>VLAN ID:</strong> 20<br>
+• <strong>Subnet:</strong> 192.168.20.0/24<br>
+• <strong>Gateway:</strong> 192.168.20.1 (pfSense)<br>
+• <strong>DHCP Pool:</strong> 192.168.20.50 - 192.168.20.100<br>
+• <strong>Static Range:</strong> 192.168.20.2 - 192.168.20.49
+</div>
+
+<div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>🛡️ Security Infrastructure:</strong><br>
+• <strong>Wazuh SIEM:</strong> Security information & event management<br>
+• <strong>ELK Stack:</strong> Elasticsearch, Logstash, Kibana<br>
+• <strong>IDS Sensors:</strong> Intrusion detection systems<br>
+• <strong>Defense Tools:</strong> Security monitoring applications<br>
+• <strong>Log Analysis:</strong> Centralized logging platform
+</div>
+
+<div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>🔒 Security Profile:</strong><br>
+• <strong>Internet Access:</strong> Enabled for security tool updates<br>
+• <strong>Isolation:</strong> Separated from attack simulation<br>
+• <strong>Monitoring:</strong> Real-time threat detection<br>
+• <strong>Response:</strong> Incident response capabilities
+</div>
+
+<div style="background: #fff3cd; padding: 15px; border-radius: 8px;">
+<strong>🔌 Physical Access:</strong><br>
+• <strong>Switch Port:</strong> Port 4 (Access/Untagged)<br>
+• <strong>Purpose:</strong> Security monitoring infrastructure<br>
+• Status: <span style="color: #27ae60; font-weight: bold;">✅ Ready for SIEM Deployment</span>
+</div>
+</div>
+                `
+            },
+            'vlan-redteam': {
+                title: '⚔️ RedTeam Attack VLAN (VLAN 30)',
+                content: `
+<div style="font-family: 'Segoe UI', sans-serif; line-height: 1.6;">
+<h4 style="color: #dc2626; margin-bottom: 15px;">⚔️ Offensive Security & Penetration Testing</h4>
+
+<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>📋 Network Configuration:</strong><br>
+• <strong>VLAN ID:</strong> 30<br>
+• <strong>Subnet:</strong> 192.168.30.0/24<br>
+• <strong>Gateway:</strong> 192.168.30.1 (pfSense)<br>
+• <strong>DHCP Pool:</strong> 192.168.30.50 - 192.168.30.100<br>
+• <strong>Static Range:</strong> 192.168.30.2 - 192.168.30.49
+</div>
+
+<div style="background: #fee2e2; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>⚔️ Attack Simulation Environment:</strong><br>
+• <strong>Penetration Testing:</strong> Controlled attack scenarios<br>
+• <strong>Vulnerability Assessment:</strong> Security weakness identification<br>
+• <strong>Exploit Development:</strong> Custom attack tool creation<br>
+• <strong>Red Team Exercises:</strong> Advanced persistent threat simulation<br>
+• <strong>Security Research:</strong> Offensive security techniques
+</div>
+
+<div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>🔒 Isolation & Security:</strong><br>
+• <strong>Network Isolation:</strong> Completely separated from other VLANs<br>
+• <strong>Attack Containment:</strong> Prevents lateral movement<br>
+• <strong>Internet Access:</strong> Limited to tool downloads only<br>
+• <strong>Monitoring:</strong> All activities logged and monitored
+</div>
+
+<div style="background: #e8f5e8; padding: 15px; border-radius: 8px;">
+<strong>🔌 Physical Access:</strong><br>
+• <strong>Switch Port:</strong> Port 5 (Access/Untagged)<br>
+• <strong>Purpose:</strong> Isolated penetration testing environment<br>
+• Status: <span style="color: #27ae60; font-weight: bold;">✅ Secure & Isolated</span>
+</div>
+</div>
+                `
+            },
+            'vlan-devops': {
+                title: '🚀 DevOps Pipeline VLAN (VLAN 40)',
+                content: `
+<div style="font-family: 'Segoe UI', sans-serif; line-height: 1.6;">
+<h4 style="color: #059669; margin-bottom: 15px;">🚀 Development & Operations Pipeline</h4>
+
+<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>📋 Network Configuration:</strong><br>
+• <strong>VLAN ID:</strong> 40<br>
+• <strong>Subnet:</strong> 192.168.40.0/24<br>
+• <strong>Gateway:</strong> 192.168.40.1 (pfSense)<br>
+• <strong>DHCP Pool:</strong> 192.168.40.50 - 192.168.40.100<br>
+• <strong>Static Range:</strong> 192.168.40.2 - 192.168.40.49
+</div>
+
+<div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>🔧 DevOps Infrastructure:</strong><br>
+• <strong>CI/CD Pipelines:</strong> Continuous integration & deployment<br>
+• <strong>Build Servers:</strong> Automated application building<br>
+• <strong>Container Registry:</strong> Docker image management<br>
+• <strong>Deployment Automation:</strong> Infrastructure as code<br>
+• <strong>DevSecOps Tools:</strong> Security integrated development
+</div>
+
+<div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>🛠️ Development Tools:</strong><br>
+• <strong>Version Control:</strong> Git repositories<br>
+• <strong>Package Management:</strong> Artifact repositories<br>
+• <strong>Testing Frameworks:</strong> Automated testing suites<br>
+• <strong>Deployment Orchestration:</strong> Kubernetes/Docker Swarm
+</div>
+
+<div style="background: #fff3cd; padding: 15px; border-radius: 8px;">
+<strong>🔌 Physical Access:</strong><br>
+• <strong>Switch Port:</strong> Port 6 (Access/Untagged)<br>
+• <strong>Internet Access:</strong> Package downloads & repository access<br>
+• Status: <span style="color: #27ae60; font-weight: bold;">✅ Ready for CI/CD Deployment</span>
+</div>
+</div>
+                `
+            },
+            'vlan-enterprise': {
+                title: '🏢 EnterpriseLAN VLAN (VLAN 50)',
+                content: `
+<div style="font-family: 'Segoe UI', sans-serif; line-height: 1.6;">
+<h4 style="color: #d97706; margin-bottom: 15px;">🏢 Business Services & Corporate Applications</h4>
+
+<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>📋 Network Configuration:</strong><br>
+• <strong>VLAN ID:</strong> 50<br>
+• <strong>Subnet:</strong> 192.168.50.0/24<br>
+• <strong>Gateway:</strong> 192.168.50.1 (pfSense)<br>
+• <strong>DHCP Pool:</strong> 192.168.50.50 - 192.168.50.100<br>
+• <strong>Static Range:</strong> 192.168.50.2 - 192.168.50.49
+</div>
+
+<div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>🏢 Business Services:</strong><br>
+• <strong>Internal DNS:</strong> Corporate domain name resolution<br>
+• <strong>Web Applications:</strong> Business productivity tools<br>
+• <strong>File Servers:</strong> Document management systems<br>
+• <strong>Database Services:</strong> Corporate data repositories<br>
+• <strong>Communication Tools:</strong> Internal messaging systems
+</div>
+
+<div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>💼 Corporate Environment Simulation:</strong><br>
+• <strong>Active Directory:</strong> User authentication services<br>
+• <strong>Email Servers:</strong> Corporate email infrastructure<br>
+• <strong>Intranet Portal:</strong> Internal company websites<br>
+• <strong>Business Applications:</strong> ERP, CRM systems
+</div>
+
+<div style="background: #e3f2fd; padding: 15px; border-radius: 8px;">
+<strong>🔌 Physical Access:</strong><br>
+• <strong>Switch Port:</strong> Port 7 (Access/Untagged)<br>
+• <strong>Security Profile:</strong> Standard corporate policies<br>
+• Status: <span style="color: #27ae60; font-weight: bold;">✅ Ready for Business Services</span>
+</div>
+</div>
+                `
+            },
+            'vlan-monitoring': {
+                title: '📊 Monitoring Stack VLAN (VLAN 60)',
+                content: `
+<div style="font-family: 'Segoe UI', sans-serif; line-height: 1.6;">
+<h4 style="color: #7c3aed; margin-bottom: 15px;">📊 Observability & Performance Monitoring</h4>
+
+<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>📋 Network Configuration:</strong><br>
+• <strong>VLAN ID:</strong> 60<br>
+• <strong>Subnet:</strong> 192.168.60.0/24<br>
+• <strong>Gateway:</strong> 192.168.60.1 (pfSense)<br>
+• <strong>DHCP Pool:</strong> 192.168.60.50 - 192.168.60.100<br>
+• <strong>Static Range:</strong> 192.168.60.2 - 192.168.60.49
+</div>
+
+<div style="background: #f3e8ff; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>📈 Observability Stack:</strong><br>
+• <strong>Prometheus:</strong> Metrics collection & storage<br>
+• <strong>Grafana:</strong> Visualization & dashboarding<br>
+• <strong>Loki:</strong> Log aggregation & analysis<br>
+• <strong>AlertManager:</strong> Alert routing & management<br>
+• <strong>Jaeger:</strong> Distributed tracing platform
+</div>
+
+<div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+<strong>🔍 Monitoring Capabilities:</strong><br>
+• <strong>Infrastructure Monitoring:</strong> Server & network metrics<br>
+• <strong>Application Performance:</strong> APM & user experience<br>
+• <strong>Log Management:</strong> Centralized log analysis<br>
+• <strong>Network Analytics:</strong> Traffic flow monitoring<br>
+• <strong>Security Metrics:</strong> Security event correlation
+</div>
+
+<div style="background: #fff3cd; padding: 15px; border-radius: 8px;">
+<strong>🔌 Physical Access:</strong><br>
+• <strong>Switch Port:</strong> Port 8 (Access/Untagged)<br>
+• <strong>Out-of-Band:</strong> Independent monitoring network<br>
+• Status: <span style="color: #27ae60; font-weight: bold;">✅ Ready for Observability Deployment</span>
+</div>
+</div>
+                `
+            }
+        };
+
+        // Enhanced professional interaction handlers
+        function showProfessionalAlert(title, content) {
+            // Create a professional modal dialog
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                backdrop-filter: blur(5px);
+                animation: fadeIn 0.3s ease;
+            `;
+
+            const dialog = document.createElement('div');
+            dialog.style.cssText = `
+                background: white;
+                border-radius: 20px;
+                max-width: 600px;
+                max-height: 80vh;
+                overflow-y: auto;
+                box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+                position: relative;
+                margin: 20px;
+                animation: slideIn 0.3s ease;
+            `;
+
+            const header = document.createElement('div');
+            header.style.cssText = `
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                padding: 20px 30px;
+                border-radius: 20px 20px 0 0;
+                font-weight: bold;
+                font-size: 18px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            `;
+            header.innerHTML = `${title}<span style="cursor: pointer; font-size: 24px; opacity: 0.8;" onclick="this.closest('.modal').remove()">×</span>`;
+
+            const body = document.createElement('div');
+            body.style.cssText = `
+                padding: 30px;
+                font-family: 'Segoe UI', sans-serif;
+            `;
+            body.innerHTML = content;
+
+            dialog.appendChild(header);
+            dialog.appendChild(body);
+            modal.appendChild(dialog);
+            modal.className = 'modal';
+
+            // Add CSS animations
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes slideIn { from { transform: translateY(-50px) scale(0.9); } to { transform: translateY(0) scale(1); } }
+            `;
+            document.head.appendChild(style);
+
+            document.body.appendChild(modal);
+
+            // Close on outside click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.remove();
+            });
+
+            // Close on escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') modal.remove();
+            });
+        }
+
+        // Enhanced hover effects with professional styling
+        document.querySelectorAll('.network-element').forEach(element => {
+            element.addEventListener('mouseenter', function() {
+                this.style.zIndex = '99';
+                this.style.transform = this.style.transform.replace(/scale\([^)]*\)/, '') + ' scale(1.05)';
+            });
+            
+            element.addEventListener('mouseleave', function() {
+                this.style.zIndex = '';
+                this.style.transform = this.style.transform.replace(/scale\([^)]*\)/, '') + ' scale(1)';
+            });
+        });
+
+        // Professional click handlers for all network elements
+        document.querySelector('.internet').addEventListener('click', () => {
+            showProfessionalAlert(networkDetails.internet.title, networkDetails.internet.content);
+        });
+
+        document.querySelector('.home-router').addEventListener('click', () => {
+            showProfessionalAlert(networkDetails['home-router'].title, networkDetails['home-router'].content);
+        });
+
+        document.querySelector('.pfsense').addEventListener('click', () => {
+            showProfessionalAlert(networkDetails.pfsense.title, networkDetails.pfsense.content);
+        });
+
+        document.querySelector('.switch').addEventListener('click', () => {
+            showProfessionalAlert(networkDetails.switch.title, networkDetails.switch.content);
+        });
+
+        document.querySelector('.laptop').addEventListener('click', () => {
+            showProfessionalAlert(networkDetails.laptop.title, networkDetails.laptop.content);
+        });
+
+        // VLAN click handlers
+        document.querySelector('.vlan-management').addEventListener('click', () => {
+            showProfessionalAlert(vlanDetails['vlan-management'].title, vlanDetails['vlan-management'].content);
+        });
+
+        document.querySelector('.vlan-blueteam').addEventListener('click', () => {
+            showProfessionalAlert(vlanDetails['vlan-blueteam'].title, vlanDetails['vlan-blueteam'].content);
+        });
+
+        document.querySelector('.vlan-redteam').addEventListener('click', () => {
+            showProfessionalAlert(vlanDetails['vlan-redteam'].title, vlanDetails['vlan-redteam'].content);
+        });
+
+        document.querySelector('.vlan-devops').addEventListener('click', () => {
+            showProfessionalAlert(vlanDetails['vlan-devops'].title, vlanDetails['vlan-devops'].content);
+        });
+
+        document.querySelector('.vlan-enterprise').addEventListener('click', () => {
+            showProfessionalAlert(vlanDetails['vlan-enterprise'].title, vlanDetails['vlan-enterprise'].content);
+        });
+
+        document.querySelector('.vlan-monitoring').addEventListener('click', () => {
+            showProfessionalAlert(vlanDetails['vlan-monitoring'].title, vlanDetails['vlan-monitoring'].content);
+        });
+
+        // Add keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'h' || e.key === 'H') {
+                showProfessionalAlert('🎯 Interactive Help', `
+<div style="font-family: 'Segoe UI', sans-serif; line-height: 1.8;">
+<h4 style="color: #2c3e50; margin-bottom: 20px;">🎯 Interactive Network Diagram Guide</h4>
+
+<div style="background: #e8f5e8; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+<strong>🖱️ Mouse Interactions:</strong><br>
+• <strong>Hover:</strong> Move mouse over any element for enhanced visual effects<br>
+• <strong>Click:</strong> Click any network component for detailed configuration information<br>
+• <strong>Scroll:</strong> Use mouse wheel to scroll through detailed information panels
+</div>
+
+<div style="background: #e3f2fd; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+<strong>⌨️ Keyboard Shortcuts:</strong><br>
+• <strong>H:</strong> Show this help dialog<br>
+• <strong>Escape:</strong> Close any open information panel<br>
+• <strong>Tab:</strong> Navigate between interactive elements
+</div>
+
+<div style="background: #fff3cd; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+<strong>🔍 Available Information:</strong><br>
+• <strong>Network Elements:</strong> Internet, Router, pfSense, Switch, Laptop<br>
+• <strong>VLAN Details:</strong> All 6 VLANs with comprehensive configuration data<br>
+• <strong>Technical Specs:</strong> IP ranges, security profiles, physical connections<br>
+• <strong>Port Mapping:</strong> Switch port assignments and VLAN configurations
+</div>
+
+<div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+<strong>📊 Features:</strong><br>
+• Professional network documentation<br>
+• Real-time status indicators<br>
+• Comprehensive security information<br>
+• Enterprise-grade network design<br>
+• Interactive learning experience
+</div>
+</div>
+                `);
+            }
+        });
+
+        // Add loading animation and status indicators
+        window.addEventListener('load', function() {
+            // Animate performance indicators
+            document.querySelectorAll('.performance-indicator').forEach((indicator, index) => {
+                setTimeout(() => {
+                    indicator.style.animation = 'pulse 2s infinite';
+                }, index * 200);
+            });
+
+            // Add network status check simulation
+            setTimeout(() => {
+                console.log('🌐 Network Architecture Diagram Loaded Successfully');
+                console.log('📊 All systems operational - Ready for interaction');
+                console.log('💡 Press "H" for interactive help');
+            }, 1000);
+        });
+
+        // Add connection line animations
+        document.querySelectorAll('.connection').forEach((connection, index) => {
+            connection.style.opacity = '0.8';
+            connection.addEventListener('mouseenter', function() {
+                this.style.background = 'linear-gradient(45deg, #3498db, #2980b9)';
+                this.style.opacity = '1';
+            });
+            connection.addEventListener('mouseleave', function() {
+                this.style.background = 'linear-gradient(45deg, #34495e, #2c3e50)';
+                this.style.opacity = '0.8';
+            });
+        });
+
+        // Professional touch interactions for mobile
+        document.querySelectorAll('.network-element').forEach(element => {
+            element.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                this.style.transform = this.style.transform + ' scale(0.95)';
+            });
+            
+            element.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                this.style.transform = this.style.transform.replace(' scale(0.95)', '');
+                // Trigger click event for touch devices
+                this.click();
+            });
+        });
+
+        // Add network topology validation
+        function validateNetworkTopology() {
+            const requiredElements = [
+                '.internet', '.home-router', '.pfsense', '.switch', '.laptop',
+                '.vlan-management', '.vlan-blueteam', '.vlan-redteam',
+                '.vlan-devops', '.vlan-enterprise', '.vlan-monitoring'
+            ];
+            
+            const missingElements = requiredElements.filter(selector => 
+                !document.querySelector(selector)
+            );
+            
+            if (missingElements.length === 0) {
+                console.log('✅ Network topology validation passed - All elements present');
+                return true;
+            } else {
+                console.warn('⚠️ Missing network elements:', missingElements);
+                return false;
+            }
+        }
+
+        // Initialize professional network diagram
+        document.addEventListener('DOMContentLoaded', function() {
+            validateNetworkTopology();
+            console.log('🏗️ Professional pfSense Network Architecture initialized');
+            console.log('🎯 Interactive features enabled - Click any element for details');
+        });
+    </script>
+</body>
+</html>
