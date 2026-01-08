@@ -215,6 +215,23 @@ sudo systemctl status filebeat
 
 ## 📊 Wazuh Dashboard Access & Verification
 
+### SSH Access to Wazuh Server
+Remote access to the Wazuh server instance for administration and troubleshooting:
+
+**SSH Connection Details:**
+```bash
+# SSH into Wazuh server
+ssh nantwi@192.168.20.2
+```
+
+| Parameter | Value |
+|-----------|-------|
+| **Hostname** | `lab-core-rocky` |
+| **IP Address** | `192.168.20.2` |
+| **SSH Port** | `22` (default) |
+| **SSH Username** | `nantwi` |
+| **VLAN** | BlueTeam (VLAN 20) |
+
 ### Dashboard Accessibility
 The Wazuh dashboard became accessible immediately after installation:
 
