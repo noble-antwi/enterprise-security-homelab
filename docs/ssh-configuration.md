@@ -7,13 +7,13 @@ This guide documents the SSH configuration setup for seamless authentication and
 ## 🔑 SSH Key Management
 
 ### Key Naming Convention
-- **Lab Infrastructure**: `ansible-homelab-key` (ED25519)
+- **Lab Infrastructure**: `ansible-automation-key` (ED25519)
 - **GitHub Access**: `blueteam-homelab-github` (ED25519)
 
 ### Key Generation
 ```bash
 # Generate lab infrastructure key
-ssh-keygen -t ed25519 -f ~/.ssh/ansible-homelab-key -C "ansible-lab@homelab-infrastructure"
+ssh-keygen -t ed25519 -f ~/.ssh/ansible-automation-key -C "ansible-lab@homelab-infrastructure"
 
 # Generate GitHub access key
 ssh-keygen -t ed25519 -f ~/.ssh/blueteam-homelab-github -C "github-access@homelab"
@@ -35,29 +35,29 @@ Host github.com
 
 # Lab Infrastructure SSH Configuration
 Host 192.168.*
-    IdentityFile ~/.ssh/ansible-homelab-key
+    IdentityFile ~/.ssh/ansible-automation-key
     User nantwi
     IdentitiesOnly yes
 
 # Specific Lab Systems
 Host wazuh-server
     HostName 192.168.20.2
-    IdentityFile ~/.ssh/ansible-homelab-key
+    IdentityFile ~/.ssh/ansible-automation-key
     User nantwi
 
 Host monitoring-server
     HostName 192.168.60.2
-    IdentityFile ~/.ssh/ansible-homelab-key
+    IdentityFile ~/.ssh/ansible-automation-key
     User nantwi
 
 Host tcm-ubuntu
     HostName 192.168.10.4
-    IdentityFile ~/.ssh/ansible-homelab-key
+    IdentityFile ~/.ssh/ansible-automation-key
     User nantwi
 
 Host ansible-controller
     HostName 192.168.10.2
-    IdentityFile ~/.ssh/ansible-homelab-key
+    IdentityFile ~/.ssh/ansible-automation-key
     User nantwi
 ```
 
@@ -122,8 +122,8 @@ ansible monitoring-server -m shell -a "uptime"
 ### Key Permission Issues
 ```bash
 # Fix SSH key permissions
-chmod 600 ~/.ssh/ansible-homelab-key
-chmod 644 ~/.ssh/ansible-homelab-key.pub
+chmod 600 ~/.ssh/ansible-automation-key
+chmod 644 ~/.ssh/ansible-automation-key.pub
 chmod 600 ~/.ssh/config
 ```
 

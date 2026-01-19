@@ -15,7 +15,6 @@ Write-Host "Preparing Windows server for Ansible automation..." -ForegroundColor
 Write-Host ""
 
 try {
-    # Check if running as Administrator
     $currentUser = [Security.Principal.WindowsIdentity]::GetCurrent()
     $principal = New-Object Security.Principal.WindowsPrincipal($currentUser)
     $isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
@@ -209,12 +208,6 @@ Next: Run bootstrap playbook from Ansible Controller
     Write-Host "📄 Completion report saved to: $markerPath" -ForegroundColor Gray
     
 }
-catch {
-    Write-Host ""
-    Write-Host "❌ Error during pre-bootstrap configuration:" -ForegroundColor Red
-    Write-Host "   $($_.Exception.Message)" -ForegroundColor Red
-    Write-Host ""
-    Write-Host "Common solutions:" -ForegroundColor Yellow
     Write-Host "• Ensure you're running PowerShell as Administrator" -ForegroundColor Gray
     Write-Host "• Check if WinRM service is installed and can be started" -ForegroundColor Gray
     Write-Host "• Verify Windows Firewall is not blocking the configuration" -ForegroundColor Gray

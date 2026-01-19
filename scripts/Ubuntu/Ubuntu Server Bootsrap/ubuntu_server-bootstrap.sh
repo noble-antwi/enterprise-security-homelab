@@ -1705,7 +1705,7 @@ ${BOLD}FILES:${RESET}
 
 ${BOLD}NEXT STEPS AFTER BOOTSTRAP:${RESET}
     1. Add SSH key for ansible user (from controller):
-       ssh-copy-id -i ~/.ssh/ansible-homelab-key.pub ansible@<NEW_IP>
+       ssh-copy-id -i ~/.ssh/ansible-automation-key.pub ansible@${STATIC_IP:-$CURRENT_IP}
     
     2. Test Ansible connection:
        ansible <NEW_IP>, -m ping --user ansible

@@ -57,7 +57,7 @@ nano ~/.ansible/ansible.cfg
 ```ini
 [defaults]
 inventory = /etc/ansible/hosts
-private_key_file = ~/.ssh/ansible-homelab-key
+private_key_file = ~/.ssh/ansible-automation-key
 remote_user = nantwi
 ask_pass = false
 ask_sudo_pass = true
@@ -188,7 +188,7 @@ ls -la ~/.ssh/id_ed25519*
 ### Issue 4: SSH Key Rename and Configuration
 
 #### **Problem Description**
-After renaming SSH keys from default names (`id_ed25519`) to custom names (`ansible-homelab-key`), SSH connections may require password authentication or fail to connect automatically.
+After renaming SSH keys from default names (`id_ed25519`) to custom names (`ansible-automation-key`), SSH connections may require password authentication or fail to connect automatically.
 
 #### **Symptoms**
 - Password prompts when using `ssh user@host` (without `-i` flag)
@@ -206,7 +206,7 @@ SSH automatically looks for keys with standard names (`id_rsa`, `id_ed25519`, et
 sudo nano /etc/ansible/ansible.cfg
 
 # Update this line:
-private_key_file = ~/.ssh/ansible-homelab-key
+private_key_file = ~/.ssh/ansible-automation-key
 ```
 
 ##### Step 2: Create SSH Configuration File
@@ -216,29 +216,29 @@ nano ~/.ssh/config
 
 # Add lab infrastructure configuration:
 Host 192.168.*
-    IdentityFile ~/.ssh/ansible-homelab-key
+    IdentityFile ~/.ssh/ansible-automation-key
     User nantwi
     IdentitiesOnly yes
 
 # Add friendly hostname aliases:
 Host wazuh-server
     HostName 192.168.20.2
-    IdentityFile ~/.ssh/ansible-homelab-key
+    IdentityFile ~/.ssh/ansible-automation-key
     User nantwi
 
 Host monitoring-server
     HostName 192.168.60.2
-    IdentityFile ~/.ssh/ansible-homelab-key
+    IdentityFile ~/.ssh/ansible-automation-key
     User nantwi
 
 Host tcm-ubuntu
     HostName 192.168.10.4
-    IdentityFile ~/.ssh/ansible-homelab-key
+    IdentityFile ~/.ssh/ansible-automation-key
     User nantwi
 
 Host ansible-controller
     HostName 192.168.10.2
-    IdentityFile ~/.ssh/ansible-homelab-key
+    IdentityFile ~/.ssh/ansible-automation-key
     User nantwi
 ```
 
@@ -246,8 +246,8 @@ Host ansible-controller
 ```bash
 # Ensure correct file permissions
 chmod 600 ~/.ssh/config
-chmod 600 ~/.ssh/ansible-homelab-key
-chmod 644 ~/.ssh/ansible-homelab-key.pub
+chmod 600 ~/.ssh/ansible-automation-key
+chmod 644 ~/.ssh/ansible-automation-key.pub
 ```
 
 #### **Verification Commands**
@@ -417,7 +417,7 @@ ansible-inventory --list
 ansible wazuh-server -m ping -vvv
 
 # Check SSH key permissions
-ls -la ~/.ssh/ansible-homelab-key*
+ls -la ~/.ssh/ansible-automation-key*
 ```
 
 ### Performance Optimization
