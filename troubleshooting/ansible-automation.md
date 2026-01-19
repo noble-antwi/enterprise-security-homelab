@@ -458,4 +458,4 @@ mkdir -p ~/.ssh/sockets
 
 ---
 
-*Ansible Automation Troubleshooting Guide | Updated with SSH Configuration Management | August 2025*
+*Ansible Automation Troubleshooting Guide | Updated with SSH Configuration Management | January 2026*

@@ -32,6 +32,7 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 | **[06-ansible-service-account](docs/06-ansible-service-account.md)** | Ansible service account implementation for automation | Complete |
 | **[07-ansible-roles-architecture](docs/07-ansible-roles-architecture.md)** | Role-based automation architecture | Complete |
 | **[08-windows-integration](docs/08-windows-integration.md)** | Windows automation & integration implementation | Complete |
+| **[09-bootstrap-procedures](docs/09-bootstrap-procedures.md)** | Ansible controller bootstrap & configuration | Complete |
 | **[ssh-configuration](docs/ssh-configuration.md)** | SSH configuration and key management guide | Complete |
 | **[troubleshooting](troubleshooting/)** | Comprehensive troubleshooting guides by component | Complete |
 
@@ -86,13 +87,14 @@ For adding new systems to the infrastructure:
 #### Linux Systems
 ```bash
 # Distribute SSH keys and add to inventory
-ssh-copy-id -i ~/.ssh/ansible-homelab-key.pub user@[IP_ADDRESS]
+ssh-copy-id -i ~/.ssh/ansible-automation-key.pub user@[IP_ADDRESS]
 echo "[IP_ADDRESS]   # [DESCRIPTION] - $(date)" >> /etc/ansible/hosts
 ansible [IP_ADDRESS] -m ping
 ```
 **Bootstrap Methods:**
 - **Service Account Setup**: See [06-ansible-service-account.md](docs/06-ansible-service-account.md)
 - **Role-Based Bootstrap**: See [07-ansible-roles-architecture.md](docs/07-ansible-roles-architecture.md)
+- **Ansible Controller Setup**: See [09-bootstrap-procedures.md](docs/09-bootstrap-procedures.md)
 
 #### Windows Systems
 ```bash
