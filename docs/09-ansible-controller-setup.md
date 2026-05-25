@@ -38,6 +38,7 @@ This document details the complete transformation of a standard Ubuntu VM into a
 | **Windows Host** | 192.168.10.3 | Lab Workstation | Windows 11 | Active |
 | **TCM Ubuntu** | 192.168.10.4 | Lab System | Ubuntu 24.04 | Active |
 | **Windows Server** | 192.168.10.5 | Domain Controller | Windows Server 2022 | Active |
+| **vault-server** | 192.168.10.6 | Secrets Management | Ubuntu 25.04 | Active |
 
 ---
 

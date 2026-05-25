@@ -32,11 +32,13 @@
 192.168.60.2   # Grafana/Prometheus (Ubuntu 24.04)
 192.168.10.4   # TCM Ubuntu (Ubuntu 24.04)
 192.168.10.2   # Ansible Controller (Ubuntu 24.04)
+192.168.10.6   # Vault Server (Ubuntu 25.04)
 
 [infrastructure] # Managed systems only (excludes controller)
 192.168.20.2
 192.168.60.2
 192.168.10.4
+192.168.10.6
 
 [controller]
 192.168.10.2 
@@ -55,6 +57,10 @@
 192.168.60.2 # grafana/prometheus
 192.168.10.4 # tcm-ubuntu
 192.168.10.2 # ansible-controller
+192.168.10.6 # vault-server
+
+[vault]
+192.168.10.6 # vault-server (Ubuntu 25.04)
 
 [rocky]
 192.168.20.2 # wazuh-siem
