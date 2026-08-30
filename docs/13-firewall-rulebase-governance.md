@@ -43,7 +43,21 @@ Each rule carries a stable **Rule ID** (`<TAB>-<NN>`) that does not change even 
 | MGMT-10 | MANAGEMENT net | NOT `LAB_NETS` | any | Pass | No | Internet access for the management plane (destination inverted = anywhere except the lab). | SC-7 | Planned |
 | *(implicit)* | any | any | any | Deny | — | Default deny. Anything not explicitly allowed is dropped. | SC-7(5) | Built-in |
 
-Other interface tabs (ENTERPRISELAN, BLUETEAM, REDTEAM, DEVOPS, MONITORING) are registered in section 2.2+ as they are built. Their target layouts are in `docs/11-domain-controller-firewall.md` section 6.
+### 2.2 ENTERPRISELAN interface (VLAN 50, source = the domain controller's segment)
+
+This tab governs what VLAN-50 hosts (currently only `DC01`) may *initiate*. Inbound access to the DC is governed by the source VLANs' tabs (e.g. VLAN 10 via MGMT-05–08) and replies are stateful, so here we permit only what the DC legitimately originates and deny lateral movement into other VLANs.
+
+| Rule ID | Source | Destination | Service | Action | Log | Justification | Control | Status |
+|---------|--------|-------------|---------|--------|-----|---------------|---------|--------|
+| ENT-01 | ENTERPRISELAN net | This Firewall | TCP/UDP 53 | Pass | No | DNS resolution/forwarding via pfSense. | SC-7 | Built |
+| ENT-02 | ENTERPRISELAN net | This Firewall | UDP 123 | Pass | No | NTP time sync; correct time underpins Kerberos and logging. | AU-8 | Built |
+| ENT-03 | ENTERPRISELAN net | any | ICMP echo-request | Pass | No | Diagnostic reachability (outbound ping). | CA-7 | Built |
+| ENT-04 | ENTERPRISELAN net | NOT `LAB_NETS` | any | Pass | No | Internet access (updates, activation, CRL, public DNS). Excludes all lab VLANs. | SC-7 | Built |
+| *(implicit)* | any | any | any | Deny | — | Default deny. VLAN 50 cannot initiate into other VLANs or reach pfSense admin. | SC-7(5), AC-4 | Built-in |
+
+The `any→any` rule that previously governed this interface was deleted 2026-08-30 after validation.
+
+Remaining tabs (BLUETEAM, REDTEAM, DEVOPS, MONITORING) are registered here as they are built. Their target layouts are in `docs/11-domain-controller-firewall.md` section 6.
 
 ---
 
@@ -59,6 +73,8 @@ Every change to the rulebase is recorded here: what changed, when, who made it, 
 | 2026-08-15 | MGMT-03 | Added NTP-to-pfSense rule | Noble Antwi | UI reachable after apply | Disable rule |
 | 2026-08-15 | MGMT-04 | Added ICMP rule; corrected subtype echo-reply → echo-request (least privilege, outbound ping) | Noble Antwi | Rule applied | Disable rule |
 | 2026-08-15 | MGMT-05 to 08 | Added the four DC-access rules (AD_TCP, AD_UDP, AD_RPC_DYNAMIC, MGMT_TCP) to SRV1_DC; MGMT-08 logging enabled | Noble Antwi | Aliases resolve as links; applied | Disable rules; DC still reachable via broad "All" until it is removed |
+| 2026-08-30 | ENT-01 to 04 | Built ENTERPRISELAN outbound rules (DNS/NTP to pfSense, ICMP, internet via `!LAB_NETS`); deleted the prior `any→any` | Noble Antwi | Isolation test flipped True→False after a manual filter reload (see 3.1 and incident below) | Re-add a temporary `any→any` on ENTERPRISELAN |
+| 2026-08-30 | (incident) | **Stale filter reload** — GUI rule changes were saved but the kernel kept enforcing the old ruleset, so isolation tests kept passing. Root-caused by systematic elimination (floating rules empty, anti-lockout disabled, packet-filtering enabled, `any→any` deleted — none had effect). Resolved via **Status → Filter Reload → Reload Filter**, which loaded the current ruleset. | Noble Antwi | Both isolation tests then returned False | N/A (diagnostic) |
 
 ### 3.1 Control validation tests
 
@@ -68,9 +84,21 @@ Evidence that a control does what its policy claims. Each test is repeatable, an
 |------|---------|------|-----------|----------|--------|
 | 2026-08-15 | Management-plane isolation (baseline) | pfSense web UI load | Admin laptop (VLAN 10) → pfSense admin | Reachable | **True** |
 | 2026-08-15 | Management-plane isolation (baseline) | `Test-NetConnection 192.168.50.1 -Port 443` | DC01 (VLAN 50) → pfSense admin `443` | Reachable now (VLAN 50 not yet tightened) | **True** (baseline) |
-| *pending* | Management-plane isolation (enforced) | `Test-NetConnection 192.168.50.1 -Port 443` | DC01 (VLAN 50) → pfSense admin `443` | **Blocked** once ENTERPRISELAN is tightened | *to record* |
+| 2026-08-30 | Management-plane isolation (enforced) | `Test-NetConnection 192.168.50.1 -Port 443` | DC01 (VLAN 50) → pfSense admin `443` | Blocked after ENTERPRISELAN tightened | **False** ✓ |
+| 2026-08-30 | Management-plane isolation (cross-VLAN) | `Test-NetConnection 192.168.10.1 -Port 443` | DC01 (VLAN 50) → Management gateway admin `443` | Blocked | **False** ✓ |
 
-The first two rows are the "before" state. The third row is the same test rerun after the ENTERPRISELAN rules are tightened; the change from True to False is the proof that the isolation control is effective.
+The change from **True to False** — while `dcdiag`, DNS and internet still pass — is the proof that VLAN 50 is contained: it can use the gateway's DNS/NTP and reach the internet, but cannot reach the pfSense admin UI on any interface, nor pivot into other VLANs. (Ping still succeeds, because ENT-03 permits ICMP — showing the rule is surgical, not a blanket block.)
+
+![Before enforcement: isolation test passing](../images/fw/fw-09-ent-isolation-before.png)
+*Figure 13.5 — Before: both `Test-NetConnection … 443` return True. The DC could reach the pfSense admin UI on its own VLAN and cross-VLAN.*
+
+![After enforcement: isolation test blocked](../images/fw/fw-10-ent-isolation-after.png)
+*Figure 13.6 — After: both return False while Ping stays True. VLAN 50 is denied admin access on every interface, yet the DC's own services keep working.*
+
+**Operational note — the stale filter reload.** The isolation test kept returning True even after the rules were correct, because pfSense had not loaded the new ruleset into the kernel: the GUI and the running filter were out of sync. Systematic elimination (floating rules, anti-lockout, packet-filtering, deleting the rule) confirmed no rule change was taking effect. It was resolved with **Status → Filter Reload → Reload Filter**. **Lesson:** after tightening rules, if behaviour does not change, verify the filter actually reloaded — a stuck reload silently enforces the old rules and can make a control look broken when it is merely not loaded.
+
+![Filter reload](../images/fw/fw-11-filter-reload.png)
+*Figure 13.7 — Status → Filter Reload. Manually reloading compiled and loaded the current ruleset, after which the isolation control took effect.*
 
 ---
 
@@ -103,5 +131,7 @@ Recording a known weakness, the reason it is accepted, and the planned fix is it
 | ID | Observation | Risk | Current decision | Planned hardening | Trigger |
 |----|-------------|------|------------------|-------------------|---------|
 | H-01 | MGMT-08 (RDP/WinRM to the DC) uses source = **MANAGEMENT subnet**, not specific hosts. Any device on VLAN 10 can *reach* the DC admin ports (network-location trust). | A rogue/compromised device placed on VLAN 10 could reach admin services. Mitigated by: (a) the DC still requires valid credentials + Remote Desktop Users membership to log in; (b) VLAN 10 is physically/administratively controlled. | **Accepted** while the lab has a single controlled admin laptop. | Create an `ADMIN_HOSTS` alias (specific admin/PAW IPs) and change MGMT-08 source to it; add MFA on the DC; move admin to a PAW. | When a second machine joins VLAN 10, or the PAW is built (see `docs/12`). |
+
+| H-02 | The **TAILSCALE** interface has broad rules: any tailnet device → pfSense admin; SSH to any destination; and `192.168.0.0/16` → any (reach every VLAN). Remote access therefore bypasses the internal VLAN segmentation. | A compromised or shared tailnet device would have full lab reach, including the RedTeam VLAN. | **Accepted** — Tailscale is WireGuard-authenticated and the tailnet holds only 4 owner-controlled devices (pfSense subnet router `noble-homelab`; admin laptop `noble-host` `100.118.195.0`; `lab-devops-svc01`; `iphone182`). It is the sole remote-admin path, so tightening it hastily risks lockout. | Scope the pfSense-admin rule to the admin device (`noble-host`); optionally exclude RedTeam (VLAN 30) from Tailscale reach; prefer Tailscale ACLs (admin console) for device-level control. Physical VLAN-10 access (MGMT-01) is the fallback. | When convenient, and **before adding any non-owner device** to the tailnet. |
 
 This register grows as other rules or segments are found to have similar location-based trust that could later be tightened to host- or identity-based trust (the Zero Trust direction, NIST SP 800-207).
