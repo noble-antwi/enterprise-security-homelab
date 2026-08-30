@@ -9,8 +9,10 @@ This document details the complete network infrastructure setup using **pfSense*
 ### Core Components
 - **pfSense Firewall**: Dedicated desktop machine with 2 NICs
 - **TP-Link TL-SG108E**: 8-Port Gigabit Smart Managed Switch
-- **Primary Laptop**: Administrative access and VM host (2 NICs with more to be added)
-- **Additional Systems**: Reserved for service deployment
+- **Primary Laptop**: Administrative workstation (`192.168.10.3`)
+- **Proxmox VE Host**: Bare-metal hypervisor on trunk Port 2 (`192.168.10.6`)
+- **Vault Desktop**: Dedicated machine for HashiCorp Vault on Port 6, VLAN 40 (`192.168.40.2`, awaiting configuration)
+- **Windows Server 2025 Host**: Dedicated hardware on Port 7, VLAN 50 — domain controller at `192.168.50.2` (connected via USB-to-Ethernet adapter)
 
 ### Physical Topology
 
@@ -66,6 +68,16 @@ For a detailed interactive view with hover effects and clickable elements, see t
 | **VLAN 50** | Virtual | EnterpriseLAN | `192.168.50.1` |
 | **VLAN 60** | Virtual | Monitoring stack | `192.168.60.1` |
 
+All six VLAN interfaces are **802.1Q tagged sub-interfaces of the single physical LAN NIC `ue0`**. This is the pfSense half of a *router-on-a-stick* design: one cable to the switch trunk carries every VLAN, and pfSense does the routing between them.
+
+![pfSense interface assignments](../images/net/net-03-pfsense-interface-assignments.png)
+*Figure 1.1 — Interfaces → Assignments. Each VLAN (Management 10 … Monitoring 60) is a tagged sub-interface of the parent `ue0`, alongside WAN (`em0`) and the isolated LAN. This is the pfSense half of the 802.1Q trunk; the switch half appears in Figures 1.4–1.5.*
+
+Each VLAN interface has a static gateway IP and **no upstream gateway** (it is a local network, not an internet uplink), so pfSense treats it as a routed LAN segment:
+
+![pfSense Management interface detail](../images/net/net-05-pfsense-mgmt-interface-detail.png)
+*Figure 1.2 — Example interface detail (Management, `ue0.10`): static IPv4 `192.168.10.1/24`, upstream gateway set to None because inter-VLAN routing is handled internally by pfSense. The same pattern is applied to VLANs 20–60.*
+
 ## VLAN & Subnet Architecture
 
 ### Design Philosophy
@@ -74,8 +86,8 @@ The network implements **VLAN-based segmentation** where each VLAN represents a 
 - **Granular firewall control** via pfSense rules
 - **Enhanced monitoring** and policy enforcement
 - **Clear separation** between Blue Team and Red Team activities
-![Vlans](<../images/11. vlans structure.png>)
-*VLAN Configured on Pfsense*
+![pfSense dashboard showing all VLAN gateways](../images/net/net-04-pfsense-vlan-gateways.png)
+*Figure 1.3 — pfSense dashboard: all six VLAN interfaces up, each with its gateway IP (`192.168.10.1` … `192.168.60.1`), plus the WAN uplink. This is the live confirmation that every segment specified below is active and routing.*
 ### Complete VLAN Specification
 
 | **VLAN Name** | **VLAN ID** | **Subnet** | **Gateway IP** | **Purpose & Use Case** |
@@ -161,6 +173,52 @@ For **BlueTeam, RedTeam, DevOps, EnterpriseLAN, and Monitoring** VLANs:
 - **Inter-VLAN Communication**: Controlled by specific rules as needed
 - **Default Behavior**: All traffic denied unless explicitly permitted
 
+## Active Directory Firewall Aliases
+
+### Why aliases
+A pfSense **alias** is a named list of hosts or ports that a firewall rule can reference by name. Instead of eight separate rules ("allow TCP 53 to the DC", "allow TCP 88 to the DC", ...) there is one rule that reads "allow `AD_TCP` to `SRV1_DC`". Rules become self-describing, and when a port needs adding or removing it is changed once in the alias rather than in every rule that uses it.
+
+Active Directory is not a single service. A domain member relies on a bundle of protocols (DNS, Kerberos, LDAP, SMB, RPC, NTP) that all terminate on the domain controller. Blocking any one of them produces confusing half-working behaviour (can join but cannot log on, logs on but Group Policy fails, password changes error out). The aliases below group those protocols by role so that access can be granted precisely.
+
+### Alias inventory
+
+| Alias | Type | Contents | Purpose |
+|-------|------|----------|---------|
+| `SRV1_DC` | Host | `192.168.50.2` | Windows Server 2025 domain controller `dc01.ad.biira.online` (alias name predates the host rename SRV1→DC01) |
+| `AD_TCP` | Ports | 53, 88, 135, 389, 445, 464, 636, 3268 | TCP ports a domain member needs on the DC |
+| `AD_UDP` | Ports | 53, 88, 123, 389, 464 | UDP ports a domain member needs on the DC |
+| `AD_RPC_DYNAMIC` | Ports | `49152:65535` | RPC dynamic high-port range (see note) |
+| `MGMT_TCP` | Ports | 3389, 5985, 5986 | Remote administration only: RDP and WinRM |
+
+### `AD_TCP`: domain-membership TCP ports
+
+| Port | Protocol | What it does |
+|------|----------|--------------|
+| **53** | DNS | Clients look up SRV records such as `_ldap._tcp.ad.biira.online` to locate the DC. TCP carries large answers and zone transfers; UDP carries ordinary queries. |
+| **88** | Kerberos | The core AD authentication protocol. Every logon and every access to a network resource obtains a Kerberos ticket from the DC. |
+| **135** | RPC endpoint mapper | The "directory assistance" for Microsoft RPC. A client asks 135 which dynamic port a given service is listening on, then connects there. Required for domain join, Group Policy and remote management. |
+| **389** | LDAP | Reading and writing the directory: user lookups, group membership, computer objects. |
+| **445** | SMB | File sharing. Clients pull Group Policy objects and logon scripts from the DC's `SYSVOL` and `NETLOGON` shares. |
+| **464** | Kerberos password change | Used when a user changes a password or a computer rotates its machine-account password (every 30 days by default). |
+| **636** | LDAPS | LDAP over TLS. Not required by Windows itself, but Linux tooling, HashiCorp Vault's LDAP auth method and Wazuh integrations prefer it. Included so those work without a later rule change. |
+| **3268** | Global Catalog | A read-only, forest-wide index of the directory. Logon uses it to resolve universal group membership; directory-aware applications search it. |
+
+### `AD_UDP`: domain-membership UDP ports
+
+| Port | Protocol | What it does |
+|------|----------|--------------|
+| **53** | DNS | Everyday name resolution. |
+| **88** | Kerberos | Kerberos tries UDP first for small requests and falls back to TCP. |
+| **123** | NTP | Domain members sync their clocks to the DC. Kerberos rejects tickets when clocks differ by more than 5 minutes, so this port is silently critical. |
+| **389** | LDAP ping | A lightweight "are you a DC for my site?" probe that clients send while locating a domain controller. |
+| **464** | Kerberos password change | UDP variant of the password-change service. |
+
+### `AD_RPC_DYNAMIC`: why it is separate
+After a client asks port 135 where a service lives, the DC answers with a random port in the **49152 to 65535** range and the client connects there. Domain join, Group Policy processing and AD replication all depend on this. Because the range is large it is kept in its own alias and granted only from tightly scoped sources (Management VLAN to `SRV1_DC`), never bundled into `AD_TCP` where it might be handed out more broadly.
+
+### `MGMT_TCP`: why RDP and WinRM are not in `AD_TCP`
+RDP (3389) and WinRM (5985 plain, 5986 TLS) are for *administering* the server, not for *being a member* of its domain. Keeping them separate means that granting a client VLAN "`AD_TCP` to `SRV1_DC`" for domain membership never accidentally grants remote console or automation access as well. `MGMT_TCP` is granted only from the Management VLAN (administrator laptop and the Ansible controller).
+
 ## Outbound NAT Configuration
 
 ### NAT Implementation Approach
@@ -199,21 +257,26 @@ The managed switch provides VLAN segmentation through strategic port assignments
 | **Port** | **Configuration** | **VLAN Membership** | **Purpose** |
 |----------|-------------------|---------------------|-------------|
 | **Port 1** | Trunk (Tagged) | **All VLANs**: 10,20,30,40,50,60 | pfSense `ue0` interface connection |
-| **Port 2** | Trunk (Tagged) | **All VLANs**: 10,20,30,40,50,60 | Laptop USB NIC for VM management |
+| **Port 2** | Trunk (Tagged) | **All VLANs**: 10,20,30,40,50,60 | Proxmox VE trunk uplink (`192.168.10.6`) for multi-VLAN VM hosting |
 | **Port 3** | Access (Untagged) | **VLAN 10 Only** | Management VLAN direct access |
 | **Port 4** | Access (Untagged) | **VLAN 20 Only** | BlueTeam VLAN direct access |
 | **Port 5** | Access (Untagged) | **VLAN 30 Only** | RedTeam VLAN direct access |
-| **Port 6** | Access (Untagged) | **VLAN 40 Only** | DevOps VLAN direct access |
-| **Port 7** | Access (Untagged) | **VLAN 50 Only** | EnterpriseLAN VLAN direct access |
+| **Port 6** | Access (Untagged) | **VLAN 40 Only** | DevOps VLAN — dedicated HashiCorp Vault desktop (`192.168.40.2`, awaiting configuration) |
+| **Port 7** | Access (Untagged) | **VLAN 50 Only** | EnterpriseLAN VLAN — Windows Server 2025 domain controller (`192.168.50.2`, via USB-to-Ethernet adapter) |
 | **Port 8** | Access (Untagged) | **VLAN 60 Only** | Monitoring VLAN direct access |
 
 #### Switch Port Configuration Evidence
-![Port Configuration in Switch](../images/image.png)
 
-![Port Configuration in Switch - Details](../images/image-1.png)
+The switch enforces the same VLAN scheme from the Layer 2 side. Two settings define it: **802.1Q VLAN membership** (which ports carry which VLANs, and whether tagged or untagged) and the **PVID** (the VLAN an *untagged* frame is placed into as it enters a port).
+
+![Switch 802.1Q VLAN membership table](../images/net/net-01-switch-vlan-table.png)
+*Figure 1.4 — TP-Link 802.1Q VLAN table. Every VLAN (10–60) includes ports 1–2 as **tagged** (the trunk uplinks to pfSense and Proxmox) plus one **untagged** access port (10→3, 20→4, 30→5, 40→6, 50→7, 60→8). Tagged keeps the 802.1Q VLAN ID on the frame so a trunk can carry many VLANs; untagged strips it for a plain end device that knows nothing about VLANs.*
+
+![Switch 802.1Q PVID settings](../images/net/net-02-switch-port-mapping.png)
+*Figure 1.5 — 802.1Q PVID settings. Each access port 3–8 carries the PVID of its VLAN (10, 20, 30, 40, 50, 60), so any untagged device plugged in lands in the correct segment automatically. Trunk ports 1–2 keep PVID 1 because they only ever carry tagged traffic. Figures 1.4 and 1.5 together are the switch-side proof of the port map in the table above, and they mirror the pfSense sub-interfaces in Figure 1.1.*
 
 ### Port Configuration Strategy
-- **Trunk Ports (1-2)**: Carry all VLAN traffic for infrastructure and management
+- **Trunk Ports (1-2)**: Carry all tagged VLAN traffic — Port 1 uplinks pfSense, Port 2 feeds the Proxmox VE VLAN-aware bridge
 - **Access Ports (3-8)**: Provide direct, untagged access to specific VLANs
 - **Device Placement**: End devices automatically assigned to appropriate VLAN
 - **Scalability**: Additional devices easily added to any VLAN segment

@@ -40,6 +40,10 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 | **[08-windows-integration](docs/08-windows-integration.md)** | Windows automation and integration implementation | Complete |
 | **[09-bootstrap-procedures](docs/09-bootstrap-procedures.md)** | Ansible controller bootstrap and configuration | Complete |
 | **[10-proxmox-hypervisor](docs/10-proxmox-hypervisor.md)** | Proxmox VE deployment, VLAN-aware bridge, trunk port migration | Complete |
+| **[11-domain-controller-firewall](docs/11-domain-controller-firewall.md)** ([PDF](docs/11-domain-controller-firewall.pdf)) | pfSense aliases and rules for the DC01 domain controller: what each AD port does, how rules evaluate, target layout | In Progress |
+| **[12-lab-expansion-roadmap](docs/12-lab-expansion-roadmap.md)** ([PDF](docs/12-lab-expansion-roadmap.pdf)) | Windows/AD estate growth plan: endpoint inventory, what each machine teaches, attack/defence scenarios, phased build, IAM repo decision | Planning |
+| **[13-firewall-rulebase-governance](docs/13-firewall-rulebase-governance.md)** ([PDF](docs/13-firewall-rulebase-governance.pdf)) | Audit-grade rulebase governance: the 8 principles auditors check, a living rule register with per-rule justification and control mapping, change-control log, review cadence | In Progress |
+| **[14-proxmox-storage-backup-capacity](docs/14-proxmox-storage-backup-capacity.md)** ([PDF](docs/14-proxmox-storage-backup-capacity.pdf)) | Proxmox storage layout, backup/recovery strategy (NIST CP-9), LXC-vs-VM capacity plan, and the lab-wide machine naming convention | Current |
 | **[ssh-configuration](docs/ssh-configuration.md)** | SSH configuration and key management guide | Complete |
 | **[troubleshooting](troubleshooting/)** | Comprehensive troubleshooting guides by component | Complete |
 
@@ -54,8 +58,8 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 | **10 - Management** | Admin and Control | `192.168.10.0/24` | `.1` | pfSense, Ansible, Windows Systems, Proxmox |
 | **20 - BlueTeam** | Security Monitoring | `192.168.20.0/24` | `.1` | Wazuh SIEM |
 | **30 - RedTeam** | Attack Simulation | `192.168.30.0/24` | `.1` | Kali Linux (Proxmox VM) |
-| **40 - DevOps** | CI/CD Pipeline | `192.168.40.0/24` | `.1` | Reserved for future use |
-| **50 - EnterpriseLAN** | Business Services | `192.168.50.0/24` | `.1` | Reserved for future use |
+| **40 - DevOps** | CI/CD Pipeline | `192.168.40.0/24` | `.1` | HashiCorp Vault desktop (staged, awaiting configuration) |
+| **50 - EnterpriseLAN** | Business Services | `192.168.50.0/24` | `.1` | Windows Server 2025 domain controller (`192.168.50.2`) |
 | **60 - Monitoring** | Observability | `192.168.60.0/24` | `.1` | Grafana, Prometheus |
 
 ### Deployed Systems
@@ -63,13 +67,14 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 | System | IP Address | VLAN | Platform | Purpose | Status |
 |--------|------------|------|----------|---------|--------|
 | pfSense Firewall | `192.168.10.1` | Management | FreeBSD | Network gateway and security | Active |
-| Ansible Controller | `192.168.10.2` | Management | Ubuntu 24.04 | Cross-platform automation | Active |
+| Ansible Controller | `192.168.10.2` | Management | Ubuntu 24.04 | Cross-platform automation | Active (planned migration to Proxmox VM) |
 | Laptop (Admin) | `192.168.10.3` | Management | Windows 11 | Administration workstation | Active |
 | TCM Ubuntu | `192.168.10.4` | Management | Ubuntu 24.04 | Training and development | Active |
-| Windows Server 2022 | `192.168.10.5` | Management | Windows Server | Enterprise services | Active |
 | Proxmox VE | `192.168.10.6` | Management | Proxmox VE | Bare-metal VM hypervisor | Active |
 | Wazuh SIEM | `192.168.20.2` | BlueTeam | Rocky Linux 9.6 | Security monitoring | Active |
 | Grafana Server | `192.168.60.2` | Monitoring | Ubuntu 24.04 | Observability dashboard | Active |
+| Vault Desktop | `192.168.40.2` | DevOps | TBD | HashiCorp Vault secrets management | Staged (awaiting configuration) |
+| DC01 (Windows Server 2025) | `192.168.50.2` | EnterpriseLAN | Windows Server 2025 | Domain controller for `ad.biira.online` (AD DS + DNS) | Active |
 
 ### Physical Network Layout
 
@@ -85,11 +90,10 @@ TP-Link TL-SG108E Managed Switch
     |-- Port 3  VLAN 10 Access     Secondary unmanaged switch
     |               |
     |               |-- Laptop        (192.168.10.3)
-    |               |-- Windows Server (192.168.10.5)
     |-- Port 4  VLAN 20 Access     BlueTeam segment
     |-- Port 5  VLAN 30 Access     RedTeam segment
-    |-- Port 6  VLAN 40 Access     DevOps segment
-    |-- Port 7  VLAN 50 Access     EnterpriseLAN segment
+    |-- Port 6  VLAN 40 Access     Vault desktop (192.168.40.2, awaiting configuration)
+    |-- Port 7  VLAN 50 Access     Windows Server 2025 DC (192.168.50.2)
     |-- Port 8  VLAN 60 Access     Monitoring segment
 ```
 
@@ -100,6 +104,7 @@ Proxmox VE is connected to a trunk port carrying all VLANs, enabling VMs to be p
 | VM | Bridge | VLAN Tag | Network | Purpose |
 |----|--------|----------|---------|---------|
 | Kali Linux | vmbr0 | 30 | 192.168.30.x | RedTeam attack simulation |
+| Ansible Controller (planned) | vmbr0 | 10 | 192.168.10.2 (same IP) | Fresh rebuild of automation controller, replacing physical host (not yet configured) |
 | Future BlueTeam VM | vmbr0 | 20 | 192.168.20.x | Security tooling |
 | Future DevOps VM | vmbr0 | 40 | 192.168.40.x | CI/CD pipelines |
 
@@ -110,7 +115,7 @@ Proxmox VE is connected to a trunk port carrying all VLANs, enabling VMs to be p
 ### Operational Capabilities
 
 - **Virtualisation**: Proxmox VE node with multi-VLAN VM hosting across all lab segments
-- **Cross-Platform Automation**: Ansible managing 7 systems across Linux, Windows, and Proxmox
+- **Cross-Platform Automation**: Ansible managing 6 systems across Linux, Windows, and Proxmox
 - **Security Monitoring**: Wazuh SIEM with centralised logging across all platforms
 - **Performance Monitoring**: Real-time infrastructure health via Grafana and Prometheus
 - **Remote Operations**: Global access to all lab resources via Tailscale mesh VPN
@@ -130,10 +135,10 @@ Proxmox VE is connected to a trunk port carrying all VLANs, enabling VMs to be p
 | Platform | Systems | Authentication | Management | Status |
 |----------|---------|---------------|------------|--------|
 | Linux | 4 systems | SSH Keys (ED25519) | Ansible + SSH | 100% Managed |
-| Windows | 2 systems | WinRM + Service Accounts | Ansible + WinRM | 100% Managed |
+| Windows | 2 systems (Windows 11 + Server 2025 DC) | WinRM + Service Accounts | Ansible + WinRM | DC Ansible onboarding pending |
 | Proxmox VE | 1 node | SSH + Web UI (port 8006) | Ansible + SSH | Active |
 | Network | pfSense + Switch | Web UI + SSH | Manual + Automation | Fully Operational |
-| Total | 8 systems | Multi-method | Cross-platform | Enterprise-Ready |
+| Total | 8 active + 1 staged | Multi-method | Cross-platform | Enterprise-Ready |
 
 ---
 
@@ -152,6 +157,7 @@ Proxmox VE is connected to a trunk port carrying all VLANs, enabling VMs to be p
 - Proxmox VE hypervisor deployed with VLAN-aware trunk port configuration
 - RedTeam VLAN (30) accessible from Proxmox for isolated VM deployment
 - Kali Linux VM deployment on VLAN 30 in progress
+- Ansible controller migration from physical host to Proxmox VM (planned, not yet configured)
 - Wazuh agent deployment across all platforms
 - Custom detection rules and automated response workflows
 - Advanced Grafana dashboards for security metrics
