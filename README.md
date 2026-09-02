@@ -86,7 +86,7 @@ pfSense (192.168.10.1)
 TP-Link TL-SG108E Managed Switch
     |
     |-- Port 1  Trunk (all VLANs)  pfSense ue0
-    |-- Port 2  Trunk (all VLANs)  Proxmox VE (192.168.10.6)
+    |-- Port 2  Trunk (all VLANs)  Switch 2 (secondary) -> Proxmox VE (192.168.10.6)
     |-- Port 3  VLAN 10 Access     Secondary unmanaged switch
     |               |
     |               |-- Laptop        (192.168.10.3)

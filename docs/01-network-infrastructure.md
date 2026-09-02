@@ -8,9 +8,10 @@ This document details the complete network infrastructure setup using **pfSense*
 
 ### Core Components
 - **pfSense Firewall**: Dedicated desktop machine with 2 NICs
-- **TP-Link TL-SG108E**: 8-Port Gigabit Smart Managed Switch
+- **TP-Link TL-SG108E (Switch 1)**: 8-Port Gigabit Smart Managed Switch; Port 1 trunk to pfSense, Port 2 trunk to Switch 2
+- **Switch 2 (secondary switch)**: uplinked from Switch 1 Port 2; passes the tagged VLANs through to Proxmox
 - **Primary Laptop**: Administrative workstation (`192.168.10.3`)
-- **Proxmox VE Host**: Bare-metal hypervisor on trunk Port 2 (`192.168.10.6`)
+- **Proxmox VE Host**: Bare-metal hypervisor connected to Switch 2 (`192.168.10.6`), receiving all tagged VLANs
 - **Vault Desktop**: Dedicated machine for HashiCorp Vault on Port 6, VLAN 40 (`192.168.40.2`, awaiting configuration)
 - **Windows Server 2025 Host**: Dedicated hardware on Port 7, VLAN 50 — domain controller at `192.168.50.2` (connected via USB-to-Ethernet adapter)
 
@@ -25,9 +26,9 @@ Internet ↔ Home Router ↔ pfSense (WAN/LAN) ↔ Managed Switch ↔ VLAN Segme
 
 ### Visual Overview
 
-![Network Infrastructure Architecture](<../images/12. network-architecture.png>)
+![Network Infrastructure Architecture](../images/diagrams/network-architecture.png)
 
-*Complete pfSense network infrastructure showing physical topology, VLAN segmentation, switch port configuration, and security zones*
+*Current-state architecture (2026-08-30): Internet → pfSense → Switch 1 (trunk Port 1); Switch 1 Port 2 trunks to Switch 2, which carries the tagged VLANs to Proxmox; Ports 3–8 are single-VLAN access ports feeding the six security zones. Firewall status per zone is shown (green = ruleset built, amber = still any→any).*
 
 ### Interactive Architecture Diagram
 For a detailed interactive view with hover effects and clickable elements, see the [Interactive Network Architecture Diagram](../network-architecture.html).
@@ -257,7 +258,7 @@ The managed switch provides VLAN segmentation through strategic port assignments
 | **Port** | **Configuration** | **VLAN Membership** | **Purpose** |
 |----------|-------------------|---------------------|-------------|
 | **Port 1** | Trunk (Tagged) | **All VLANs**: 10,20,30,40,50,60 | pfSense `ue0` interface connection |
-| **Port 2** | Trunk (Tagged) | **All VLANs**: 10,20,30,40,50,60 | Proxmox VE trunk uplink (`192.168.10.6`) for multi-VLAN VM hosting |
+| **Port 2** | Trunk (Tagged) | **All VLANs**: 10,20,30,40,50,60 | Trunk to **Switch 2** (secondary switch). Proxmox VE (`192.168.10.6`) connects via Switch 2 and receives the tagged VLANs for multi-VLAN VM hosting |
 | **Port 3** | Access (Untagged) | **VLAN 10 Only** | Management VLAN direct access |
 | **Port 4** | Access (Untagged) | **VLAN 20 Only** | BlueTeam VLAN direct access |
 | **Port 5** | Access (Untagged) | **VLAN 30 Only** | RedTeam VLAN direct access |
@@ -276,7 +277,7 @@ The switch enforces the same VLAN scheme from the Layer 2 side. Two settings def
 *Figure 1.5 — 802.1Q PVID settings. Each access port 3–8 carries the PVID of its VLAN (10, 20, 30, 40, 50, 60), so any untagged device plugged in lands in the correct segment automatically. Trunk ports 1–2 keep PVID 1 because they only ever carry tagged traffic. Figures 1.4 and 1.5 together are the switch-side proof of the port map in the table above, and they mirror the pfSense sub-interfaces in Figure 1.1.*
 
 ### Port Configuration Strategy
-- **Trunk Ports (1-2)**: Carry all tagged VLAN traffic — Port 1 uplinks pfSense, Port 2 feeds the Proxmox VE VLAN-aware bridge
+- **Trunk Ports (1-2)**: Carry all tagged VLAN traffic — Port 1 uplinks pfSense; Port 2 trunks to Switch 2, which carries the tagged VLANs on to the Proxmox VE VLAN-aware bridge
 - **Access Ports (3-8)**: Provide direct, untagged access to specific VLANs
 - **Device Placement**: End devices automatically assigned to appropriate VLAN
 - **Scalability**: Additional devices easily added to any VLAN segment
