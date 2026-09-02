@@ -39,7 +39,7 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 | **[07-ansible-roles-architecture](docs/07-ansible-roles-architecture.md)** | Role-based automation architecture | Complete |
 | **[08-windows-integration](docs/08-windows-integration.md)** | Windows automation and integration implementation | Complete |
 | **[09-bootstrap-procedures](docs/09-bootstrap-procedures.md)** | Ansible controller bootstrap and configuration | Complete |
-| **[10-proxmox-hypervisor](docs/10-proxmox-hypervisor.md)** | Proxmox VE deployment, VLAN-aware bridge, trunk port migration | Complete |
+| **[10-proxmox-hypervisor](docs/10-proxmox-hypervisor.md)** ([PDF](docs/10-proxmox-hypervisor.pdf)) | Proxmox VE deployment, VLAN-aware bridge, trunk port migration | Complete |
 | **[11-domain-controller-firewall](docs/11-domain-controller-firewall.md)** ([PDF](docs/11-domain-controller-firewall.pdf)) | pfSense aliases and rules for the DC01 domain controller: what each AD port does, how rules evaluate, target layout | In Progress |
 | **[12-lab-expansion-roadmap](docs/12-lab-expansion-roadmap.md)** ([PDF](docs/12-lab-expansion-roadmap.pdf)) | Windows/AD estate growth plan: endpoint inventory, what each machine teaches, attack/defence scenarios, phased build, IAM repo decision | Planning |
 | **[13-firewall-rulebase-governance](docs/13-firewall-rulebase-governance.md)** ([PDF](docs/13-firewall-rulebase-governance.pdf)) | Audit-grade rulebase governance: the 8 principles auditors check, a living rule register with per-rule justification and control mapping, change-control log, review cadence | In Progress |
@@ -144,7 +144,7 @@ Proxmox VE is connected to a trunk port carrying all VLANs, enabling VMs to be p
 
 ## Development Roadmap
 
-### Phase 1: Foundation — Complete
+### Phase 1: Foundation (Complete)
 
 - Network infrastructure with 6-VLAN segmentation
 - Security monitoring with Wazuh SIEM
@@ -152,7 +152,7 @@ Proxmox VE is connected to a trunk port carrying all VLANs, enabling VMs to be p
 - Remote access via Tailscale mesh VPN
 - Observability stack with Grafana and Prometheus
 
-### Phase 2: Virtualisation and Advanced Security — In Progress
+### Phase 2: Virtualisation and Advanced Security (In Progress)
 
 - Proxmox VE hypervisor deployed with VLAN-aware trunk port configuration
 - RedTeam VLAN (30) accessible from Proxmox for isolated VM deployment
@@ -162,14 +162,14 @@ Proxmox VE is connected to a trunk port carrying all VLANs, enabling VMs to be p
 - Custom detection rules and automated response workflows
 - Advanced Grafana dashboards for security metrics
 
-### Phase 3: Red Team Capabilities — Planned
+### Phase 3: Red Team Capabilities (Planned)
 
 - Kali Linux fully operational on VLAN 30
 - Attack simulation and penetration testing environment
 - Purple team exercise frameworks
 - Security tool development and testing environment
 
-### Phase 4: DevSecOps Integration — Future
+### Phase 4: DevSecOps Integration (Future)
 
 - CI/CD pipeline integration with security scanning
 - Infrastructure as Code enhancement
@@ -238,4 +238,4 @@ Community involvement is welcomed:
 
 The enterprise homelab demonstrates professional security practices, comprehensive cross-platform automation, advanced monitoring capabilities, and bare-metal virtualisation in a scalable, well-documented infrastructure. The implementation showcases real-world enterprise security operations, making it suitable for Blue Team training, security research, professional development, and demonstrating advanced cybersecurity capabilities.
 
-**Current Achievement**: Proxmox VE hypervisor integrated on a full VLAN trunk port, enabling VM deployment across all six lab segments from a single physical node — combined with unified Ansible management, enterprise-grade authentication, comprehensive SIEM monitoring, and secure global remote access via Tailscale.
+**Current Achievement**: Proxmox VE hypervisor integrated on a full VLAN trunk port, enabling VM deployment across all six lab segments from a single physical node, combined with unified Ansible management, enterprise-grade authentication, comprehensive SIEM monitoring, and secure global remote access via Tailscale.

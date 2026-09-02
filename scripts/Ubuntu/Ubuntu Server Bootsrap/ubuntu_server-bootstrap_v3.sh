@@ -304,7 +304,7 @@ detect_netplan_config() {
     if [[ -n "$suggested" ]]; then
         print_info "Suggested file (contains '${DETECTED_INTERFACE}:'): $(basename "$suggested")"
     else
-        print_warning "No file explicitly contains '${DETECTED_INTERFACE}:' — pick the one that looks active (DHCP/Static) for your VM type."
+        print_warning "No file explicitly contains '${DETECTED_INTERFACE}:', pick the one that looks active (DHCP/Static) for your VM type."
     fi
     echo ""
 

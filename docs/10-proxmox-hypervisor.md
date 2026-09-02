@@ -19,7 +19,7 @@ This enables virtual machines hosted on Proxmox to be placed on any lab VLAN by 
 | VLAN | 10 (Management) |
 | Platform | Proxmox VE |
 | NIC | Single NIC (nic0) |
-| Switch Port | Port 2 (Trunk — all VLANs tagged) |
+| Switch Port | Port 2 (Trunk, all VLANs tagged) |
 | Web UI | https://192.168.10.6:8006 |
 
 ---
@@ -41,10 +41,10 @@ With a trunk port and a VLAN-aware Linux bridge:
 
 | Port | Type | Connected To |
 |------|------|-------------|
-| Port 1 | Trunk — all VLANs tagged | pfSense ue0 interface |
-| Port 2 | Trunk — all VLANs tagged | Proxmox VE (nic0) |
-| Port 3 | Access — VLAN 10 | Secondary unmanaged switch |
-| Ports 4–8 | Access — individual VLANs | Reserved per VLAN |
+| Port 1 | Trunk, all VLANs tagged | pfSense ue0 interface |
+| Port 2 | Trunk, all VLANs tagged | Proxmox VE (nic0) |
+| Port 3 | Access, VLAN 10 | Secondary unmanaged switch |
+| Ports 4–8 | Access, individual VLANs | Reserved per VLAN |
 
 Port 3 feeds a secondary unmanaged switch that extends VLAN 10 connectivity to additional management-tier devices including Windows Server 2022 and the primary laptop.
 
@@ -95,7 +95,7 @@ source /etc/network/interfaces.d/*
 
 `bridge-vids 2-4094` instructs the bridge to accept any VLAN tag in that range, covering all six lab VLANs and any future additions.
 
-The management IP is placed on `vmbr0.10` rather than directly on `vmbr0`. On a trunk port, VLAN 10 traffic arrives tagged — the sub-interface explicitly handles VLAN 10 tagged frames, ensuring the management IP remains reachable after the trunk migration.
+The management IP is placed on `vmbr0.10` rather than directly on `vmbr0`. On a trunk port, VLAN 10 traffic arrives tagged, the sub-interface explicitly handles VLAN 10 tagged frames, ensuring the management IP remains reachable after the trunk migration.
 
 ---
 
@@ -127,24 +127,24 @@ Connect the machine to a VLAN 10 access port for the initial installation. The t
 
 The trunk migration must follow this sequence exactly. Reversing the order causes immediate loss of access before the fix is in place.
 
-**Step 1 — Verify the current NIC name**
+**Step 1, Verify the current NIC name**
 
 ```bash
 ip link show
 ```
 
 ![Output of ip link show confirming nic0 as the physical NIC](../assets/proxmox/01-ip-link-show.png)
-*Output of ip link show — the physical NIC is identified as nic0 with alternate names enp0s25 and enx3417eb9da246*
+*Output of ip link show, the physical NIC is identified as nic0 with alternate names enp0s25 and enx3417eb9da246*
 
-Note the physical NIC name. On this node it is `nic0`. On other hardware it may differ — use whatever appears here, not an assumed name.
+Note the physical NIC name. On this node it is `nic0`. On other hardware it may differ, use whatever appears here, not an assumed name.
 
-**Step 2 — Back up the existing config**
+**Step 2, Back up the existing config**
 
 ```bash
 cp /etc/network/interfaces /etc/network/interfaces.backup
 ```
 
-**Step 3 — Review the default post-install config**
+**Step 3, Review the default post-install config**
 
 ```bash
 cat /etc/network/interfaces
@@ -152,18 +152,18 @@ cat /etc/network/interfaces
 
 The default config assigns the management IP directly to `vmbr0` with no VLAN awareness. This works on an access port but will fail on a trunk port because tagged frames cannot be decoded.
 
-**Step 4 — Edit the interfaces file**
+**Step 4, Edit the interfaces file**
 
 ```bash
 nano /etc/network/interfaces
 ```
 
 ![New /etc/network/interfaces config in nano showing VLAN-aware bridge configuration](../assets/proxmox/02-interfaces-config-nano.png)
-*The updated interfaces file — vmbr0 is now VLAN-aware and the management IP has moved to vmbr0.10*
+*The updated interfaces file, vmbr0 is now VLAN-aware and the management IP has moved to vmbr0.10*
 
 Replace the contents with the configuration shown in the Network Configuration section above.
 
-**Step 5 — Apply the configuration**
+**Step 5, Apply the configuration**
 
 ```bash
 ifreload -a
@@ -171,7 +171,7 @@ ifreload -a
 
 Proxmox uses `ifupdown2` which allows network changes to be applied without a reboot.
 
-**Step 6 — Verify before moving the cable**
+**Step 6, Verify before moving the cable**
 
 ```bash
 # Management IP must be present on vmbr0.10
@@ -185,11 +185,11 @@ ip route
 ```
 
 ![Verification command outputs after ifreload showing vmbr0.10 with correct IP and vlan_filtering returning 1](../assets/proxmox/03-verification-output.png)
-*Verification output — vmbr0.10 holds 192.168.10.6/24, vlan_filtering returns 1, default route is correct*
+*Verification output, vmbr0.10 holds 192.168.10.6/24, vlan_filtering returns 1, default route is correct*
 
-At this stage a ping to `192.168.10.1` returns `Destination Host Unreachable`. This is expected — the node is now sending tagged frames but is still on an access port that only accepts untagged frames. This confirms the config is working correctly and is ready for the trunk port.
+At this stage a ping to `192.168.10.1` returns `Destination Host Unreachable`. This is expected, the node is now sending tagged frames but is still on an access port that only accepts untagged frames. This confirms the config is working correctly and is ready for the trunk port.
 
-**Step 7 — Move the cable**
+**Step 7, Move the cable**
 
 Move the Ethernet cable from Port 3 (access) to Port 2 (trunk) on the TP-Link switch. Wait ten seconds, then verify:
 
@@ -198,15 +198,15 @@ ping -c 4 192.168.10.1
 ```
 
 ![Successful ping to pfSense after moving to trunk port showing 0% packet loss](../assets/proxmox/04-ping-success.png)
-*4 packets transmitted, 4 received, 0% packet loss — Proxmox is live on the trunk port*
+*4 packets transmitted, 4 received, 0% packet loss, Proxmox is live on the trunk port*
 
-**Step 8 — Confirm internet access**
+**Step 8, Confirm internet access**
 
 ```bash
 ping -c 4 8.8.8.8
 ```
 
-**Step 9 — Confirm web UI**
+**Step 9, Confirm web UI**
 
 From any device on the Management VLAN:
 
@@ -215,7 +215,7 @@ https://192.168.10.6:8006
 ```
 
 ![Proxmox VE web UI accessible at 192.168.10.6:8006](../assets/proxmox/05-proxmox-webui.png)
-*Proxmox web UI — the no-subscription notice is standard on the free community edition and does not affect functionality*
+*Proxmox web UI, the no-subscription notice is standard on the free community edition and does not affect functionality*
 
 ---
 
@@ -301,7 +301,7 @@ systemctl restart pveproxy
 
 ## Related Documentation
 
-- [01-network-infrastructure.md](01-network-infrastructure.md) — pfSense and switch VLAN configuration
-- [04-automation-platform.md](04-automation-platform.md) — Ansible controller setup
-- [06-ansible-service-account.md](06-ansible-service-account.md) — Service account configuration for new nodes
-- [09-bootstrap-procedures.md](09-bootstrap-procedures.md) — Standardised bootstrap procedures
+- [01-network-infrastructure.md](01-network-infrastructure.md), pfSense and switch VLAN configuration
+- [04-automation-platform.md](04-automation-platform.md), Ansible controller setup
+- [06-ansible-service-account.md](06-ansible-service-account.md), Service account configuration for new nodes
+- [09-bootstrap-procedures.md](09-bootstrap-procedures.md), Standardised bootstrap procedures

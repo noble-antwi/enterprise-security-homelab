@@ -56,14 +56,14 @@ The split is deliberate. `AD_TCP` + `AD_UDP` + `AD_RPC_DYNAMIC` together are **"
 #### Evidence: the aliases as built
 
 ![pfSense IP aliases](../images/fw/fw-01-aliases-ip.png)
-*Figure 11.1 — Firewall → Aliases → IP. The two host/network aliases: `SRV1_DC` (the domain controller at `192.168.50.2`) and `LAB_NETS` (the internal trust boundary, with its NIST SC-7 description visible).*
+*Figure 11.1: Firewall → Aliases → IP. The two host/network aliases: `SRV1_DC` (the domain controller at `192.168.50.2`) and `LAB_NETS` (the internal trust boundary, with its NIST SC-7 description visible).*
 
 ![pfSense port aliases](../images/fw/fw-02-aliases-ports.png)
-*Figure 11.2 — Firewall → Aliases → Ports. The four port groups: `AD_TCP`, `AD_UDP`, `AD_RPC_DYNAMIC` (the domain-membership bundle) and `MGMT_TCP` (administration, kept separate on purpose).*
+*Figure 11.2: Firewall → Aliases → Ports. The four port groups: `AD_TCP`, `AD_UDP`, `AD_RPC_DYNAMIC` (the domain-membership bundle) and `MGMT_TCP` (administration, kept separate on purpose).*
 
 ### 3.1 `SRV1_DC` (host)
 
-The single IP of the DC. Using an alias rather than the raw address means that if the DC is ever re-addressed, or a second DC is added, only the alias changes. Rules keep working. (The alias name `SRV1_DC` dates from when the host was named `SRV1`; the host was renamed to `DC01` on 2026-08-30, but the alias keeps its original name because it references the IP, not the hostname — so rules and evidence stay stable.)
+The single IP of the DC. Using an alias rather than the raw address means that if the DC is ever re-addressed, or a second DC is added, only the alias changes. Rules keep working. (The alias name `SRV1_DC` dates from when the host was named `SRV1`; the host was renamed to `DC01` on 2026-08-30, but the alias keeps its original name because it references the IP, not the hostname, so rules and evidence stay stable.)
 
 ### 3.2 `AD_TCP` (domain-membership TCP ports)
 
@@ -79,7 +79,7 @@ The single IP of the DC. Using an alias rather than the raw address means that i
 | **3268** | Global Catalog | A read-only copy of *every* object in the whole AD forest, held on designated DCs. Logon uses it to resolve universal group membership; applications use it to search across domains. In a single-domain lab it mostly duplicates 389, but Windows still queries it and logon can stall if it is blocked. |
 
 ![AD_TCP alias detail with per-port descriptions](../images/fw/fw-04-alias-ad-tcp-detail.png)
-*Figure 11.3 — The `AD_TCP` alias as configured, each port carrying an inline description of its role. Documenting intent at the point of configuration (not only in this file) is what makes the alias self-explaining to the next person who opens it.*
+*Figure 11.3: The `AD_TCP` alias as configured, each port carrying an inline description of its role. Documenting intent at the point of configuration (not only in this file) is what makes the alias self-explaining to the next person who opens it.*
 
 ### 3.3 `AD_UDP` (domain-membership UDP ports)
 
@@ -160,7 +160,7 @@ The Management VLAN is the administrative network and is *intended* to be the mo
 `LAB_NETS` is a sixth alias, type Network, containing the six lab subnets `192.168.10.0/24` through `192.168.60.0/24`. Rule 10 uses pfSense's "invert match" checkbox on the destination so that it means "anywhere except the lab".
 
 ![LAB_NETS alias detail with all six VLAN subnets](../images/fw/fw-03-alias-lab-nets-detail.png)
-*Figure 11.4 — The `LAB_NETS` alias: all six VLAN subnets, each labelled with its security zone. This single object is what lets one firewall rule mean "the whole internal lab", and its inverse mean "the Internet". It is the machine-readable form of the trust boundary described in section 8.*
+*Figure 11.4: The `LAB_NETS` alias: all six VLAN subnets, each labelled with its security zone. This single object is what lets one firewall rule mean "the whole internal lab", and its inverse mean "the Internet". It is the machine-readable form of the trust boundary described in section 8.*
 
 Rules 5 to 8 are technically covered by rule 9 today. They are written anyway because (a) they document intent, and (b) when rule 9 is later tightened to per-service grants, DC access keeps working without anyone remembering to add it.
 
@@ -231,10 +231,10 @@ This lab is a learning environment, not a production system under audit, but eve
 
 ### 8.3 Frameworks referenced
 
-- **NIST SP 800-53 Rev 5** — the U.S. federal control catalogue; the SC (System & Communications Protection), AC (Access Control), and CM (Configuration Management) families are the ones this firewall work touches.
-- **NIST Cybersecurity Framework (CSF) 2.0** — the higher-level outcomes model; PR (Protect) is the relevant function.
-- **NIST SP 800-207** — Zero Trust Architecture; the source of the microsegmentation and "never trust network location" ideas.
-- **CIS Controls v8** — a prioritised, prescriptive control set; Controls 4 (Secure Configuration) and 12 (Network Infrastructure Management) are the relevant ones.
+- **NIST SP 800-53 Rev 5**, the U.S. federal control catalogue; the SC (System & Communications Protection), AC (Access Control), and CM (Configuration Management) families are the ones this firewall work touches.
+- **NIST Cybersecurity Framework (CSF) 2.0**, the higher-level outcomes model; PR (Protect) is the relevant function.
+- **NIST SP 800-207**, Zero Trust Architecture; the source of the microsegmentation and "never trust network location" ideas.
+- **CIS Controls v8**, a prioritised, prescriptive control set; Controls 4 (Secure Configuration) and 12 (Network Infrastructure Management) are the relevant ones.
 
 These are references for a learning lab, not a claim of formal compliance. Real compliance requires evidence, testing, and assessment beyond the scope of a homelab.
 

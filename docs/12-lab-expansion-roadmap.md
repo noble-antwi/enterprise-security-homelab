@@ -55,33 +55,33 @@ Start at the five. Grow when a specific lesson calls for the next machine.
 
 ## 4. What each addition teaches (the deep value)
 
-### DC02 — second domain controller
+### DC02: second domain controller
 - **Replication**: watch changes flow with `repadmin /replsummary`, `repadmin /showrepl`; break and repair it.
 - **FSMO roles**: the five single-master roles, how to transfer them cleanly, and how to *seize* them when a DC dies. This is a real operational skill.
 - **Resilience**: shut down one DC and prove logon still works; understand why DNS-on-both matters.
 - **Security payoff**: **DCSync** (pretending to be a DC to pull password hashes) and **DCShadow** (injecting rogue directory changes) only make sense once you understand replication. You cannot properly detect what you do not understand.
 
-### CA01 — AD Certificate Services
+### CA01: AD Certificate Services
 - **PKI fundamentals**: root vs issuing CA, certificate templates, enrolment.
 - **Certificate-based authentication**: the basis of smartcard/PIV login, and of passwordless directions.
-- **Security payoff**: the **ESC1–ESC8** escalation family — misconfigured templates that let a low-privileged user enrol a certificate that impersonates a domain admin. This is among the most impactful modern AD attack classes (tools: Certipy, Certify). Blue side: Wazuh rules for abnormal enrolment.
+- **Security payoff**: the **ESC1–ESC8** escalation family, misconfigured templates that let a low-privileged user enrol a certificate that impersonates a domain admin. This is among the most impactful modern AD attack classes (tools: Certipy, Certify). Blue side: Wazuh rules for abnormal enrolment.
 - Doubles as a **file server**: NTFS vs share permissions, access-based enumeration, honeyfiles/canary tokens.
 
-### WKS10 / WKS11 — workstations
+### WKS10 / WKS11: workstations
 - **The real starting point of attacks.** No intruder begins on a DC; they begin on a user's machine.
 - **Foothold to dominance kill chain**: initial access → local privilege escalation → credential theft (**LSASS/Mimikatz**) → lateral movement (**PsExec, WMI, WinRM, pass-the-hash**) → domain dominance.
 - **Defences to build and test**: **Credential Guard**, **LAPS** (randomised local admin passwords), **AppLocker/WDAC**, **Sysmon** feeding Wazuh.
 - **Group Policy** in practice: how policy applies, and how attackers abuse writable GPOs.
 
-### SQL01 — SQL Server member
+### SQL01: SQL Server member
 - **Kerberoasting**: request service tickets for accounts with an SPN, crack them offline. A SQL service account is the canonical target.
 - **Service-account hygiene**: why gMSA (group Managed Service Accounts) exist.
 
-### PAW01 — Privileged Access Workstation
+### PAW01: Privileged Access Workstation
 - **Microsoft's tiered administration model** (Tier 0/1/2): domain admins never log on to normal workstations; the "clean source" principle.
 - Turns the abstract idea of admin hygiene into something you can configure and then try to bypass.
 
-### LNX01 — Linux domain member
+### LNX01: Linux domain member
 - **Hybrid reality**: real enterprises are not all-Windows. Join Ubuntu to AD with `realmd`/SSSD, get Kerberos SSO on Linux, and see how your existing lab Linux boxes could authenticate against AD.
 
 ---
@@ -109,24 +109,24 @@ Do not attempt these against anything but this isolated lab. RedTeam reaching th
 
 ## 6. Phased build plan
 
-### Phase A — make it a domain (Priority 1)
+### Phase A: make it a domain (Priority 1)
 1. Build `DC02` as a Proxmox VM on VLAN 50, join it as a second DC, verify replication.
 2. Build `CA01`, install AD CS, publish a couple of templates (one deliberately weak for ESC1 practice later).
 3. Build `WKS10`, domain-join it, deploy Sysmon, ship logs to Wazuh.
 4. Outcome: the minimum viable security lab; scenarios 1, 2, 5, 6 become possible.
 
-### Phase B — enrich the estate (Priority 2)
+### Phase B: enrich the estate (Priority 2)
 5. Add `WKS11`; practise lateral movement WKS10 ↔ WKS11.
 6. Deploy LAPS and Credential Guard; re-run the lateral scenarios and watch them get harder.
 7. Outcome: scenarios 7, 8, 9.
 
-### Phase C — realism and hardening (Priority 3–4)
+### Phase C: realism and hardening (Priority 3–4)
 8. Add `SQL01` (Kerberoasting), `PAW01` (tiering), `LNX01` (hybrid).
 9. Introduce a dedicated **client VLAN** so workstations are segmented from servers (see note below).
 10. Outcome: scenarios 3, 4, 10; a lab that mirrors a real enterprise.
 
 ### A note on a client VLAN
-Today VLAN 50 (EnterpriseLAN) would hold both servers and workstations. That works, but putting workstations on their own segment (a new VLAN 70, or a re-purposed one) teaches the segmentation that makes lateral movement realistic: an attacker on a client subnet must cross a firewall boundary to reach servers, exactly as in production. Worth doing at Phase C, not before — it adds firewall complexity you do not need while learning the basics.
+Today VLAN 50 (EnterpriseLAN) would hold both servers and workstations. That works, but putting workstations on their own segment (a new VLAN 70, or a re-purposed one) teaches the segmentation that makes lateral movement realistic: an attacker on a client subnet must cross a firewall boundary to reach servers, exactly as in production. Worth doing at Phase C, not before, it adds firewall complexity you do not need while learning the basics.
 
 ---
 
@@ -147,7 +147,7 @@ Phase A alone is roughly **10–14 GB RAM and ~240 GB disk** on top of what Prox
 
 ## 8. The IAM repo: keep separate, cross-link, reconcile
 
-The sibling repo `enterprise-iam-lab` builds hybrid identity (on-prem AD + Okta as primary IdP, Entra ID federation planned) on **this same domain** — it references `dc01.ad.biira.online` at `192.168.50.2` directly. They are two layers of one lab:
+The sibling repo `enterprise-iam-lab` builds hybrid identity (on-prem AD + Okta as primary IdP, Entra ID federation planned) on **this same domain**, it references `dc01.ad.biira.online` at `192.168.50.2` directly. They are two layers of one lab:
 
 - **This repo (homelab)** is authoritative for the **infrastructure substrate**: network, VLANs, pfSense, Proxmox, the DC01 build, firewall rules, Wazuh, monitoring.
 - **The IAM repo** is authoritative for the **identity workload**: OU design, tiered admin groups, GPO, Okta, SAML/SWA app integrations, federation.
@@ -165,8 +165,8 @@ If a recruiter-facing IAM-only artifact matters to you, separate repos is also t
 
 ## 9. Summary recommendation
 
-- **Add DC02 and CA01 as Proxmox VMs** — they unlock replication, PKI, and the attacks that abuse both.
-- **Add two workstations** — the real starting point of every attack; without them you cannot learn the kill chain.
+- **Add DC02 and CA01 as Proxmox VMs**, they unlock replication, PKI, and the attacks that abuse both.
+- **Add two workstations**, the real starting point of every attack; without them you cannot learn the kill chain.
 - **Target 5 Windows endpoints minimum, 8 for a rich lab.**
 - **Keep the IAM repo separate**, cross-link it, and fix the 2022/2025 and VLAN-naming mismatches.
 - Build in the phased order above, attacking and defending each addition before moving on.

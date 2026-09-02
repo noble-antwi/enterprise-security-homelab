@@ -10,9 +10,9 @@ The convention was reset on 2026-08-15. Older, unlabelled files (`image.png`, `i
 
 Evidence that cannot be traced to what it shows, when it was captured, and which configuration it proves is not evidence, it is decoration. Naming and registering evidence is exactly what audit frameworks expect:
 
-- **NIST SP 800-53 AU-3 / CM-2** — records and configuration baselines must be identifiable and current.
-- **CIS Control 12.4** — maintain up-to-date documentation and diagrams of the network.
-- General audit practice — every artifact maps to a control or a procedure it supports.
+- **NIST SP 800-53 AU-3 / CM-2**, records and configuration baselines must be identifiable and current.
+- **CIS Control 12.4**, maintain up-to-date documentation and diagrams of the network.
+- General audit practice, every artifact maps to a control or a procedure it supports.
 
 A predictable filename does most of that work for free.
 
@@ -46,10 +46,10 @@ Add a new area folder only when a genuinely new subsystem appears.
 <area>-<NN>-<subject>.<ext>
 ```
 
-- **`<area>`** — the folder code above (`net`, `fw`, `dc`, ...). Repeating it in the filename keeps names unambiguous when files are moved or embedded in docs.
-- **`<NN>`** — two-digit sequence in capture order within the area (`01`, `02`, ... `10`, `11`). Zero-padded so they sort correctly.
-- **`<subject>`** — short kebab-case description of what the image shows. Be specific: `dc01-ipconfig-all`, not `ipconfig`.
-- **`<ext>`** — `png` for screenshots, `mp4` for recordings, `gif` for short silent clips.
+- **`<area>`**, the folder code above (`net`, `fw`, `dc`, ...). Repeating it in the filename keeps names unambiguous when files are moved or embedded in docs.
+- **`<NN>`**, two-digit sequence in capture order within the area (`01`, `02`, ... `10`, `11`). Zero-padded so they sort correctly.
+- **`<subject>`**, short kebab-case description of what the image shows. Be specific: `dc01-ipconfig-all`, not `ipconfig`.
+- **`<ext>`**, `png` for screenshots, `mp4` for recordings, `gif` for short silent clips.
 
 ### Examples
 

@@ -20,7 +20,7 @@
 RAM is the binding constraint for how many guests run at once; CPU and storage are abundant.
 
 ![Proxmox datacenter summary](../images/pve/pve-01-datacenter-summary.png)
-*Figure 14.1 — Datacenter summary: a healthy standalone node (`proxmox-01`), no cluster, with the current guests. This is the top-level health and inventory view.*
+*Figure 14.1: Datacenter summary: a healthy standalone node (`proxmox-01`), no cluster, with the current guests. This is the top-level health and inventory view.*
 
 ---
 
@@ -34,7 +34,7 @@ RAM is the binding constraint for how many guests run at once; CPU and storage a
 `sda` holds the two default install storages: `local` (ISO images, templates, backups directory) and `local-lvm` (VM/CT disk images). `sdb` was previously an OS disk (leftover EFI + ext4 partitions); it was wiped and repurposed as a dedicated backup store.
 
 ![Proxmox node disks](../images/pve/pve-02-node-disks.png)
-*Figure 14.2 — The two physical disks: `/dev/sda` (3 TB, Proxmox OS + LVM guest storage) and `/dev/sdb` (500 GB), before `sdb` was repurposed. Both report SMART "PASSED".*
+*Figure 14.2: The two physical disks: `/dev/sda` (3 TB, Proxmox OS + LVM guest storage) and `/dev/sdb` (500 GB), before `sdb` was repurposed. Both report SMART "PASSED".*
 
 ### Why backups go on a separate disk
 Keeping backups on a *different physical disk* from the running VMs means a failure or corruption of the primary disk does not take the backups with it. This is a basic tenet of recoverable design: the backup must survive the thing it is protecting against.
@@ -49,7 +49,7 @@ A running VM is not a backup of itself. Snapshots help with quick rollback, but 
 ### What was configured (2026-08-30)
 1. **Wiped `/dev/sdb`** and created a **Directory storage** named `backup` (ext4, mounted at `/mnt/pve/backup`), content type *VZDump backup file*.
 ![backup Directory storage](../images/pve/pve-03-storage-backup.png)
-*Figure 14.3 — The `backup` Directory storage mounted at `/mnt/pve/backup` on the ext4 `sdb` disk. This is the dedicated backup target, separate from the disk that holds the running guests.*
+*Figure 14.3: The `backup` Directory storage mounted at `/mnt/pve/backup` on the ext4 `sdb` disk. This is the dedicated backup target, separate from the disk that holds the running guests.*
 
 2. **Scheduled backup job**:
 
@@ -65,7 +65,7 @@ A running VM is not a backup of itself. Snapshots help with quick rollback, but 
 3. **Verified** with an on-demand run: task completed `TASK OK`, backup files present under `backup` → Backups for both existing guests.
 
 ![Scheduled backup job](../images/pve/pve-04-backup-job.png)
-*Figure 14.4 — The backup job: enabled, all nodes, daily 02:00, target `backup`, retention keep-last=3, selection All. The running task at the bottom is the verification run.*
+*Figure 14.4: The backup job: enabled, all nodes, daily 02:00, target `backup`, retention keep-last=3, selection All. The running task at the bottom is the verification run.*
 
 ### What it protects, and what it does not
 - **Protects**: all Proxmox VMs and containers (current and future). A lost or broken guest becomes a **restore**, not a rebuild.
@@ -85,7 +85,7 @@ RAM is the limit (~32 GiB). The rule that keeps the lab within budget:
 
 > **Linux services run as LXC containers; Windows runs as full VMs.**
 
-LXC containers share the host kernel — a fraction of the RAM and disk of a VM. Windows cannot be a container, so it uses full VMs.
+LXC containers share the host kernel, a fraction of the RAM and disk of a VM. Windows cannot be a container, so it uses full VMs.
 
 | Guest | Type | Planned RAM |
 |-------|------|-------------|
@@ -97,7 +97,7 @@ LXC containers share the host kernel — a fraction of the RAM and disk of a VM.
 | MON01 (Grafana/Prometheus) | **LXC** | ~2 GB |
 | Kali | VM | ~3 GB |
 
-All-running total is roughly 28 GB — within 32 GB, and guests can be powered on **on demand** rather than all at once. Verdict: the host comfortably carries the planned estate.
+All-running total is roughly 28 GB, within 32 GB, and guests can be powered on **on demand** rather than all at once. Verdict: the host comfortably carries the planned estate.
 
 ---
 
@@ -119,7 +119,7 @@ A consistent, role-based naming scheme (adopted 2026-08-30). Names state the rol
 **Migration note**: the first domain controller was originally named `SRV1` and was **renamed to `DC01` on 2026-08-30** to match this convention. The rename was change-controlled: `dcdiag /test:dns` was clean before and after, the IP `192.168.50.2` and the domain `ad.biira.online` were unaffected, and the Netlogon service was restarted to re-register the DC's SRV records under the new name. The firewall alias retains its original name `SRV1_DC` (it points to the IP, not the hostname). Existing guests `100 (windows11)` and `102 (ubuntu-blueteam)` will be renamed to their role names when rebuilt/repurposed.
 
 ![DC01 dcdiag clean after rename](../images/dc/dc-01-rename-to-dc01.png)
-*Figure 14.5 — `dcdiag /test:dns` on `DC01` after the rename and Netlogon restart: Connectivity, DNS, all partition tests, and the enterprise `ad.biira.online` DNS test all pass. Evidence the rename left Active Directory healthy.*
+*Figure 14.5: `dcdiag /test:dns` on `DC01` after the rename and Netlogon restart: Connectivity, DNS, all partition tests, and the enterprise `ad.biira.online` DNS test all pass. Evidence the rename left Active Directory healthy.*
 
 ---
 
