@@ -57,7 +57,25 @@ This tab governs what VLAN-50 hosts (currently only `DC01`) may *initiate*. Inbo
 
 The `any→any` rule that previously governed this interface was deleted 2026-08-30 after validation.
 
-Remaining tabs (BLUETEAM, REDTEAM, DEVOPS, MONITORING) are registered here as they are built. Their target layouts are in `docs/11-domain-controller-firewall.md` section 6.
+### 2.3 REDTEAM interface (VLAN 30, the attack segment)
+
+VLAN 30 is treated as **untrusted**. The baseline contains it from the entire internal lab: the attack box may function (name resolution, time, internet for tooling) but has **no standing path to the domain controller, any other VLAN, or the pfSense admin interface**. Access to a target for an actual exercise is granted as a temporary, specific rule and removed afterwards, so a compromised or careless attack box cannot roam the network.
+
+| Rule ID | Source | Destination | Service | Action | Log | Justification | Control | Status |
+|---------|--------|-------------|---------|--------|-----|---------------|---------|--------|
+| RED-01 | REDTEAM net | This Firewall | TCP/UDP 53 | Pass | No | Name resolution so the attack host functions. | SC-7 | Built |
+| RED-02 | REDTEAM net | This Firewall | UDP 123 | Pass | No | Time sync; accurate timestamps for exercise evidence. | AU-8 | Built |
+| RED-03 | REDTEAM net | NOT `LAB_NETS` | any | Pass | No | Internet only, for tooling and updates. Excludes every lab VLAN. | SC-7 | Built |
+| *(implicit)* | any | any | any | Deny | , | Default deny. No path to DC01, other VLANs, or pfSense admin. | SC-7(5), AC-4 | Built-in |
+
+**Deliberate omission:** unlike MANAGEMENT and ENTERPRISELAN, there is **no ICMP-to-any rule** here. An outbound ping rule would let the attack box sweep the internal VLANs for live hosts, which is exactly the reconnaissance step to deny. ICMP to the internet still works through RED-03. The absence of a rule is itself the control.
+
+![REDTEAM ruleset](../images/fw/fw-12-redteam-rules.png)
+*Figure 13.8: The REDTEAM tab. RED-01 to RED-03 are active; the legacy `RedTeam Firewall` any-to-any rule is disabled (greyed) pending deletion. No rule permits VLAN 30 to reach any lab subnet.*
+
+**Validation status:** deferred. There is currently no host on VLAN 30 (the Kali VM has not been built yet), so the containment test cannot be run. Once Kali exists, run from it: `curl -I https://google.com` (expect success, RED-03), `ping -c 2 192.168.50.2` and `nc -zv 192.168.50.2 443` (expect both to fail, proving containment from DC01). Record the result in section 3.1.
+
+Remaining tabs (BLUETEAM, DEVOPS, MONITORING) are registered here as they are built. Their target layouts are in `docs/11-domain-controller-firewall.md` section 6.
 
 ---
 
@@ -74,6 +92,7 @@ Every change to the rulebase is recorded here: what changed, when, who made it, 
 | 2026-08-15 | MGMT-04 | Added ICMP rule; corrected subtype echo-reply → echo-request (least privilege, outbound ping) | Noble Antwi | Rule applied | Disable rule |
 | 2026-08-15 | MGMT-05 to 08 | Added the four DC-access rules (AD_TCP, AD_UDP, AD_RPC_DYNAMIC, MGMT_TCP) to SRV1_DC; MGMT-08 logging enabled | Noble Antwi | Aliases resolve as links; applied | Disable rules; DC still reachable via broad "All" until it is removed |
 | 2026-08-30 | ENT-01 to 04 | Built ENTERPRISELAN outbound rules (DNS/NTP to pfSense, ICMP, internet via `!LAB_NETS`); deleted the prior `any→any` | Noble Antwi | Isolation test flipped True→False after a manual filter reload (see 3.1 and incident below) | Re-add a temporary `any→any` on ENTERPRISELAN |
+| 2026-09-03 | RED-01 to 03 | Built REDTEAM baseline (DNS/NTP to pfSense, internet via `!LAB_NETS`); no ICMP-to-any by design; legacy any-to-any disabled pending deletion | Noble Antwi | Not yet: no host on VLAN 30 (Kali not built). Test deferred, see 2.3 | Re-enable the legacy any-to-any rule |
 | 2026-08-30 | (incident) | **Stale filter reload**, GUI rule changes were saved but the kernel kept enforcing the old ruleset, so isolation tests kept passing. Root-caused by systematic elimination (floating rules empty, anti-lockout disabled, packet-filtering enabled, `any→any` deleted, none had effect). Resolved via **Status → Filter Reload → Reload Filter**, which loaded the current ruleset. | Noble Antwi | Both isolation tests then returned False | N/A (diagnostic) |
 
 ### 3.1 Control validation tests
