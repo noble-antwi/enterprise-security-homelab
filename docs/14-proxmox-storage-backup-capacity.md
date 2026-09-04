@@ -115,6 +115,7 @@ A consistent, role-based naming scheme (adopted 2026-08-30). Names state the rol
 | Grafana / monitoring | `MON01` |
 | Vault | `VAULT01` |
 | Ansible controller | `ANS01` |
+| Attack / offensive box | `KALI01` |
 
 **Migration note**: the first domain controller was originally named `SRV1` and was **renamed to `DC01` on 2026-08-30** to match this convention. The rename was change-controlled: `dcdiag /test:dns` was clean before and after, the IP `192.168.50.2` and the domain `ad.biira.online` were unaffected, and the Netlogon service was restarted to re-register the DC's SRV records under the new name. The firewall alias retains its original name `SRV1_DC` (it points to the IP, not the hostname). Existing guests `100 (windows11)` and `102 (ubuntu-blueteam)` will be renamed to their role names when rebuilt/repurposed.
 

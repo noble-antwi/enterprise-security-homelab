@@ -44,6 +44,7 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 | **[12-lab-expansion-roadmap](docs/12-lab-expansion-roadmap.md)** ([PDF](docs/12-lab-expansion-roadmap.pdf)) | Windows/AD estate growth plan: endpoint inventory, what each machine teaches, attack/defence scenarios, phased build, IAM repo decision | Planning |
 | **[13-firewall-rulebase-governance](docs/13-firewall-rulebase-governance.md)** ([PDF](docs/13-firewall-rulebase-governance.pdf)) | Audit-grade rulebase governance: the 8 principles auditors check, a living rule register with per-rule justification and control mapping, change-control log, review cadence | In Progress |
 | **[14-proxmox-storage-backup-capacity](docs/14-proxmox-storage-backup-capacity.md)** ([PDF](docs/14-proxmox-storage-backup-capacity.pdf)) | Proxmox storage layout, backup/recovery strategy (NIST CP-9), LXC-vs-VM capacity plan, and the lab-wide machine naming convention | Current |
+| **[15-kali-attack-host-build](docs/15-kali-attack-host-build.md)** ([PDF](docs/15-kali-attack-host-build.pdf)) | Building the attack host on the isolated RedTeam segment, the containment evidence, and what the test does and does not prove about reachability | Current |
 | **[ssh-configuration](docs/ssh-configuration.md)** | SSH configuration and key management guide | Complete |
 | **[troubleshooting](troubleshooting/)** | Comprehensive troubleshooting guides by component | Complete |
 
@@ -78,7 +79,7 @@ Machines follow a role-based naming convention (`DC01`, `CA01`, `WKS01`, `SIEM01
 | TCM Ubuntu | `192.168.10.4` | Management | Ubuntu 24.04 | Training and development | Active |
 | Proxmox VE (proxmox-01) | `192.168.10.6` | Management | Proxmox VE 9.2 | Bare-metal VM hypervisor | Active |
 | SIEM01 (Wazuh) | `192.168.20.2` | BlueTeam | Rocky Linux 9.6 | SIEM and centralised logging | Offline: physical host failed, rebuild planned |
-| KALI01 | `192.168.30.2` | RedTeam | Kali Linux 2026.2 | Attack simulation (Proxmox VM 103) | Deploying |
+| KALI01 | `192.168.30.2` | RedTeam | Kali Linux 2026.2 | Attack simulation (Proxmox VM 103) | Active, containment validated |
 | VAULT01 (lab-devops-svc01) | `192.168.40.2` | DevOps | Ubuntu | HashiCorp Vault secrets management | Staged, not yet configured |
 | DC01 | `192.168.50.2` | EnterpriseLAN | Windows Server 2025 | Domain controller for `ad.biira.online` (AD DS + DNS) | Active |
 | MON01 (Grafana + Prometheus) | `192.168.60.2` | Monitoring | Ubuntu 24.04 | Observability dashboards | Active, migration to Proxmox planned |
@@ -112,7 +113,7 @@ The host is an 8 core / 32 GiB / 2.67 TiB node with nightly backups to a dedicat
 
 | VM / CT | Bridge | VLAN Tag | Network | Purpose | Status |
 |---------|--------|----------|---------|---------|--------|
-| KALI01 (VM 103) | vmbr0 | 30 | 192.168.30.2 | RedTeam attack simulation | Deploying |
+| KALI01 (VM 103) | vmbr0 | 30 | 192.168.30.2 | RedTeam attack simulation | Active, containment validated |
 | ANS01 | vmbr0 | 10 | 192.168.10.2 (same IP) | Fresh rebuild of the automation controller | Planned |
 | SIEM01 | vmbr0 | 20 | 192.168.20.2 | Wazuh SIEM rebuild | Planned |
 | MON01 | vmbr0 | 60 | 192.168.60.2 | Grafana and Prometheus migration | Planned |
@@ -149,10 +150,10 @@ The host is an 8 core / 32 GiB / 2.67 TiB node with nightly backups to a dedicat
 |----------|---------|---------------|------------|--------|
 | Linux | MON01, TCM Ubuntu (ANS01 and SIEM01 pending rebuild) | SSH keys (ED25519) | Ansible + SSH | Automation paused until ANS01 is rebuilt |
 | Windows | Admin laptop, DC01 | WinRM + service accounts | Ansible + WinRM | DC01 onboarding pending |
-| Kali | KALI01 (VM 103, VLAN 30) | Local account | Manual | Deploying |
+| Kali | KALI01 (VM 103, VLAN 30) | Local account + SSH | Manual | Active, containment validated |
 | Proxmox VE | proxmox-01 (1 node) | SSH + Web UI (port 8006) | Web UI + SSH | Active, nightly backups |
 | Network | pfSense + 2 switches | Web UI + SSH | Manual | 3 of 6 VLAN rulesets hardened |
-| Total | 6 active, 1 deploying, 1 staged, 2 rebuilding | Multi-method | Cross-platform | Phase 2 in progress |
+| Total | 7 active, 1 staged, 2 rebuilding | Multi-method | Cross-platform | Phase 2 in progress |
 
 ---
 
@@ -174,11 +175,11 @@ Complete:
 - DC01 (Windows Server 2025) promoted as domain controller for `ad.biira.online`, with AD-integrated forward and reverse DNS zones and clean `dcdiag` health
 - pfSense rulebase hardened on three interfaces: MANAGEMENT (MGMT-01 to 10), ENTERPRISELAN (ENT-01 to 04) and REDTEAM (RED-01 to 03), each rule justified and control-mapped
 - Management-plane isolation proven by before and after testing (`docs/13` section 3.1)
+- KALI01 (Kali Linux) built on VLAN 30 and its containment validated against a live host: no reachability to the domain controller or the firewall management plane, while DNS, time and internet all function (`docs/15`)
 - Nightly Proxmox backups to a dedicated second disk, verified by an on-demand restore point
 
 In progress:
 
-- KALI01 deployment on VLAN 30 for attack simulation
 - Ansible controller rebuild as ANS01 (Proxmox guest, retaining `192.168.10.2`)
 - Wazuh rebuild as SIEM01 following the failure of the physical host
 
@@ -188,9 +189,9 @@ Remaining:
 - Tailscale scoping (hardening item H-02)
 - Wazuh agent deployment across all platforms, custom detection rules, and security dashboards
 
-### Phase 3: Red Team Capabilities (Planned)
+### Phase 3: Red Team Capabilities (Started)
 
-- Kali Linux fully operational on VLAN 30
+- Kali Linux operational on VLAN 30 and contained (`docs/15`)
 - Attack simulation and penetration testing environment
 - Purple team exercise frameworks
 - Security tool development and testing environment
