@@ -51,6 +51,10 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 
 ## Current Lab Infrastructure
 
+![Network architecture](images/diagrams/network-architecture.png)
+
+*Current-state architecture: Internet to pfSense, Switch 1 (Port 1 trunk to pfSense, Port 2 trunk to Switch 2, Ports 3 to 8 single-VLAN access), Switch 2 carrying the tagged VLANs to Proxmox, and the six security zones with their firewall status.*
+
 ### VLAN Architecture
 
 | VLAN | Purpose | Subnet | Gateway | Services |
@@ -64,17 +68,20 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 
 ### Deployed Systems
 
+Machines follow a role-based naming convention (`DC01`, `CA01`, `WKS01`, `SIEM01`, `MON01`, `VAULT01`, `ANS01`, `KALI01`), documented in `docs/14`.
+
 | System | IP Address | VLAN | Platform | Purpose | Status |
 |--------|------------|------|----------|---------|--------|
-| pfSense Firewall | `192.168.10.1` | Management | FreeBSD | Network gateway and security | Active |
-| Ansible Controller | `192.168.10.2` | Management | Ubuntu 24.04 | Cross-platform automation | Active (planned migration to Proxmox VM) |
+| pfSense Firewall | `192.168.10.1` | Management | FreeBSD | Gateway, firewall, Tailscale subnet router | Active |
+| ANS01 (Ansible Controller) | `192.168.10.2` | Management | Ubuntu | Cross-platform automation | Rebuilding as a Proxmox guest |
 | Laptop (Admin) | `192.168.10.3` | Management | Windows 11 | Administration workstation | Active |
 | TCM Ubuntu | `192.168.10.4` | Management | Ubuntu 24.04 | Training and development | Active |
-| Proxmox VE | `192.168.10.6` | Management | Proxmox VE | Bare-metal VM hypervisor | Active |
-| Wazuh SIEM | `192.168.20.2` | BlueTeam | Rocky Linux 9.6 | Security monitoring | Active |
-| Grafana Server | `192.168.60.2` | Monitoring | Ubuntu 24.04 | Observability dashboard | Active |
-| Vault Desktop | `192.168.40.2` | DevOps | TBD | HashiCorp Vault secrets management | Staged (awaiting configuration) |
-| DC01 (Windows Server 2025) | `192.168.50.2` | EnterpriseLAN | Windows Server 2025 | Domain controller for `ad.biira.online` (AD DS + DNS) | Active |
+| Proxmox VE (proxmox-01) | `192.168.10.6` | Management | Proxmox VE 9.2 | Bare-metal VM hypervisor | Active |
+| SIEM01 (Wazuh) | `192.168.20.2` | BlueTeam | Rocky Linux 9.6 | SIEM and centralised logging | Offline: physical host failed, rebuild planned |
+| KALI01 | `192.168.30.2` | RedTeam | Kali Linux 2026.2 | Attack simulation (Proxmox VM 103) | Deploying |
+| VAULT01 (lab-devops-svc01) | `192.168.40.2` | DevOps | Ubuntu | HashiCorp Vault secrets management | Staged, not yet configured |
+| DC01 | `192.168.50.2` | EnterpriseLAN | Windows Server 2025 | Domain controller for `ad.biira.online` (AD DS + DNS) | Active |
+| MON01 (Grafana + Prometheus) | `192.168.60.2` | Monitoring | Ubuntu 24.04 | Observability dashboards | Active, migration to Proxmox planned |
 
 ### Physical Network Layout
 
@@ -101,12 +108,15 @@ TP-Link TL-SG108E Managed Switch
 
 Proxmox VE is connected to a trunk port carrying all VLANs, enabling VMs to be placed on any lab segment via a single VLAN-aware Linux bridge. A VM's network placement is determined solely by its VLAN Tag assignment at the virtual NIC level.
 
-| VM | Bridge | VLAN Tag | Network | Purpose |
-|----|--------|----------|---------|---------|
-| Kali Linux | vmbr0 | 30 | 192.168.30.x | RedTeam attack simulation |
-| Ansible Controller (planned) | vmbr0 | 10 | 192.168.10.2 (same IP) | Fresh rebuild of automation controller, replacing physical host (not yet configured) |
-| Future BlueTeam VM | vmbr0 | 20 | 192.168.20.x | Security tooling |
-| Future DevOps VM | vmbr0 | 40 | 192.168.40.x | CI/CD pipelines |
+The host is an 8 core / 32 GiB / 2.67 TiB node with nightly backups to a dedicated second disk (see `docs/14`). Linux services are planned as LXC containers and Windows as full VMs, which keeps the estate within the memory budget.
+
+| VM / CT | Bridge | VLAN Tag | Network | Purpose | Status |
+|---------|--------|----------|---------|---------|--------|
+| KALI01 (VM 103) | vmbr0 | 30 | 192.168.30.2 | RedTeam attack simulation | Deploying |
+| ANS01 | vmbr0 | 10 | 192.168.10.2 (same IP) | Fresh rebuild of the automation controller | Planned |
+| SIEM01 | vmbr0 | 20 | 192.168.20.2 | Wazuh SIEM rebuild | Planned |
+| MON01 | vmbr0 | 60 | 192.168.60.2 | Grafana and Prometheus migration | Planned |
+| DC02, CA01, WKS01/02 | vmbr0 | 50 / client | see `docs/12` | AD estate expansion for security training | Roadmap |
 
 ---
 
@@ -114,31 +124,35 @@ Proxmox VE is connected to a trunk port carrying all VLANs, enabling VMs to be p
 
 ### Operational Capabilities
 
-- **Virtualisation**: Proxmox VE node with multi-VLAN VM hosting across all lab segments
-- **Cross-Platform Automation**: Ansible managing 6 systems across Linux, Windows, and Proxmox
-- **Security Monitoring**: Wazuh SIEM with centralised logging across all platforms
-- **Performance Monitoring**: Real-time infrastructure health via Grafana and Prometheus
+- **Virtualisation**: Proxmox VE node with multi-VLAN VM hosting across all lab segments, plus nightly backups to a dedicated disk
+- **Identity Services**: Active Directory (`ad.biira.online`) on DC01 with AD-integrated DNS, forward and reverse zones, verified healthy
+- **Network Segmentation**: six VLANs with per-interface default-deny firewall rulesets
 - **Remote Operations**: Global access to all lab resources via Tailscale mesh VPN
 - **Scalability**: Proxmox enables rapid deployment of new VMs on any VLAN without physical changes
+- **Cross-Platform Automation**: Ansible (currently offline while the controller is rebuilt as ANS01)
+- **Security Monitoring**: Wazuh SIEM (currently offline after a hardware failure, rebuild planned as a Proxmox guest)
+- **Performance Monitoring**: Infrastructure health via Grafana and Prometheus on MON01
 
 ### Security Posture
 
-- **Network Isolation**: VLAN-based segmentation with pfSense firewall enforcement
-- **Access Control**: Role-based access with platform-appropriate authentication methods
-- **Monitoring Coverage**: All VLANs and systems monitored by centralised SIEM
-- **Secure Remote Access**: WireGuard encryption via Tailscale mesh networking
-- **Professional Standards**: Enterprise-grade authentication, service accounts, and audit trails
-- **Incident Response**: Centralised logging and alerting across all infrastructure components
+- **Default-Deny Segmentation**: MANAGEMENT, ENTERPRISELAN and REDTEAM run explicit least-privilege rulesets; every rule carries a business justification and a NIST control mapping (`docs/13`)
+- **Management-Plane Isolation**: verified by test. VLAN 50 cannot reach the pfSense administrative interface on any interface, while retaining the DNS, NTP and internet access it legitimately needs
+- **Attack-Segment Containment**: RedTeam (VLAN 30) has no standing path to the domain controller or any other VLAN. Exercise access is granted temporarily and withdrawn afterwards
+- **Change Control**: firewall changes are logged with tester, rollback and validation evidence, and controls are re-tested before and after each change
+- **Backup and Recovery**: nightly Proxmox backups to a separate physical disk, with documented restore procedure (NIST CP-9)
+- **Software Integrity**: installation media verified by SHA256 before use (NIST SI-7)
+- **Secure Remote Access**: WireGuard encryption via Tailscale. Its ability to bypass per-interface rules is recorded as a known, risk-accepted hardening item (H-02)
 
 ### Platform Coverage Metrics
 
 | Platform | Systems | Authentication | Management | Status |
 |----------|---------|---------------|------------|--------|
-| Linux | 4 systems | SSH Keys (ED25519) | Ansible + SSH | 100% Managed |
-| Windows | 2 systems (Windows 11 + Server 2025 DC) | WinRM + Service Accounts | Ansible + WinRM | DC Ansible onboarding pending |
-| Proxmox VE | 1 node | SSH + Web UI (port 8006) | Ansible + SSH | Active |
-| Network | pfSense + Switch | Web UI + SSH | Manual + Automation | Fully Operational |
-| Total | 8 active + 1 staged | Multi-method | Cross-platform | Enterprise-Ready |
+| Linux | MON01, TCM Ubuntu (ANS01 and SIEM01 pending rebuild) | SSH keys (ED25519) | Ansible + SSH | Automation paused until ANS01 is rebuilt |
+| Windows | Admin laptop, DC01 | WinRM + service accounts | Ansible + WinRM | DC01 onboarding pending |
+| Kali | KALI01 (VM 103, VLAN 30) | Local account | Manual | Deploying |
+| Proxmox VE | proxmox-01 (1 node) | SSH + Web UI (port 8006) | Web UI + SSH | Active, nightly backups |
+| Network | pfSense + 2 switches | Web UI + SSH | Manual | 3 of 6 VLAN rulesets hardened |
+| Total | 6 active, 1 deploying, 1 staged, 2 rebuilding | Multi-method | Cross-platform | Phase 2 in progress |
 
 ---
 
@@ -154,13 +168,25 @@ Proxmox VE is connected to a trunk port carrying all VLANs, enabling VMs to be p
 
 ### Phase 2: Virtualisation and Advanced Security (In Progress)
 
+Complete:
+
 - Proxmox VE hypervisor deployed with VLAN-aware trunk port configuration
-- RedTeam VLAN (30) accessible from Proxmox for isolated VM deployment
-- Kali Linux VM deployment on VLAN 30 in progress
-- Ansible controller migration from physical host to Proxmox VM (planned, not yet configured)
-- Wazuh agent deployment across all platforms
-- Custom detection rules and automated response workflows
-- Advanced Grafana dashboards for security metrics
+- DC01 (Windows Server 2025) promoted as domain controller for `ad.biira.online`, with AD-integrated forward and reverse DNS zones and clean `dcdiag` health
+- pfSense rulebase hardened on three interfaces: MANAGEMENT (MGMT-01 to 10), ENTERPRISELAN (ENT-01 to 04) and REDTEAM (RED-01 to 03), each rule justified and control-mapped
+- Management-plane isolation proven by before and after testing (`docs/13` section 3.1)
+- Nightly Proxmox backups to a dedicated second disk, verified by an on-demand restore point
+
+In progress:
+
+- KALI01 deployment on VLAN 30 for attack simulation
+- Ansible controller rebuild as ANS01 (Proxmox guest, retaining `192.168.10.2`)
+- Wazuh rebuild as SIEM01 following the failure of the physical host
+
+Remaining:
+
+- BlueTeam, DevOps and Monitoring VLAN rulesets (still permissive)
+- Tailscale scoping (hardening item H-02)
+- Wazuh agent deployment across all platforms, custom detection rules, and security dashboards
 
 ### Phase 3: Red Team Capabilities (Planned)
 
@@ -238,4 +264,6 @@ Community involvement is welcomed:
 
 The enterprise homelab demonstrates professional security practices, comprehensive cross-platform automation, advanced monitoring capabilities, and bare-metal virtualisation in a scalable, well-documented infrastructure. The implementation showcases real-world enterprise security operations, making it suitable for Blue Team training, security research, professional development, and demonstrating advanced cybersecurity capabilities.
 
-**Current Achievement**: Proxmox VE hypervisor integrated on a full VLAN trunk port, enabling VM deployment across all six lab segments from a single physical node, combined with unified Ansible management, enterprise-grade authentication, comprehensive SIEM monitoring, and secure global remote access via Tailscale.
+**Current Achievement**: an Active Directory domain (`ad.biira.online`) running on DC01, sitting behind a pfSense rulebase that has been converted from permissive any-to-any rules to explicit, least-privilege, control-mapped rulesets on three interfaces. Management-plane isolation and RedTeam containment are enforced and evidenced by repeatable tests, with every change recorded in a firewall rule register (`docs/13`). Proxmox VE hosts the growing estate on a VLAN-aware trunk with nightly backups to a separate disk.
+
+**Being honest about current state**: the Wazuh SIEM host has failed and the Ansible controller was deliberately destroyed for rebuild, so centralised monitoring and automation are offline while both are rebuilt as Proxmox guests. Three of the six VLANs still carry permissive rules. Those gaps are tracked openly in the roadmap above and in `docs/13` rather than presented as complete.
