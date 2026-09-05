@@ -130,11 +130,20 @@ The change from **True to False**, while `dcdiag`, DNS and internet still pass, 
 ![Filter reload](../images/fw/fw-11-filter-reload.png)
 *Figure 13.7: Status → Filter Reload. Manually reloading compiled and loaded the current ruleset, after which the isolation control took effect.*
 
+![RedTeam containment test](../images/red/red-16-containment-test.png)
+*Figure 13.9: The containment test run from KALI01 on VLAN 30. SMB to DC01 and HTTPS to the management gateway both time out; the internet remains reachable at 0% packet loss. Full build context in `docs/15`.*
+
+![RedTeam rulebase as validated](../images/red/red-14-redteam-rules-final.png)
+*Figure 13.10: The REDTEAM interface after the legacy any-to-any rule was deleted. Three rules, each carrying its identifier, justification and control mapping. Compare Figure 13.8, where the disabled permit-all was still present.*
+
 **RedTeam containment, validated against a live attack host.** The five tests dated 2026-09-04 were run from KALI01 once it was built on VLAN 30. They are deliberately paired: two prove the segment is contained, three prove it is still usable. A containment control that also breaks the host is not a control anyone will keep, so the evidence has to show both halves. The attack box can resolve names, hold accurate time and reach the internet for tooling, while SMB to the domain controller and HTTPS to the firewall's management address both fail.
 
 **On the test path.** These results measure the rulebase itself. KALI01 runs no VPN client, so its only route is `default via 192.168.30.1`, and every probe was evaluated on the REDTEAM interface. This matters because the administrator's own workstation reaches KALI01 over the Tailscale overlay, a path that does not traverse the per-interface rules at all (see section 6, H-02). The distinction is worth stating plainly: an overlay that terminates inside the perimeter can make a segment look reachable in ways the documented rulebase never authorised. Tests of a segmentation control must originate from a host inside that segment, not from an administrator's machine sitting on an overlay.
 
 **A second instance of the config-versus-running-state gap.** DNS from VLAN 30 timed out even though RED-01 was demonstrably passing traffic: the rule showed live state entries in the pfSense **States** column. That single observation located the fault. If the firewall had been dropping the queries there would have been no states at all, so the packets were being delivered and nothing was answering. The DNS Resolver was simply not bound to the REDTEAM interface, which had been created after the resolver was first configured. This is the same failure family as the stale filter reload above: the saved configuration was correct, but the running system was not doing what the configuration described. **Lesson: when validating a control, read the state counters before changing any rules. They separate "the firewall blocked it" from "the firewall passed it and the service was not there", which are opposite problems with opposite fixes.**
+
+![State counters as the diagnostic](../images/red/red-09-redteam-states-diagnostic.png)
+*Figure 13.11: `RED-01` showing **3/1 KiB** in the States column while DNS queries from VLAN 30 were timing out. A blocked packet never creates a state entry, so these states prove the firewall passed the traffic and the fault lay beyond it, in a service that was not listening. `RED-02` at `0/0 B` is the contrast. The greyed row is the legacy any-to-any rule, since deleted.*
 
 ---
 

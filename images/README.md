@@ -59,6 +59,7 @@ Add a new area folder only when a genuinely new subsystem appears.
 | `net/net-02-switch-port-mapping.png` | Which ports are trunk vs access, and their VLANs |
 | `dc/dc-03-dc01-ipconfig-all.png` | `ipconfig /all` output on the DC |
 | `fw/fw-05-alias-lab-nets.png` | The `LAB_NETS` alias definition |
+| `red/red-16-containment-test.png` | The RedTeam containment test run from KALI01 |
 | `auto/auto-01-controller-build.mp4` | Recording of the Ansible controller rebuild |
 
 ---

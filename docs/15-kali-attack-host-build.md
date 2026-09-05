@@ -37,6 +37,15 @@ This is the same posture a real organisation applies to a penetration testing ju
 
 The VLAN tag on the virtual NIC is what puts this machine on the RedTeam segment. Proxmox tags the frame, the VLAN-aware bridge passes it to the trunk, and pfSense receives it on the REDTEAM interface. No configuration inside the guest can move it to another VLAN, which is precisely why the tag belongs at the hypervisor rather than in the guest.
 
+![Installation media integrity check](../images/red/red-01-iso-checksum.png)
+*Figure 15.1: SHA256 verification of the downloaded Kali ISO against the published checksum before installation. Verifying the integrity of software before it is introduced to the environment is a control in its own right (NIST SI-7), and it matters most for the machine that will run offensive tooling.*
+
+![Virtual NIC on VLAN 30](../images/red/red-02-vm-network-vlan30.png)
+*Figure 15.2: The guest's network device: `virtio` on bridge `vmbr0` with **VLAN Tag 30**. The tag is applied by the hypervisor, so the segment assignment cannot be changed from inside the guest.*
+
+![Virtual machine hardware](../images/red/red-03-vm-hardware.png)
+*Figure 15.3: The full hardware profile for VM 103, including the 60 GB disk on `local-lvm` with discard enabled.*
+
 ---
 
 ## 3. Installation, and a failure worth recording
@@ -54,6 +63,9 @@ and went no further.
 
 **Fix.** Answer the device prompt explicitly with **`/dev/sda`**, the disk, not `/dev/sda1`, the partition. The boot record lives at the start of the disk. GRUB written into a partition is somewhere the BIOS will never look.
 
+![The GRUB boot loader prompts](../images/red/red-04-grub-device-prompt.png)
+*Figure 15.4: The two prompts, on one screen. The first has `default=1` (Yes). The second, `Device for boot loader installation`, shows only `Prompt: '?' for help>` with **no default value**. Pressing Enter here selects nothing and the installer continues, producing an installation that reports success and cannot boot.*
+
 **Recovery options.** Either reinstall (chosen here, since nothing of value existed yet) or boot the installer ISO, choose **Advanced options → Rescue mode**, select `/dev/sda1` as the root filesystem, and run **Reinstall GRUB boot loader** against `/dev/sda`.
 
 This is recorded because the symptom is misleading. "Booting from Hard Disk..." followed by silence suggests a damaged disk or a boot-order problem, and both were checked first. The actual cause was an unanswered prompt several screens earlier in an installation that reported success.
@@ -65,6 +77,9 @@ This is recorded because the symptom is misleading. "Booting from Hard Disk..." 
 ## 4. Network configuration
 
 The guest initially took a DHCP lease of `192.168.30.50`, which was itself a useful result: it confirmed the VLAN tag, the trunk and the pfSense DHCP scope on VLAN 30 were all working before any manual configuration was attempted.
+
+![First boot with a DHCP lease](../images/red/red-05-first-boot-desktop.png)
+*Figure 15.5: KALI01 booted from disk, proving GRUB reached the MBR on the second installation. `eth0` holds `192.168.30.50/24` with a finite `valid_lft`, a DHCP lease from pfSense. End-to-end VLAN 30 connectivity is confirmed before any manual network configuration.*
 
 A static address was then assigned, because a host that appears in firewall rules, test evidence and log correlation must have a stable identity.
 
@@ -85,6 +100,9 @@ sudo nmcli con up "Wired connection 1"
 | DNS | `192.168.30.1` |
 | IPv6 | Disabled |
 
+![Static address applied](../images/red/red-06-static-ip-verified.png)
+*Figure 15.6: `192.168.30.2/24` with `valid_lft forever`, confirming a static address rather than a lease, and a default route via `192.168.30.1` marked `proto static`. The failed ping to the gateway in the same capture is expected: no REDTEAM rule permits ICMP to the firewall, and its absence is the control (see section 1).*
+
 IPv6 is disabled deliberately. The lab's rulebase is written and tested in IPv4 only, and an unmanaged IPv6 path on a segment whose entire purpose is containment would be an unmonitored route out of it. Reducing a host to only the protocols the environment actually governs is least functionality (NIST CM-7).
 
 Time is synchronised from the firewall rather than the internet:
@@ -93,6 +111,9 @@ Time is synchronised from the firewall rather than the internet:
 sudo sed -i 's/^#\?NTP=.*/NTP=192.168.30.1/' /etc/systemd/timesyncd.conf
 sudo systemctl restart systemd-timesyncd
 ```
+
+![Time synchronised from the firewall](../images/red/red-13-time-synchronised.png)
+*Figure 15.7: After pointing `systemd-timesyncd` at `192.168.30.1`, the host reports `System clock synchronized: yes` with `NTP service: active`, in the same timezone (`America/Chicago`) as the rest of the estate.*
 
 Accurate, *shared* time matters more here than accurate time. When an exercise from this host is later correlated against SIEM events, firewall logs and Windows Security events, every clock has to agree or the timeline cannot be reconstructed (NIST AU-8).
 
@@ -120,13 +141,34 @@ $ nslookup kali.org 192.168.30.1
 ;; no servers could be reached
 ```
 
+![The symptom](../images/red/red-07-dns-failure-symptom.png)
+*Figure 15.8: The symptom as first observed. `ping 8.8.8.8` succeeds with `ttl=116`, so routing and NAT work, but every name lookup returns `Temporary failure in name resolution`. The `curl` command returns nothing at all, silently, because `-s` suppresses the same error.*
+
+![Isolating the failure to the resolver](../images/red/red-08-dns-diagnosis-nslookup.png)
+*Figure 15.9: Querying two resolvers separates the possibilities. `nslookup kali.org 8.8.8.8` returns a full answer, proving outbound port 53 is permitted and the path works. The identical query to `192.168.30.1` times out three times. `/etc/resolv.conf` confirms the client is configured correctly. The fault is therefore at the firewall's own resolver, not in the client and not in the rule permitting the traffic.*
+
 **How the cause was located.** The pfSense rules page shows a **States** column, the count of live connection-state entries matched by each rule. `RED-01` showed `3/1 KiB`. That single number settles the question. If the firewall had been blocking the queries there would be no states at all, because a blocked packet never creates one. The states proved the packets were being accepted and delivered to the firewall itself, which meant the failure was not in the rulebase. Nothing was listening.
 
 **Cause.** The pfSense DNS Resolver binds only to the interfaces selected under `Services → DNS Resolver → General Settings → Network Interfaces`. The REDTEAM interface was created after the resolver was first configured and had never been added, so unbound was not listening on `192.168.30.1`. Queries were delivered and silently discarded.
 
+![State counters as the diagnostic](../images/red/red-09-redteam-states-diagnostic.png)
+*Figure 15.10: The evidence that settled it. `RED-01` shows **3/1 KiB** in the States column while DNS was failing. A blocked packet never creates a state entry, so these states prove the firewall accepted and delivered the queries. `RED-02` shows `0/0 B` for comparison, no NTP traffic had been attempted yet. The greyed row at the bottom is the legacy any-to-any rule, disabled and later deleted.*
+
 **Fix.** Add the interface to the resolver's binding list. If specific interfaces are selected rather than **All**, `Localhost` must be included too, or pfSense itself loses name resolution.
 
+![DNS Resolver interface binding](../images/red/red-10-dns-resolver-interfaces.png)
+*Figure 15.11: `Services → DNS Resolver → General Settings`. The **Network Interfaces** field controls which addresses unbound will answer on, and its help text states the consequence plainly: queries to addresses not selected here are discarded. **Outgoing Network Interfaces** is set to WAN so recursion can reach the internet.*
+
+![DNS working from the RedTeam segment](../images/red/red-11-dns-working.png)
+*Figure 15.12: The same query that had been timing out now returns a non-authoritative answer from `192.168.30.1`. RED-01 works end to end: the rule passes the traffic and the service is listening.*
+
 The NTP server was found to be running on the wildcard, listening on every interface including WAN. It was bound explicitly to the internal interfaces, with WAN excluded. WAN rules already blocked inbound traffic, so nothing was exposed in practice, but NTP is a well-known reflection and amplification vector and the service should not be listening on the internet-facing address at all. Removing an unnecessary listener is cheaper than relying on a rule to protect it (NIST CM-7, SC-7).
+
+![NTP service verified from the attack host](../images/red/red-12-ntp-nmap-verify.png)
+*Figure 15.13: `nmap -sU -p123 --script ntp-info 192.168.30.1` from KALI01. The service answers with `123/udp open` and reports `stratum: 2`, meaning pfSense is one hop from an authoritative source. Using the attack host's own tooling to verify a service it depends on is the natural way to test from inside the segment.*
+
+![NTP bound to internal interfaces only](../images/red/red-15-ntp-interface-binding.png)
+*Figure 15.14: `Services → NTP → Settings`. The interface list previously had nothing selected, which the help text describes as listening on all interfaces with a wildcard. Internal interfaces are now selected explicitly and **WAN is deliberately left unselected**, so the time service is not bound to the internet-facing address.*
 
 ### The general lesson
 
@@ -149,6 +191,12 @@ The full results are recorded in `docs/13-firewall-rulebase-governance.md` secti
 | `ping -c2 8.8.8.8` | Internet | Reachable | 0% packet loss |
 | `nslookup kali.org 192.168.30.1` | Firewall resolver | Resolves | Answer returned |
 | `timedatectl` | Clock state | Synchronised | System clock synchronized: yes |
+
+![RedTeam rulebase as validated](../images/red/red-14-redteam-rules-final.png)
+*Figure 15.15: The REDTEAM interface at the point of validation. Three rules, each carrying its identifier, justification and NIST control mapping in the description field. The legacy any-to-any rule has been deleted: a disabled permit-all left in place is ambiguous to a reviewer, who should not have to determine whether it is live.*
+
+![Containment test results](../images/red/red-16-containment-test.png)
+*Figure 15.16: The containment test, run from KALI01. SMB to the domain controller and HTTPS to the management gateway both return `Connection timed out`. Internet connectivity is unaffected, at 0% packet loss. The attack host is contained and functional at the same time.*
 
 The tests are paired on purpose. Two prove containment, three prove the host still functions. Evidence for a segmentation control has to show both, because a control that also breaks the host is one that gets removed the first time it becomes inconvenient.
 
@@ -177,6 +225,9 @@ Two practical points follow, and both generalise well beyond this lab.
 ## 9. Operational practice
 
 **Snapshot before every exercise.** The `clean-install` snapshot captures the host as built: static addressing, verified DNS and NTP, no tooling changes. Roll back to it after any engagement that installs software, modifies configuration, or executes untrusted code. This is what makes a virtual attack host preferable to a physical one (NIST CP-10).
+
+![Clean install snapshot](../images/red/red-17-clean-install-snapshot.png)
+*Figure 15.17: The `clean-install` snapshot, taken once the build was validated and before any tooling was added. It is the rollback point for every exercise run from this host.*
 
 **Grant access for an exercise, then remove it.** Reaching a target from this segment requires a temporary, specific pass rule recorded in the change control log of `docs/13`, and removed when the exercise ends. There is no standing path, by design.
 

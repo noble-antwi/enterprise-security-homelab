@@ -13,9 +13,13 @@ from __future__ import annotations
 
 import glob
 import os
+import re
+import shutil
 import subprocess
 import sys
 import tempfile
+import time
+import zlib
 from pathlib import Path
 
 import markdown
@@ -81,24 +85,82 @@ def render(md_path: Path, edge: str) -> Path:
 </body></html>"""
 
     pdf_path = md_path.with_suffix(".pdf").resolve()
-    with tempfile.NamedTemporaryFile("w", suffix=".html", delete=False, encoding="utf-8") as tmp:
-        tmp.write(html)
-        tmp_html = tmp.name
+    # The intermediate HTML lives in its own directory and is NOT deleted until the
+    # PDF has actually appeared. Edge with --headless=new can return from the parent
+    # process before the render completes; deleting the source HTML in a finally block
+    # then races the render, and Edge prints its "cannot reach this page" error page
+    # instead. That failure is silent: a plausible-looking PDF is produced, identical
+    # in size for every document.
+    work_dir = Path(tempfile.mkdtemp(prefix="md2pdf-"))
+    tmp_html = work_dir / "doc.html"
+    tmp_html.write_text(html, encoding="utf-8")
     # A private profile dir stops Edge from handing the job to an already-running
     # instance (which would exit immediately without printing).
     profile_dir = tempfile.mkdtemp(prefix="edge-pdf-")
+    before = pdf_path.stat().st_mtime if pdf_path.exists() else 0.0
     try:
         result = subprocess.run(
             [edge, "--headless=new", "--disable-gpu", "--no-first-run",
              f"--user-data-dir={profile_dir}", "--no-pdf-header-footer",
-             f"--print-to-pdf={pdf_path}", Path(tmp_html).as_uri()],
-            capture_output=True, text=True, timeout=120,
+             # Let images and fonts load before the page is printed.
+             "--virtual-time-budget=15000", "--run-all-compositor-stages-before-draw",
+             f"--print-to-pdf={pdf_path}", tmp_html.as_uri()],
+            capture_output=True, text=True, timeout=180,
         )
-        if not pdf_path.exists():
+        # Wait for the file to appear and stop growing, rather than trusting the exit.
+        deadline, last, stable = time.time() + 90, -1, 0
+        while time.time() < deadline:
+            if pdf_path.exists() and pdf_path.stat().st_mtime > before:
+                size = pdf_path.stat().st_size
+                stable = stable + 1 if size == last else 0
+                last = size
+                if stable >= 3 and size > 0:
+                    break
+            time.sleep(0.4)
+        else:
             sys.exit(f"Edge did not produce {pdf_path}\nexit={result.returncode}\n{result.stderr[-2000:]}")
     finally:
-        os.unlink(tmp_html)
+        shutil.rmtree(work_dir, ignore_errors=True)
+        shutil.rmtree(profile_dir, ignore_errors=True)
+    verify(md_path, pdf_path)
     return pdf_path
+
+
+def verify(md_path: Path, pdf_path: Path) -> None:
+    """Fail loudly if the PDF looks like Edge's error page rather than the document.
+
+    Edge's error page renders as two pages carrying a single illustration and almost
+    no text. A real document has more text operators than that, and one containing
+    figures embeds an image object per figure.
+    """
+    data = pdf_path.read_bytes()
+    pages = data.count(b"/Type /Page") + data.count(b"/Type/Page")
+    text_ops = 0
+    for m in re.finditer(rb"stream\r?\n(.*?)endstream", data, re.S):
+        try:
+            s = zlib.decompress(m.group(1))
+        except Exception:
+            continue
+        text_ops += s.count(b"Tj") + s.count(b"TJ")
+    # A render that lost the page entirely is fatal: it produces a plausible-looking
+    # PDF, so nothing downstream would notice.
+    if text_ops < 50:
+        sys.exit(f"{pdf_path.name} failed verification ({pages} pages, {text_ops} text "
+                 f"operators): the render is almost certainly Edge's error page, not the document.")
+
+    # Broken image links are a defect in the Markdown rather than the render, so they
+    # are reported and the PDF is still written.
+    refs = re.findall(r"^!\[[^\]]*\]\(([^)]+)\)", md_path.read_text(encoding="utf-8"), re.M)
+    missing = [r for r in refs if not (md_path.parent / r).exists()]
+    images = data.count(b"/Subtype /Image") + data.count(b"/Subtype/Image")
+    if missing:
+        print(f"  WARNING: {len(missing)} image(s) referenced by {md_path.name} do not exist:",
+              file=sys.stderr)
+        for r in missing:
+            print(f"    {r}", file=sys.stderr)
+    elif refs and images < len(refs):
+        print(f"  WARNING: {md_path.name} declares {len(refs)} figures but the PDF embeds "
+              f"{images} images.", file=sys.stderr)
 
 
 def main(argv: list[str]) -> None:
