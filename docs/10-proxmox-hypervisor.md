@@ -133,7 +133,7 @@ The trunk migration must follow this sequence exactly. Reversing the order cause
 ip link show
 ```
 
-![Output of ip link show confirming nic0 as the physical NIC](../assets/proxmox/01-ip-link-show.png)
+![Output of ip link show confirming nic0 as the physical NIC](../images/pve/pve-05-ip-link-show.png)
 *Output of ip link show, the physical NIC is identified as nic0 with alternate names enp0s25 and enx3417eb9da246*
 
 Note the physical NIC name. On this node it is `nic0`. On other hardware it may differ, use whatever appears here, not an assumed name.
@@ -158,7 +158,7 @@ The default config assigns the management IP directly to `vmbr0` with no VLAN aw
 nano /etc/network/interfaces
 ```
 
-![New /etc/network/interfaces config in nano showing VLAN-aware bridge configuration](../assets/proxmox/02-interfaces-config-nano.png)
+![New /etc/network/interfaces config in nano showing VLAN-aware bridge configuration](../images/pve/pve-06-interfaces-vlan-aware.png)
 *The updated interfaces file, vmbr0 is now VLAN-aware and the management IP has moved to vmbr0.10*
 
 Replace the contents with the configuration shown in the Network Configuration section above.
@@ -184,7 +184,7 @@ cat /sys/class/net/vmbr0/bridge/vlan_filtering
 ip route
 ```
 
-![Verification command outputs after ifreload showing vmbr0.10 with correct IP and vlan_filtering returning 1](../assets/proxmox/03-verification-output.png)
+![Verification command outputs after ifreload showing vmbr0.10 with correct IP and vlan_filtering returning 1](../images/pve/pve-07-vlan-verification.png)
 *Verification output, vmbr0.10 holds 192.168.10.6/24, vlan_filtering returns 1, default route is correct*
 
 At this stage a ping to `192.168.10.1` returns `Destination Host Unreachable`. This is expected, the node is now sending tagged frames but is still on an access port that only accepts untagged frames. This confirms the config is working correctly and is ready for the trunk port.
@@ -197,7 +197,7 @@ Move the Ethernet cable from Port 3 (access) to Port 2 (trunk) on the TP-Link sw
 ping -c 4 192.168.10.1
 ```
 
-![Successful ping to pfSense after moving to trunk port showing 0% packet loss](../assets/proxmox/04-ping-success.png)
+![Successful ping to pfSense after moving to trunk port showing 0% packet loss](../images/pve/pve-08-trunk-ping-success.png)
 *4 packets transmitted, 4 received, 0% packet loss, Proxmox is live on the trunk port*
 
 **Step 8, Confirm internet access**
@@ -214,7 +214,7 @@ From any device on the Management VLAN:
 https://192.168.10.6:8006
 ```
 
-![Proxmox VE web UI accessible at 192.168.10.6:8006](../assets/proxmox/05-proxmox-webui.png)
+![Proxmox VE web UI accessible at 192.168.10.6:8006](../images/pve/pve-09-webui-on-trunk.png)
 *Proxmox web UI, the no-subscription notice is standard on the free community edition and does not affect functionality*
 
 ---
