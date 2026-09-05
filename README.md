@@ -75,7 +75,7 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 
 ### Deployed Systems
 
-Machines follow a role-based naming convention (`DC01`, `CA01`, `WKS01`, `SIEM01`, `MON01`, `VAULT01`, `ANS01`, `KALI01`), documented in `docs/14`.
+Machines follow a role-based naming convention, `<ROLE><NN>`: servers such as `DC01`, `CA01`, `SIEM01`, `MON01`, `VAULT01`, `ANS01`, `KALI01`, `WKS01`, and infrastructure such as `FW01` (pfSense), `SW01`/`SW02` (switches), `PVE01` (hypervisor) and `LAB01` (training host). The full scheme, the current rename status of every machine, and the reasoning behind the monitoring and SIEM role swap are in `docs/14` section 5.
 
 | System | IP Address | VLAN | Platform | Purpose | Status |
 |--------|------------|------|----------|---------|--------|

@@ -103,21 +103,66 @@ All-running total is roughly 28 GB, within 32 GB, and guests can be powered on *
 
 ## 5. Machine naming convention
 
-A consistent, role-based naming scheme (adopted 2026-08-30). Names state the role, so any machine is identifiable from its name alone. This supports asset inventory and audit (NIST CM-8).
+A consistent, role-based scheme: **`<ROLE><NN>`**, uppercase, no separators. The name states the role, so any machine is identifiable from its name alone without consulting an inventory. This is the basis of the asset register that NIST CM-8 (System Component Inventory) expects.
 
-| Role | Name(s) |
-|------|---------|
-| Domain controllers | `DC01`, `DC02` |
-| Certificate Authority | `CA01` |
-| File / SQL servers | `FS01`, `SQL01` |
-| Workstations | `WKS01`, `WKS02` |
-| Wazuh / SIEM | `SIEM01` |
-| Grafana / monitoring | `MON01` |
-| Vault | `VAULT01` |
-| Ansible controller | `ANS01` |
-| Attack / offensive box | `KALI01` |
+Adopted 2026-08-30 for servers. **Extended 2026-09-04** to cover the categories the original scheme left undefined: network devices, the hypervisor, and utility hosts. Those gaps were the actual source of the inconsistency, since machines with no defined category kept whatever name they were installed with.
 
-**Migration note**: the first domain controller was originally named `SRV1` and was **renamed to `DC01` on 2026-08-30** to match this convention. The rename was change-controlled: `dcdiag /test:dns` was clean before and after, the IP `192.168.50.2` and the domain `ad.biira.online` were unaffected, and the Netlogon service was restarted to re-register the DC's SRV records under the new name. The firewall alias retains its original name `SRV1_DC` (it points to the IP, not the hostname). Existing guests `100 (windows11)` and `102 (ubuntu-blueteam)` will be renamed to their role names when rebuilt/repurposed.
+### 5.1 The scheme
+
+| Category | Role prefix | Examples |
+|----------|-------------|----------|
+| Domain controllers | `DC` | `DC01`, `DC02` |
+| Certificate Authority | `CA` | `CA01` |
+| File / SQL servers | `FS`, `SQL` | `FS01`, `SQL01` |
+| Workstations | `WKS` | `WKS01`, `WKS02` |
+| SIEM / log collection | `SIEM` | `SIEM01` |
+| Metrics and dashboards | `MON` | `MON01` |
+| Secrets management | `VAULT` | `VAULT01` |
+| Automation controller | `ANS` | `ANS01` |
+| Attack / offensive | `KALI` | `KALI01` |
+| Privileged access workstation | `PAW` | `PAW01` |
+| Firewall / router | `FW` | `FW01` |
+| Switches | `SW` | `SW01`, `SW02` |
+| Hypervisor host | `PVE` | `PVE01` |
+| Utility / training host | `LAB` | `LAB01` |
+
+Two conventions worth stating explicitly, because they are the ones that get broken:
+
+- **The number is per role, not global.** The second domain controller is `DC02`, not `DC10`, regardless of how many other machines exist.
+- **A machine is named for what it does, not what it runs.** A Wazuh server is `SIEM01` whether it runs Rocky Linux or Ubuntu. Naming after the operating system or the hardware is what produced names like `nbl-core-ub01`, which tell a reader nothing about the machine's purpose.
+
+### 5.2 Inventory and rename status
+
+| Current name | Target | Role | Status |
+|--------------|--------|------|--------|
+| `DC01` | `DC01` | Domain controller | Correct |
+| `kali01` | `KALI01` | Attack box | Correct |
+| `nbl-core-ub01` | `SIEM01` | Wazuh (after repurposing, see 5.3) | Pending rebuild |
+| `lab-devops-svc01` | `VAULT01` | HashiCorp Vault | Pending |
+| `proxmox-01` | `PVE01` | Hypervisor | Pending |
+| pfSense (default) | `FW01` | Firewall | Pending |
+| TL-SG108E | `SW01` | Managed switch | Pending |
+| Secondary switch | `SW02` | Switch | Pending |
+| TCM Ubuntu `192.168.10.4` | `LAB01` | Training host | Pending |
+| VM 100 `windows11` | `WKS01` | Workstation | Pending |
+| VM 102 `ubuntu-blueteam` | `MON01` | Metrics and dashboards | Pending rebuild |
+
+### 5.3 Role swap: monitoring hardware becomes the SIEM
+
+The Wazuh host failed on 2026-08-29 and the monitoring host is physical while the estate's spare capacity is virtual. Rather than rebuild like for like, the two roles swap:
+
+| | Before | After |
+|---|--------|-------|
+| Physical `nbl-core-ub01` | Grafana + Prometheus, VLAN 60 | **`SIEM01`**, Wazuh, VLAN 20 |
+| Proxmox guest | none | **`MON01`**, Grafana + Prometheus, VLAN 60 |
+
+The reasoning is resource shape rather than preference. Wazuh's all-in-one deployment includes the Indexer, an OpenSearch instance whose memory floor is around 8 GB, and it holds data that must survive. Grafana and Prometheus run comfortably in about 2 GB and their state is a configuration file and a metrics database that can be restored from backup. Putting the memory-hungry, data-bearing service on dedicated hardware and the light, reproducible one on the hypervisor uses both better. The operating system stays Ubuntu 24.04 on both, which also means Wazuh moves from Rocky Linux 9.6 to Ubuntu.
+
+### 5.4 Rename history
+
+**`SRV1` to `DC01`, 2026-08-30.** Change-controlled: `dcdiag /test:dns` was clean before and after, the IP `192.168.50.2` and the domain `ad.biira.online` were unaffected, and Netlogon was restarted to re-register the DC's SRV records under the new name. The firewall alias retains its original name `SRV1_DC`, because it resolves an IP rather than a hostname and renaming it would invalidate the change-control history and the screenshots that reference it.
+
+**A note on the hypervisor rename.** `proxmox-01` to `PVE01` is the only rename here carrying real risk. Every guest configuration lives under `/etc/pve/nodes/<nodename>/qemu-server/`, so the rename involves moving a directory inside the cluster filesystem. Performed incorrectly, guests vanish from the interface. It is recoverable, but it should be done last, after a verified backup, and never at the same time as other changes.
 
 ![DC01 dcdiag clean after rename](../images/dc/dc-01-rename-to-dc01.png)
 *Figure 14.5: `dcdiag /test:dns` on `DC01` after the rename and Netlogon restart: Connectivity, DNS, all partition tests, and the enterprise `ad.biira.online` DNS test all pass. Evidence the rename left Active Directory healthy.*
