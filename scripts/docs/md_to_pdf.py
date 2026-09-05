@@ -92,6 +92,10 @@ th { text-align: left; background: var(--navy); color: #fff; padding: 5pt 7pt; f
      border-bottom: 2px solid var(--cyan); }
 td { padding: 5pt 7pt; border-bottom: 1px solid var(--line); vertical-align: top; }
 tr:nth-child(even) td { background: var(--sky); }
+/* Rule identifiers (MGMT-01, RED-03, H-01) must never break across lines: the
+   hyphen is a legal break point, so "H-01" wraps to "H-" / "01" in a narrow
+   first column and stops reading as an identifier. */
+td .nw, th .nw { white-space: nowrap; }
 hr { border: 0; border-top: 1px solid var(--line); margin: 16pt 0; }
 strong { color: var(--navy); }
 img { max-width: 100%; height: auto; display: block; margin: 12pt auto 4pt;
@@ -118,6 +122,11 @@ def render(md_path: Path, edge: str) -> Path:
     text = md_path.read_text(encoding="utf-8")
     body = markdown.markdown(text, extensions=["tables", "fenced_code", "toc", "sane_lists"])
     title = next((ln.lstrip("# ").strip() for ln in text.splitlines() if ln.startswith("# ")), md_path.stem)
+    # A table cell holding nothing but a rule identifier is wrapped so the hyphen
+    # cannot become a line break. Applied only to whole-cell matches, so prose
+    # that merely mentions an identifier still wraps normally.
+    body = re.sub(r"(<t[dh]>)([A-Z]{1,7}-\d{1,3})(</t[dh]>)",
+                  r'\1<span class="nw">\2</span>\3', body)
     # Resolve relative image paths (e.g. ../images/...) against the .md file's own
     # directory, since the rendered HTML lives in a temp dir. A trailing slash makes
     # the base act as a directory.
