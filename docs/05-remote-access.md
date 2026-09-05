@@ -23,7 +23,7 @@ Internet ↔ ISP Router (208.59.146.187) ↔ pfSense WAN (192.168.4.32) ↔ Lab 
 ![alt text](../images/image-33.png)
 
 
-![alt text](<../images/simple_network_constraint (1).png>)
+![Network constraint that motivated the mesh VPN](../images/vpn/vpn-01-network-constraint.png)
 **Specific Issues:**
 - **No Administrative Access** to ISP-provided router
 - **pfSense behind NAT** at `192.168.4.32` instead of public IP

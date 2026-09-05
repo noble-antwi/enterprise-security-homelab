@@ -1,4 +1,10 @@
-# Enterprise Information Security Lab
+<img src="images/brand/biira-bank-mark-256.png" alt="Biira Bank" height="90">
+
+# Biira Bank: Enterprise Information Security Lab
+
+**The scenario.** This environment is built and documented as the infrastructure of a fictional regional bank, **Biira Bank**. The domain is real (`ad.biira.online`), the segmentation is real, and the controls are tested rather than described. Working to a named organisation rather than an abstract "lab" forces the decisions a real environment forces: who needs to reach what, why a rule exists, what an auditor would ask, and what happens when something fails. Financial services was chosen deliberately, because it is the sector where segmentation, least privilege, change control and evidence are least optional.
+
+The sibling repository [enterprise-iam-lab](https://github.com/noble-antwi/enterprise-iam-lab) documents the same organisation's identity estate (Active Directory, Okta, Entra) and is built on the architecture described here.
 
 [![Documentation](https://img.shields.io/badge/docs-complete-brightgreen.svg)](docs/)
 [![Lab Status](https://img.shields.io/badge/status-active-brightgreen.svg)]()
@@ -30,22 +36,22 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 
 | Module | Description | Status |
 |--------|-------------|--------|
-| **[01-network-infrastructure](docs/01-network-infrastructure.md)** | pfSense setup, VLAN architecture, switch configuration | Complete |
-| **[02-security-monitoring](docs/02-security-monitoring.md)** | Wazuh SIEM deployment and BlueTeam VLAN setup | Complete |
-| **[03-observability-stack](docs/03-observability-stack.md)** | Grafana and Prometheus monitoring deployment | Complete |
-| **[04-automation-platform](docs/04-automation-platform.md)** | Cross-platform Ansible automation with Linux and Windows | Complete |
-| **[05-remote-access](docs/05-remote-access.md)** | Tailscale mesh VPN implementation | Complete |
-| **[06-ansible-service-account](docs/06-ansible-service-account.md)** | Ansible service account implementation for automation | Complete |
-| **[07-ansible-roles-architecture](docs/07-ansible-roles-architecture.md)** | Role-based automation architecture | Complete |
-| **[08-windows-integration](docs/08-windows-integration.md)** | Windows automation and integration implementation | Complete |
-| **[09-bootstrap-procedures](docs/09-bootstrap-procedures.md)** | Ansible controller bootstrap and configuration | Complete |
+| **[01-network-infrastructure](docs/01-network-infrastructure.md)** ([PDF](docs/01-network-infrastructure.pdf)) | pfSense setup, VLAN architecture, switch configuration | Complete |
+| **[02-security-monitoring](docs/02-security-monitoring.md)** ([PDF](docs/02-security-monitoring.pdf)) | Wazuh SIEM deployment and BlueTeam VLAN setup | Complete |
+| **[03-observability-stack](docs/03-observability-stack.md)** ([PDF](docs/03-observability-stack.pdf)) | Grafana and Prometheus monitoring deployment | Complete |
+| **[04-automation-platform](docs/04-automation-platform.md)** ([PDF](docs/04-automation-platform.pdf)) | Cross-platform Ansible automation with Linux and Windows | Complete |
+| **[05-remote-access](docs/05-remote-access.md)** ([PDF](docs/05-remote-access.pdf)) | Tailscale mesh VPN implementation | Complete |
+| **[06-ansible-service-account](docs/06-ansible-service-account.md)** ([PDF](docs/06-ansible-service-account.pdf)) | Ansible service account implementation for automation | Complete |
+| **[07-ansible-roles-architecture](docs/07-ansible-roles-architecture.md)** ([PDF](docs/07-ansible-roles-architecture.pdf)) | Role-based automation architecture | Complete |
+| **[08-windows-integration](docs/08-windows-integration.md)** ([PDF](docs/08-windows-integration.pdf)) | Windows automation and integration implementation | Complete |
+| **[09-ansible-controller-setup](docs/09-ansible-controller-setup.md)** ([PDF](docs/09-ansible-controller-setup.pdf)) | Ansible controller bootstrap and configuration | Complete |
 | **[10-proxmox-hypervisor](docs/10-proxmox-hypervisor.md)** ([PDF](docs/10-proxmox-hypervisor.pdf)) | Proxmox VE deployment, VLAN-aware bridge, trunk port migration | Complete |
 | **[11-domain-controller-firewall](docs/11-domain-controller-firewall.md)** ([PDF](docs/11-domain-controller-firewall.pdf)) | pfSense aliases and rules for the DC01 domain controller: what each AD port does, how rules evaluate, target layout | In Progress |
 | **[12-lab-expansion-roadmap](docs/12-lab-expansion-roadmap.md)** ([PDF](docs/12-lab-expansion-roadmap.pdf)) | Windows/AD estate growth plan: endpoint inventory, what each machine teaches, attack/defence scenarios, phased build, IAM repo decision | Planning |
 | **[13-firewall-rulebase-governance](docs/13-firewall-rulebase-governance.md)** ([PDF](docs/13-firewall-rulebase-governance.pdf)) | Audit-grade rulebase governance: the 8 principles auditors check, a living rule register with per-rule justification and control mapping, change-control log, review cadence | In Progress |
 | **[14-proxmox-storage-backup-capacity](docs/14-proxmox-storage-backup-capacity.md)** ([PDF](docs/14-proxmox-storage-backup-capacity.pdf)) | Proxmox storage layout, backup/recovery strategy (NIST CP-9), LXC-vs-VM capacity plan, and the lab-wide machine naming convention | Current |
 | **[15-kali-attack-host-build](docs/15-kali-attack-host-build.md)** ([PDF](docs/15-kali-attack-host-build.pdf)) | Building the attack host on the isolated RedTeam segment, the containment evidence, and what the test does and does not prove about reachability | Current |
-| **[ssh-configuration](docs/ssh-configuration.md)** | SSH configuration and key management guide | Complete |
+| **[ssh-configuration](docs/ssh-configuration.md)** ([PDF](docs/ssh-configuration.pdf)) | SSH configuration and key management guide | Complete |
 | **[troubleshooting](troubleshooting/)** | Comprehensive troubleshooting guides by component | Complete |
 
 ---
