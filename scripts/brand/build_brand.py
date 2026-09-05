@@ -1,0 +1,176 @@
+"""
+Build the Biira Bank brand assets from a single source of truth.
+
+Usage (from the repo root):
+    python scripts/brand/build_brand.py
+
+Writes SVG masters and rasterised PNGs into images/brand/, plus a favicon.
+Every asset is generated, so changing a colour here changes it everywhere.
+
+Requires PyMuPDF (rasterising) and Pillow (favicon assembly).
+"""
+from __future__ import annotations
+
+import math
+import pathlib
+
+import fitz
+from PIL import Image
+
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+OUT = ROOT / "images" / "brand"
+
+# ---------------------------------------------------------------- palette --
+# Colourway "Signal Cyan". Cyan is an accent, not a text colour: at #2DD4E8 it
+# scores about 1.7:1 on white, so anything that must be read on a light ground
+# uses CYAN_INK instead, which clears WCAG AA.
+NAVY = "#08152F"   # deep field, headings, table fill
+NAVY_MID = "#1B2F5E"   # field highlight, subheadings
+CYAN = "#2DD4E8"   # accent: rules, ring, bars. Never body text on white.
+CYAN_LIGHT = "#7FE9F5"   # hub, highlights on dark
+CYAN_INK = "#0E7490"   # readable cyan-tone on white (4.9:1)
+PAPER = "#FFFFFF"
+
+SHIELD = ("M12 20C12 14 16 10 22 10h76c6 0 10 4 10 10v54"
+          "c0 29-20 48-48 58C32 122 12 103 12 74Z")
+INNER = ("M20.5 24c0-4 2.6-6.6 6.6-6.6h65.8c4 0 6.6 2.6 6.6 6.6v49"
+         "c0 24.5-17 40.5-39.5 49.5C37.5 113.5 20.5 97.5 20.5 73Z")
+
+
+def _spokes(cx: float, cy: float, r0: float, r1: float, n: int, w: float, colour: str) -> str:
+    parts = []
+    for i in range(n):
+        a = math.radians(i * 360 / n + 22.5)
+        parts.append(
+            f'<line x1="{cx + r0 * math.cos(a):.2f}" y1="{cy + r0 * math.sin(a):.2f}" '
+            f'x2="{cx + r1 * math.cos(a):.2f}" y2="{cy + r1 * math.sin(a):.2f}" '
+            f'stroke="{colour}" stroke-width="{w}" stroke-linecap="round"/>')
+    return "".join(parts)
+
+
+def _field(on_dark: bool = False) -> str:
+    """Flat fill, deliberately. A gradient would tie the mark to renderers that
+    support one: MuPDF fills `url(#id)` with solid black, and the same applies to
+    embroidery, single-colour print and most favicon pipelines. Flat colour also
+    keeps the mark honest at 16px, where a gradient contributes nothing.
+
+    On a dark ground the deep navy field would vanish into the background, so the
+    reverse variant uses the lighter navy and keeps the shield legible as a shape."""
+    return f'<path fill="{NAVY_MID if on_dark else NAVY}" d="{SHIELD}"/>'
+
+
+def mark_full(on_dark: bool = False) -> str:
+    """Primary mark. The vault door reads properly at 64px and above."""
+    return (f'{_field(on_dark)}'
+            f'<path fill="none" stroke="{CYAN}" stroke-width="3.4" d="{INNER}"/>'
+            f'<circle cx="60" cy="66" r="23" fill="none" stroke="{CYAN}" stroke-width="3.4"/>'
+            f'{_spokes(60, 66, 11.5, 19.5, 8, 3.2, CYAN)}'
+            f'<circle cx="60" cy="66" r="7" fill="{CYAN_LIGHT}"/>')
+
+
+def mark_compact(on_dark: bool = False) -> str:
+    """Small-size mark. The spokes and the inner rule are the first things to
+    collapse below about 48px, so they are removed rather than allowed to turn
+    into a smudge. Ring and hub are thickened to hold the same silhouette."""
+    return (f'{_field(on_dark)}'
+            f'<circle cx="60" cy="66" r="24" fill="none" stroke="{CYAN}" stroke-width="6.5"/>'
+            f'<circle cx="60" cy="66" r="9.5" fill="{CYAN}"/>')
+
+
+def mark_mono(colour: str) -> str:
+    """One colour, for greyscale print, stamps and embroidery."""
+    return (f'<path fill="{colour}" d="{SHIELD}"/>'
+            f'<circle cx="60" cy="66" r="23" fill="none" stroke="{PAPER}" stroke-width="3.6"/>'
+            f'{_spokes(60, 66, 11.5, 19.5, 8, 3.4, PAPER)}'
+            f'<circle cx="60" cy="66" r="7" fill="{PAPER}"/>')
+
+
+def svg(body: str, w: float, h: float, extra: str = "") -> str:
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w:g} {h:g}" '
+            f'role="img" aria-label="Biira Bank"{extra}>'
+            f'<title>Biira Bank</title>{body}</svg>')
+
+
+FONT = "'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+
+
+def lockup(word: str, sub: str | None, on_dark: bool = False) -> str:
+    """Horizontal lockup. Text is live rather than outlined, so it depends on the
+    rendering system's fonts. The rasterised PNGs are the portable form."""
+    wordfill = PAPER if on_dark else NAVY
+    subfill = CYAN if on_dark else CYAN_INK
+    body = [f'<g transform="translate(0,0) scale(0.72)">{mark_full(on_dark)}</g>']
+    y = 56 if sub else 66
+    body.append(f'<text x="106" y="{y}" font-family="{FONT}" font-size="34" font-weight="700" '
+                f'letter-spacing="3.2" fill="{wordfill}">{word}</text>')
+    if sub:
+        body.append(f'<text x="108" y="80" font-family="{FONT}" font-size="12.5" font-weight="600" '
+                    f'letter-spacing="4.4" fill="{subfill}">{sub}</text>')
+    return svg("".join(body), 470, 102)
+
+
+def lockup_stacked(word: str, sub: str) -> str:
+    body = [f'<g transform="translate(95,0) scale(0.86)">{mark_full()}</g>',
+            f'<text x="145" y="168" text-anchor="middle" font-family="{FONT}" font-size="31" '
+            f'font-weight="700" letter-spacing="3" fill="{NAVY}">{word}</text>',
+            f'<text x="146" y="190" text-anchor="middle" font-family="{FONT}" font-size="11.5" '
+            f'font-weight="600" letter-spacing="4" fill="{CYAN_INK}">{sub}</text>']
+    return svg("".join(body), 290, 205)
+
+
+def rasterise(svg_path: pathlib.Path, png_path: pathlib.Path, width: int) -> None:
+    doc = fitz.open(svg_path)
+    page = doc[0]
+    zoom = width / page.rect.width
+    pix = page.get_pixmap(matrix=fitz.Matrix(zoom, zoom), alpha=True)
+    pix.save(png_path)
+    doc.close()
+
+
+def main() -> None:
+    OUT.mkdir(parents=True, exist_ok=True)
+    masters = {
+        "biira-bank-mark.svg": svg(mark_full(), 120, 140),
+        "biira-bank-mark-compact.svg": svg(mark_compact(), 120, 140),
+        "biira-bank-mark-reverse.svg": svg(mark_full(on_dark=True), 120, 140),
+        "biira-bank-mark-compact-reverse.svg": svg(mark_compact(on_dark=True), 120, 140),
+        "biira-bank-mark-mono-navy.svg": svg(mark_mono(NAVY), 120, 140),
+        "biira-bank-lockup.svg": lockup("BIIRA BANK", "SECURITY ENGINEERING"),
+        "biira-bank-lockup-reverse.svg": lockup("BIIRA BANK", "SECURITY ENGINEERING", on_dark=True),
+        "biira-bank-lockup-stacked.svg": lockup_stacked("BIIRA BANK", "SECURITY ENGINEERING"),
+    }
+    for name, content in masters.items():
+        (OUT / name).write_text(content + "\n", encoding="utf-8")
+        print(f"  svg  {name}")
+
+    raster = [
+        ("biira-bank-mark.svg", "biira-bank-mark-512.png", 512),
+        ("biira-bank-mark.svg", "biira-bank-mark-256.png", 256),
+        ("biira-bank-mark.svg", "biira-bank-mark-128.png", 128),
+        ("biira-bank-mark.svg", "biira-bank-mark-64.png", 64),
+        ("biira-bank-mark-reverse.svg", "biira-bank-mark-reverse-256.png", 256),
+        ("biira-bank-mark-compact.svg", "biira-bank-mark-compact-48.png", 48),
+        ("biira-bank-mark-compact.svg", "biira-bank-mark-compact-32.png", 32),
+        ("biira-bank-mark-compact-reverse.svg", "biira-bank-mark-compact-reverse-48.png", 48),
+        ("biira-bank-mark-compact-reverse.svg", "biira-bank-mark-compact-reverse-32.png", 32),
+        ("biira-bank-lockup.svg", "biira-bank-lockup-960.png", 960),
+        ("biira-bank-lockup-reverse.svg", "biira-bank-lockup-reverse-960.png", 960),
+        ("biira-bank-lockup-stacked.svg", "biira-bank-lockup-stacked-600.png", 600),
+    ]
+    for src, dst, w in raster:
+        rasterise(OUT / src, OUT / dst, w)
+        print(f"  png  {dst}")
+
+    # Favicon: the compact mark at every size a browser or OS asks for.
+    ico_src = OUT / "biira-bank-mark-compact.svg"
+    tmp = OUT / "_favicon-256.png"
+    rasterise(ico_src, tmp, 256)
+    base = Image.open(tmp).convert("RGBA")
+    base.save(OUT / "favicon.ico",
+              sizes=[(16, 16), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)])
+    tmp.unlink()
+    print("  ico  favicon.ico")
+
+
+if __name__ == "__main__":
+    main()
