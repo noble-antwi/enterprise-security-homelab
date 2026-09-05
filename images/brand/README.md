@@ -42,7 +42,7 @@ Every text and background pair in the documents clears AA at body size. That als
 | Anywhere vector works | `biira-bank-mark.svg` |
 | 64px and above, raster | `biira-bank-mark-{512,256,128,64}.png` |
 | **48px and below** | `biira-bank-mark-compact-{48,32}.png` |
-| Browser tab, OS icon | `favicon.ico` (16 to 256px) |
+| Browser tab, OS icon | `web/favicon.ico` (16 to 256px) |
 | Beside the name, horizontal | `biira-bank-lockup.svg` |
 | Stacked, for square spaces | `biira-bank-lockup-stacked.svg` |
 | On a dark background | any `*-reverse` variant |
@@ -55,6 +55,27 @@ The vault's eight spokes and the inner shield rule are the first details to coll
 The **compact** variant removes them and thickens the ring and hub, holding the same silhouette with fewer parts. This is ordinary practice, not a compromise: it is why the favicon is built from the compact mark rather than by shrinking the full one.
 
 Use the full mark at 64px and above. Use compact at 48px and below.
+
+---
+
+## For a website
+
+`web/` holds a complete favicon and app-icon set, ready to drop into a site root. `web/head-snippet.html` has the tags to paste into `<head>`.
+
+| File | Used by |
+|------|---------|
+| `favicon.ico` | Older browsers, bookmarks, Windows shortcuts |
+| `favicon.svg` | Modern browsers, sharp at any density |
+| `favicon-{16,32,48,96}x{...}.png` | Browser tabs and OS surfaces |
+| `apple-touch-icon.png` | iOS home screen, 180px |
+| `web-app-manifest-{192,512}x{...}.png` | Android and installable web apps |
+| `site.webmanifest` | PWA metadata, theme colour `#08152F` |
+
+Three details in there are the usual reason deployed icons look broken, and are worth knowing if you ever build the set by hand:
+
+- **iOS ignores transparency** on the touch icon and composites whatever it finds onto black. These are drawn on an opaque navy tile instead.
+- **Android crops maskable icons** to a circle or squircle. Anything outside the central 80% can be cut off, so the mark is inset to about 60% of the canvas.
+- **The opaque tiles use the reverse mark.** The deep navy field is invisible against a navy tile, leaving only a floating cyan outline, which reads as a rendering fault rather than a logo.
 
 ### Why there are reverse variants
 

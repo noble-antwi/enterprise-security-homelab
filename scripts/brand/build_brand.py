@@ -171,6 +171,87 @@ def main() -> None:
     tmp.unlink()
     print("  ico  favicon.ico")
 
+    build_web_icons()
+
+def build_web_icons() -> None:
+    """Favicons and app icons for a website.
+
+    Three things differ from the plain PNGs and are the usual cause of icons
+    that look broken once deployed:
+
+    * iOS ignores transparency on the touch icon and composites it onto black,
+      so these are drawn on an opaque navy square.
+    * Android maskable icons are cropped to a circle or squircle by the
+      launcher. Anything outside the central 80% can be cut, so the mark is
+      inset to roughly 60% of the canvas.
+    * The compact mark is used below 96px, for the same reason the favicon is.
+    """
+    web = OUT / "web"
+    web.mkdir(exist_ok=True)
+
+    def canvas(size: int, mark_svg: str, scale: float, opaque: bool) -> Image.Image:
+        tmp = web / "_tmp.png"
+        rasterise(OUT / mark_svg, tmp, max(8, int(size * scale)))
+        mark = Image.open(tmp).convert("RGBA")
+        tmp.unlink()
+        # Fit by height: the shield is taller than it is wide.
+        h = max(8, int(size * scale))
+        mark = mark.resize((max(1, int(h * mark.width / mark.height)), h), Image.LANCZOS)
+        bg = (8, 21, 47, 255) if opaque else (0, 0, 0, 0)
+        img = Image.new("RGBA", (size, size), bg)
+        img.alpha_composite(mark, ((size - mark.width) // 2, (size - mark.height) // 2))
+        return img
+
+    # Transparent favicons, drawn edge to edge.
+    for size in (16, 32, 48, 96):
+        src = "biira-bank-mark-compact.svg" if size < 96 else "biira-bank-mark.svg"
+        canvas(size, src, 1.0, opaque=False).save(web / f"favicon-{size}x{size}.png")
+
+    # SVG favicon: modern browsers prefer it and it stays sharp at any density.
+    (web / "favicon.svg").write_text(
+        (OUT / "biira-bank-mark-compact.svg").read_text(encoding="utf-8"), encoding="utf-8")
+
+    # The opaque icons use the REVERSE mark. On the navy tile the deep-navy
+    # field is invisible and only the cyan outline survives, which reads as a
+    # broken icon rather than a logo.
+    # iOS: opaque, and Apple applies its own rounding.
+    canvas(180, "biira-bank-mark-reverse.svg", 0.74, opaque=True).save(
+        web / "apple-touch-icon.png")
+
+    # Android/PWA: maskable, so the mark sits inside the safe area.
+    for size in (192, 512):
+        canvas(size, "biira-bank-mark-reverse.svg", 0.60, opaque=True).save(
+            web / f"web-app-manifest-{size}x{size}.png")
+
+    (OUT / "favicon.ico").replace(web / "favicon.ico")
+
+    (web / "site.webmanifest").write_text("""{
+  "name": "Biira Bank Security Lab",
+  "short_name": "Biira Bank",
+  "icons": [
+    { "src": "/web-app-manifest-192x192.png", "sizes": "192x192",
+      "type": "image/png", "purpose": "maskable" },
+    { "src": "/web-app-manifest-512x512.png", "sizes": "512x512",
+      "type": "image/png", "purpose": "maskable" }
+  ],
+  "theme_color": "#08152F",
+  "background_color": "#08152F",
+  "display": "standalone"
+}
+""", encoding="utf-8")
+
+    (web / "head-snippet.html").write_text("""<!-- Paste into <head>. Adjust the paths if the icons are not served from the site root. -->
+<link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Biira Bank">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#08152F">
+""", encoding="utf-8")
+
+    print("  web  favicon set (10 files) in images/brand/web/")
+
 
 if __name__ == "__main__":
     main()
