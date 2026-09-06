@@ -120,6 +120,7 @@ Adopted 2026-08-30 for servers. **Extended 2026-09-04** to cover the categories 
 | Secrets management | `VAULT` | `VAULT01` |
 | Automation controller | `ANS` | `ANS01` |
 | Attack / offensive | `KALI` | `KALI01` |
+| Administrative workstation | `ADM` | `ADM01` |
 | Privileged access workstation | `PAW` | `PAW01` |
 | Firewall / router | `FW` | `FW01` |
 | Switches | `SW` | `SW01`, `SW02` |
@@ -137,7 +138,8 @@ Two conventions worth stating explicitly, because they are the ones that get bro
 |--------------|--------|------|--------|
 | `DC01` | `DC01` | Domain controller | Correct |
 | `kali01` | `KALI01` | Attack box | Correct |
-| `nbl-core-ub01` | `SIEM01` | Wazuh (see 5.3) | **Done 2026-09-05**: renamed, moved to VLAN 20 at `192.168.20.2`, cable moved to Port 4. Wazuh install pending |
+| `nbl-core-ub01` | `SIEM01` | Wazuh (see 5.3) | **Done 2026-09-05**: renamed, moved to VLAN 20 at `192.168.20.2`, cable moved to Port 4, Wazuh installed and collecting from two agents |
+| Admin laptop | `ADM01` | Administrative workstation | Named at Wazuh enrolment 2026-09-06. To be superseded by `PAW01`; see the note below |
 | `lab-devops-svc01` | `VAULT01` | HashiCorp Vault | Pending |
 | `proxmox-01` | `PVE01` | Hypervisor | Pending |
 | pfSense (default) | `FW01` | Firewall | Pending |
@@ -161,6 +163,8 @@ The reasoning is resource shape rather than preference. Wazuh's all-in-one deplo
 ### 5.4 Rename history
 
 **`SRV1` to `DC01`, 2026-08-30.** Change-controlled: `dcdiag /test:dns` was clean before and after, the IP `192.168.50.2` and the domain `ad.biira.online` were unaffected, and Netlogon was restarted to re-register the DC's SRV records under the new name. The firewall alias retains its original name `SRV1_DC`, because it resolves an IP rather than a hostname and renaming it would invalidate the change-control history and the screenshots that reference it.
+
+**Why an `ADM` category exists, and why it is temporary.** The administrative workstation is a daily-driver laptop that also browses the web and reads email, while holding reach into every lab VLAN (`MGMT-09`) and administrative access to the domain controller (`MGMT-08`). That makes it a Tier 0 machine by function and a Tier 2 machine by use, which inverts the trust relationship the tiering model exists to protect: the domain's security becomes bounded by the laptop's. The proper resolution is `PAW01`, a dedicated administrative workstation with no browsing or email, with `MGMT-08` narrowed to an `ADMIN_HOSTS` alias containing only it. `ADM01` names the current reality honestly rather than pretending the laptop is something it is not. Tracked as `H-01` in `docs/13`.
 
 **A note on the hypervisor rename.** `proxmox-01` to `PVE01` is the only rename here carrying real risk. Every guest configuration lives under `/etc/pve/nodes/<nodename>/qemu-server/`, so the rename involves moving a directory inside the cluster filesystem. Performed incorrectly, guests vanish from the interface. It is recoverable, but it should be done last, after a verified backup, and never at the same time as other changes.
 

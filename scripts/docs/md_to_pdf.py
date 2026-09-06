@@ -218,6 +218,17 @@ def verify(md_path: Path, pdf_path: Path) -> None:
     refs = re.findall(r"^!\[[^\]]*\]\(([^)]+)\)", md_path.read_text(encoding="utf-8"), re.M)
     missing = [r for r in refs if not (md_path.parent / r).exists()]
     images = data.count(b"/Subtype /Image") + data.count(b"/Subtype/Image")
+    # Figure cross-references. Renumbering captions silently invalidates any
+    # "see Figure 13.7" written in prose, which is a class of error a reader
+    # notices and the author never does.
+    src = md_path.read_text(encoding="utf-8")
+    captions = set(re.findall(r"\*Figure (\d+\.\d+):", src))
+    prose = set(re.findall(r"Figure (\d+\.\d+)(?!:)", src))
+    dangling = sorted(prose - captions)
+    if dangling:
+        print(f"  WARNING: {md_path.name} refers to figure(s) that do not exist: "
+              f"{', '.join(dangling)}", file=sys.stderr)
+
     if missing:
         print(f"  WARNING: {len(missing)} image(s) referenced by {md_path.name} do not exist:",
               file=sys.stderr)

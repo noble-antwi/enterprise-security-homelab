@@ -45,19 +45,23 @@ Each rule carries a stable **Rule ID** (`<TAB>-<NN>`) that does not change even 
 | MGMT-09 | MANAGEMENT net | `LAB_NETS` | any | Pass | No | Administrative reach into all lab VLANs from the management plane (explicit; to be tightened per-service over time). | AC-6 | Built |
 | MGMT-10 | MANAGEMENT net | NOT `LAB_NETS` | any | Pass | No | Internet access for the management plane (destination inverted = anywhere except the lab). | SC-7 | Built |
 | MGMT-11 | MANAGEMENT net | `SIEM01_HOST` | `SIEM_ADMIN` (22, 443) | Pass | Yes | SSH and dashboard access to SIEM01 for administration. Logged, because administrative access to the host holding the security evidence must be attributable. | AC-17, AU-2 | Built |
+| MGMT-12 | MANAGEMENT net | `SIEM01_HOST` | `WAZUH_AGENT` (1514, 1515) | Pass | No | Wazuh agents on the management plane report events and enrol against SIEM01. Covers the admin workstation, the hypervisor, and any future VLAN 10 host, so no rule is needed per machine. | AU-6, SI-4 | Built |
 | *(implicit)* | any | any | any | Deny | - | Default deny. Anything not explicitly allowed is dropped. | SC-7(5) | Built-in |
 
+![MGMT-12](../images/fw/fw-18-mgmt-12-rule.png)
+*Figure 13.1: `MGMT-12`, reusing the `WAZUH_AGENT` alias created for ENT-05. One rule serves every agent on the management plane rather than one rule per host.*
+
 ![MANAGEMENT rules, first batch](../images/fw/fw-05-mgmt-rules-batch1.png)
-*Figure 13.1: The MANAGEMENT tab partway through the build. The broad `All` rule is still present near the bottom, which is why the specific rules above it could be added safely: nothing was cut off while the ruleset was incomplete.*
+*Figure 13.2: The MANAGEMENT tab partway through the build. The broad `All` rule is still present near the bottom, which is why the specific rules above it could be added safely: nothing was cut off while the ruleset was incomplete.*
 
 ![MANAGEMENT rules, continued](../images/fw/fw-06-mgmt-rules-batch1b.png)
-*Figure 13.2: The same tab after MGMT-01 to 04 were in place. Several legacy rules with informal descriptions are still visible; they were replaced by identified rules rather than edited, so the register and the live config could be reconciled line by line.*
+*Figure 13.3: The same tab after MGMT-01 to 04 were in place. Several legacy rules with informal descriptions are still visible; they were replaced by identified rules rather than edited, so the register and the live config could be reconciled line by line.*
 
 ![Domain controller access rules](../images/fw/fw-07-mgmt-dc-rules.png)
-*Figure 13.3: MGMT-05 to 08, the four rules that give the management plane access to the domain controller. Each uses an alias rather than a literal address or port list, so the rule reads as its intent and a change to the alias updates every rule at once.*
+*Figure 13.4: MGMT-05 to 08, the four rules that give the management plane access to the domain controller. Each uses an alias rather than a literal address or port list, so the rule reads as its intent and a change to the alias updates every rule at once.*
 
 ![MANAGEMENT ruleset complete](../images/fw/fw-08-mgmt-rules-complete.png)
-*Figure 13.4: MGMT-09 and MGMT-10, the pair that closes the interface. MGMT-09 permits administrative reach into the lab VLANs; MGMT-10 uses an inverted destination, "not `LAB_NETS`", to grant internet access without granting anything internal. One inverted rule replaces a fragile stack of blocks.*
+*Figure 13.5: MGMT-09 and MGMT-10, the pair that closes the interface. MGMT-09 permits administrative reach into the lab VLANs; MGMT-10 uses an inverted destination, "not `LAB_NETS`", to grant internet access without granting anything internal. One inverted rule replaces a fragile stack of blocks.*
 
 ### 2.2 ENTERPRISELAN interface (VLAN 50, source = the domain controller's segment)
 
@@ -73,10 +77,10 @@ This tab governs what VLAN-50 hosts (currently only `DC01`) may *initiate*. Inbo
 | *(implicit)* | any | any | any | Deny | - | Default deny. VLAN 50 cannot initiate into other VLANs or reach pfSense admin. | SC-7(5), AC-4 | Built-in |
 
 ![WAZUH_AGENT ports alias](../images/fw/fw-16-alias-wazuh-agent.png)
-*Figure 13.5: The `WAZUH_AGENT` ports alias: 1514 for event forwarding, 1515 for enrolment, each described individually so the rule that uses it needs no explanation.*
+*Figure 13.6: The `WAZUH_AGENT` ports alias: 1514 for event forwarding, 1515 for enrolment, each described individually so the rule that uses it needs no explanation.*
 
 ![ENT-05 in the ENTERPRISELAN ruleset](../images/fw/fw-17-ent-05-rule.png)
-*Figure 13.6: `ENT-05` on the ENTERPRISELAN tab. The rule is narrow where it matters, one destination host and two ports, and broad where breadth is correct, any source on the segment.*
+*Figure 13.7: `ENT-05` on the ENTERPRISELAN tab. The rule is narrow where it matters, one destination host and two ports, and broad where breadth is correct, any source on the segment.*
 
 **A rule can be valid, applied, and completely dead.** The first version of ENT-05 was created by copying `MGMT-11` and editing only the description. It kept `MANAGEMENT subnets` as its source and `SIEM_ADMIN` as its service, which on the ENTERPRISELAN interface means "traffic arriving on VLAN 50 whose source address is on VLAN 10, going to SSH or HTTPS". That matches nothing, ever. pfSense accepted it without complaint and the agent simply never connected. **Copying a rule copies its source and service, not only its shape**, and the description is the one field that carries no enforcement, so it is the one most likely to disagree with the rule beneath it.
 
@@ -96,7 +100,7 @@ VLAN 30 is treated as **untrusted**. The baseline contains it from the entire in
 **Deliberate omission:** unlike MANAGEMENT and ENTERPRISELAN, there is **no ICMP-to-any rule** here. An outbound ping rule would let the attack box sweep the internal VLANs for live hosts, which is exactly the reconnaissance step to deny. ICMP to the internet still works through RED-03. The absence of a rule is itself the control.
 
 ![REDTEAM ruleset](../images/fw/fw-12-redteam-rules.png)
-*Figure 13.7: The REDTEAM tab. RED-01 to RED-03 are active; the legacy `RedTeam Firewall` any-to-any rule is disabled (greyed) pending deletion. No rule permits VLAN 30 to reach any lab subnet.*
+*Figure 13.8: The REDTEAM tab. RED-01 to RED-03 are active; the legacy `RedTeam Firewall` any-to-any rule is disabled (greyed) pending deletion. No rule permits VLAN 30 to reach any lab subnet.*
 
 **Validation status: VALIDATED 2026-09-04.** KALI01 (`192.168.30.2`) was built on VLAN 30 and the containment test was run from it. The attack box resolves names, syncs time and reaches the internet, and cannot reach the domain controller or the firewall's management plane. Full results in section 3.1. The legacy any-to-any rule was deleted the same day, so the interface now carries only RED-01 to RED-03.
 
@@ -142,25 +146,27 @@ Evidence that a control does what its policy claims. Each test is repeatable, an
 | 2026-09-04 | RedTeam usability (RED-03) | `ping -c2 8.8.8.8` | KALI01 (VLAN 30) → internet | Reachable | **0% packet loss** ✓ |
 | 2026-09-04 | RedTeam usability (RED-01) | `nslookup kali.org 192.168.30.1` | KALI01 (VLAN 30) → pfSense resolver | Resolves | **Answer returned** ✓ |
 | 2026-09-04 | RedTeam usability (RED-02) | `timedatectl` after pointing at `192.168.30.1` | KALI01 (VLAN 30) → pfSense NTP | Synchronised | **System clock synchronized: yes** ✓ |
+| 2026-09-06 | ENT-05, agent reporting | Wazuh agent enrolment | DC01 (VLAN 50) → SIEM01 `1514`, `1515` | Agent registers and reports | **Active, agent 001** ✓ |
+| 2026-09-06 | MGMT-12, agent reporting | Wazuh agent enrolment | ADM01 (VLAN 10) → SIEM01 `1514`, `1515` | Agent registers with a VLAN 10 source address | **Active, agent 002, registered `192.168.10.3`** ✓ |
 
 The change from **True to False**, while `dcdiag`, DNS and internet still pass, is the proof that VLAN 50 is contained: it can use the gateway's DNS/NTP and reach the internet, but cannot reach the pfSense admin UI on any interface, nor pivot into other VLANs. (Ping still succeeds, because ENT-03 permits ICMP, showing the rule is surgical, not a blanket block.)
 
 ![Before enforcement: isolation test passing](../images/fw/fw-09-ent-isolation-before.png)
-*Figure 13.8: Before: both `Test-NetConnection … 443` return True. The DC could reach the pfSense admin UI on its own VLAN and cross-VLAN.*
+*Figure 13.9: Before: both `Test-NetConnection … 443` return True. The DC could reach the pfSense admin UI on its own VLAN and cross-VLAN.*
 
 ![After enforcement: isolation test blocked](../images/fw/fw-10-ent-isolation-after.png)
-*Figure 13.9: After: both return False while Ping stays True. VLAN 50 is denied admin access on every interface, yet the DC's own services keep working.*
+*Figure 13.10: After: both return False while Ping stays True. VLAN 50 is denied admin access on every interface, yet the DC's own services keep working.*
 
 **Operational note, the stale filter reload.** The isolation test kept returning True even after the rules were correct, because pfSense had not loaded the new ruleset into the kernel: the GUI and the running filter were out of sync. Systematic elimination (floating rules, anti-lockout, packet-filtering, deleting the rule) confirmed no rule change was taking effect. It was resolved with **Status → Filter Reload → Reload Filter**. **Lesson:** after tightening rules, if behaviour does not change, verify the filter actually reloaded, a stuck reload silently enforces the old rules and can make a control look broken when it is merely not loaded.
 
 ![Filter reload](../images/fw/fw-11-filter-reload.png)
-*Figure 13.10: Status → Filter Reload. Manually reloading compiled and loaded the current ruleset, after which the isolation control took effect.*
+*Figure 13.11: Status → Filter Reload. Manually reloading compiled and loaded the current ruleset, after which the isolation control took effect.*
 
 ![RedTeam containment test](../images/red/red-16-containment-test.png)
-*Figure 13.11: The containment test run from KALI01 on VLAN 30. SMB to DC01 and HTTPS to the management gateway both time out; the internet remains reachable at 0% packet loss. Full build context in `docs/15`.*
+*Figure 13.12: The containment test run from KALI01 on VLAN 30. SMB to DC01 and HTTPS to the management gateway both time out; the internet remains reachable at 0% packet loss. Full build context in `docs/15`.*
 
 ![RedTeam rulebase as validated](../images/red/red-14-redteam-rules-final.png)
-*Figure 13.12: The REDTEAM interface after the legacy any-to-any rule was deleted. Three rules, each carrying its identifier, justification and control mapping. Compare Figure 13.7, where the disabled permit-all was still present.*
+*Figure 13.13: The REDTEAM interface after the legacy any-to-any rule was deleted. Three rules, each carrying its identifier, justification and control mapping. Compare Figure 13.8, where the disabled permit-all was still present.*
 
 **RedTeam containment, validated against a live attack host.** The five tests dated 2026-09-04 were run from KALI01 once it was built on VLAN 30. They are deliberately paired: two prove the segment is contained, three prove it is still usable. A containment control that also breaks the host is not a control anyone will keep, so the evidence has to show both halves. The attack box can resolve names, hold accurate time and reach the internet for tooling, while SMB to the domain controller and HTTPS to the firewall's management address both fail.
 
@@ -169,7 +175,7 @@ The change from **True to False**, while `dcdiag`, DNS and internet still pass, 
 **A second instance of the config-versus-running-state gap.** DNS from VLAN 30 timed out even though RED-01 was demonstrably passing traffic: the rule showed live state entries in the pfSense **States** column. That single observation located the fault. If the firewall had been dropping the queries there would have been no states at all, so the packets were being delivered and nothing was answering. The DNS Resolver was simply not bound to the REDTEAM interface, which had been created after the resolver was first configured. This is the same failure family as the stale filter reload above: the saved configuration was correct, but the running system was not doing what the configuration described. **Lesson: when validating a control, read the state counters before changing any rules. They separate "the firewall blocked it" from "the firewall passed it and the service was not there", which are opposite problems with opposite fixes.**
 
 ![State counters as the diagnostic](../images/red/red-09-redteam-states-diagnostic.png)
-*Figure 13.13: `RED-01` showing **3/1 KiB** in the States column while DNS queries from VLAN 30 were timing out. A blocked packet never creates a state entry, so these states prove the firewall passed the traffic and the fault lay beyond it, in a service that was not listening. `RED-02` at `0/0 B` is the contrast. The greyed row is the legacy any-to-any rule, since deleted.*
+*Figure 13.14: `RED-01` showing **3/1 KiB** in the States column while DNS queries from VLAN 30 were timing out. A blocked packet never creates a state entry, so these states prove the firewall passed the traffic and the fault lay beyond it, in a service that was not listening. `RED-02` at `0/0 B` is the contrast. The greyed row is the legacy any-to-any rule, since deleted.*
 
 ---
 

@@ -410,6 +410,34 @@ That is the third time a stale filter has produced a different-looking failure i
 
 **Recording:** [Deploying a Wazuh Agent to Windows Server 2025, and debugging the pfSense rule that blocked it](https://youtu.be/Tsh_W0gWIRc) (5:34). The full deployment including both failures and the diagnosis, rather than an edited clean run. The raw file is not committed; see `images/README.md` for the recording policy.
 
+### The second agent, and what it revealed about the network
+
+The administrative workstation was enrolled next as `ADM01`, using the same procedure. One rule covers it and every future management-plane agent:
+
+> `MGMT-12`: source `MANAGEMENT subnets`, destination `SIEM01_HOST`, ports `WAZUH_AGENT`.
+
+The interesting part is what the SIEM recorded. The agent registered with the IP address **`100.118.195.0`**, which is a Tailscale address, not the laptop's VLAN 10 address of `192.168.10.3`.
+
+**The traffic had not crossed the firewall at all.** pfSense acts as a Tailscale subnet router and advertises the lab networks into the tailnet, so the laptop holds a route saying `192.168.20.0/24` is reachable over the Tailscale interface. Windows selects the most specific matching route, and a `/24` beats the default route through `192.168.10.1`. The overlay therefore won, even with the laptop sitting on VLAN 10 a few metres from the firewall.
+
+`MGMT-12` was correct, applied, and had passed no traffic. The SIEM's own asset inventory is what exposed it.
+
+Forcing the LAN path is a matter of beating specificity with more specificity, since a host route beats a `/24`:
+
+```powershell
+route -p add 192.168.20.2 mask 255.255.255.255 192.168.10.1 metric 1
+Restart-Service WazuhSvc
+```
+
+After reconnection the agent re-registered as `192.168.10.3`, which is the evidence that `MGMT-12` is genuinely carrying traffic.
+
+The route degrades sensibly. Away from home, `192.168.10.1` is unreachable, the route leaves the active table, and the agent falls back to Tailscale. On the LAN it uses the LAN; roaming, it uses the overlay.
+
+![Both agents reporting](../images/siem/siem-14-agents-adm01-lan-path.png)
+*Figure 16.17: DC01 and ADM01 both active. ADM01's registered address is `192.168.10.3` rather than its earlier tailnet address, which is what confirms the management-plane rule is being exercised.*
+
+**Two things worth carrying forward.** An agent's registered address is whichever source address the manager observed, so it reports the path taken rather than the machine's primary identity. And a firewall rule that has never passed traffic proves nothing, however correct it looks: this is the same lesson as the stale filter, arriving by a different route.
+
 ### A second baseline, and an instructive comparison
 
 DC01's first Configuration Assessment run scores against the **CIS Microsoft Windows Server 2025 Benchmark**:
