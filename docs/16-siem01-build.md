@@ -124,7 +124,16 @@ Two rules were required before the host could be administered, and both were bui
 
 Port 443 was included before Wazuh existed, on the expectation that the dashboard would use it. The installer confirmed this during the run (`Wazuh web interface port will be 443`), so no rule change was needed afterwards.
 
-The rule is **logged**, on the same reasoning as `MGMT-08` on the domain controller: administrative access to a machine holding security evidence is privileged activity and has to be attributable (NIST AC-17, AU-2). Registered in `docs/13`.
+The rule is **logged**, on the same reasoning as `MGMT-08` on the domain controller: administrative access to a machine holding security evidence is privileged activity and has to be attributable (NIST AC-17, AU-2). Registered in `docs/13` as `MGMT-11`.
+
+![SIEM01_HOST alias](../images/fw/fw-13-alias-siem01.png)
+*Figure 16.10: The `SIEM01_HOST` alias. Defining the host once means the rule references intent rather than an address, and re-addressing the machine later becomes a single edit instead of a hunt through the ruleset.*
+
+![SIEM_ADMIN ports alias](../images/fw/fw-14-alias-siem-admin.png)
+*Figure 16.11: The `SIEM_ADMIN` ports alias, holding SSH and the dashboard with each port individually described. Port 443 was added before Wazuh was installed, on the expectation that the dashboard would use it.*
+
+![MGMT-11 in the MANAGEMENT ruleset](../images/fw/fw-15-mgmt-11-rule.png)
+*Figure 16.12: `MGMT-11` at the foot of the MANAGEMENT tab, both aliases resolving as links and the logging icon set. The rules above it show the rest of the management plane's ruleset carrying live traffic.*
 
 **The DNS Resolver check.** Before moving the host, the pfSense DNS Resolver was confirmed to be listening on the BLUETEAM interface. This is the third time in this build that a service bound to the wrong interfaces would have produced a correct-looking configuration and a silent failure, after the same issue on VLAN 30 (`docs/15` section 6). It is now a standing pre-flight check when a host moves to a new segment.
 

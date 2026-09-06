@@ -39,9 +39,22 @@ Each rule carries a stable **Rule ID** (`<TAB>-<NN>`) that does not change even 
 | MGMT-06 | MANAGEMENT net | `SRV1_DC` | `AD_UDP` | Pass | No | Domain membership (UDP). | AC-4 | Built |
 | MGMT-07 | MANAGEMENT net | `SRV1_DC` | `AD_RPC_DYNAMIC` | Pass | No | RPC high ports for domain join, Group Policy, replication. | AC-4 | Built |
 | MGMT-08 | MANAGEMENT net | `SRV1_DC` | `MGMT_TCP` | Pass | Yes | Administrative access (RDP, WinRM/Ansible) to the DC. Logged as privileged access. | AC-6, AC-17, AU-2 | Built |
-| MGMT-09 | MANAGEMENT net | `LAB_NETS` | any | Pass | No | Administrative reach into all lab VLANs from the management plane (explicit; to be tightened per-service over time). | AC-6 | Planned |
-| MGMT-10 | MANAGEMENT net | NOT `LAB_NETS` | any | Pass | No | Internet access for the management plane (destination inverted = anywhere except the lab). | SC-7 | Planned |
+| MGMT-09 | MANAGEMENT net | `LAB_NETS` | any | Pass | No | Administrative reach into all lab VLANs from the management plane (explicit; to be tightened per-service over time). | AC-6 | Built |
+| MGMT-10 | MANAGEMENT net | NOT `LAB_NETS` | any | Pass | No | Internet access for the management plane (destination inverted = anywhere except the lab). | SC-7 | Built |
+| MGMT-11 | MANAGEMENT net | `SIEM01_HOST` | `SIEM_ADMIN` (22, 443) | Pass | Yes | SSH and dashboard access to SIEM01 for administration. Logged, because administrative access to the host holding the security evidence must be attributable. | AC-17, AU-2 | Built |
 | *(implicit)* | any | any | any | Deny | - | Default deny. Anything not explicitly allowed is dropped. | SC-7(5) | Built-in |
+
+![MANAGEMENT rules, first batch](../images/fw/fw-05-mgmt-rules-batch1.png)
+*Figure 13.1: The MANAGEMENT tab partway through the build. The broad `All` rule is still present near the bottom, which is why the specific rules above it could be added safely: nothing was cut off while the ruleset was incomplete.*
+
+![MANAGEMENT rules, continued](../images/fw/fw-06-mgmt-rules-batch1b.png)
+*Figure 13.2: The same tab after MGMT-01 to 04 were in place. Several legacy rules with informal descriptions are still visible; they were replaced by identified rules rather than edited, so the register and the live config could be reconciled line by line.*
+
+![Domain controller access rules](../images/fw/fw-07-mgmt-dc-rules.png)
+*Figure 13.3: MGMT-05 to 08, the four rules that give the management plane access to the domain controller. Each uses an alias rather than a literal address or port list, so the rule reads as its intent and a change to the alias updates every rule at once.*
+
+![MANAGEMENT ruleset complete](../images/fw/fw-08-mgmt-rules-complete.png)
+*Figure 13.4: MGMT-09 and MGMT-10, the pair that closes the interface. MGMT-09 permits administrative reach into the lab VLANs; MGMT-10 uses an inverted destination, "not `LAB_NETS`", to grant internet access without granting anything internal. One inverted rule replaces a fragile stack of blocks.*
 
 ### 2.2 ENTERPRISELAN interface (VLAN 50, source = the domain controller's segment)
 
