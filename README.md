@@ -67,11 +67,11 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 | VLAN | Purpose | Subnet | Gateway | Services |
 |------|---------|--------|---------|----------|
 | **10 - Management** | Admin and Control | `192.168.10.0/24` | `.1` | pfSense, Ansible, Windows Systems, Proxmox |
-| **20 - BlueTeam** | Security Monitoring | `192.168.20.0/24` | `.1` | Wazuh SIEM |
+| **20 - BlueTeam** | Security Monitoring | `192.168.20.0/24` | `.1` | SIEM01 (`192.168.20.2`), Wazuh install pending |
 | **30 - RedTeam** | Attack Simulation | `192.168.30.0/24` | `.1` | Kali Linux (Proxmox VM) |
 | **40 - DevOps** | CI/CD Pipeline | `192.168.40.0/24` | `.1` | HashiCorp Vault desktop (staged, awaiting configuration) |
 | **50 - EnterpriseLAN** | Business Services | `192.168.50.0/24` | `.1` | Windows Server 2025 domain controller (`192.168.50.2`) |
-| **60 - Monitoring** | Observability | `192.168.60.0/24` | `.1` | Grafana, Prometheus |
+| **60 - Monitoring** | Observability | `192.168.60.0/24` | `.1` | Grafana and Prometheus, moving to a Proxmox guest |
 
 ### Deployed Systems
 
@@ -84,11 +84,11 @@ Machines follow a role-based naming convention, `<ROLE><NN>`: servers such as `D
 | Laptop (Admin) | `192.168.10.3` | Management | Windows 11 | Administration workstation | Active |
 | TCM Ubuntu | `192.168.10.4` | Management | Ubuntu 24.04 | Training and development | Active |
 | Proxmox VE (proxmox-01) | `192.168.10.6` | Management | Proxmox VE 9.2 | Bare-metal VM hypervisor | Active |
-| SIEM01 (Wazuh) | `192.168.20.2` | BlueTeam | Rocky Linux 9.6 | SIEM and centralised logging | Offline: physical host failed, rebuild planned |
+| SIEM01 | `192.168.20.2` | BlueTeam | Ubuntu 24.04 (Dell OptiPlex 9020, 8 core, 16 GB) | SIEM and centralised logging | Host live on VLAN 20, Wazuh install pending |
 | KALI01 | `192.168.30.2` | RedTeam | Kali Linux 2026.2 | Attack simulation (Proxmox VM 103) | Active, containment validated |
 | VAULT01 (lab-devops-svc01) | `192.168.40.2` | DevOps | Ubuntu | HashiCorp Vault secrets management | Staged, not yet configured |
 | DC01 | `192.168.50.2` | EnterpriseLAN | Windows Server 2025 | Domain controller for `ad.biira.online` (AD DS + DNS) | Active |
-| MON01 (Grafana + Prometheus) | `192.168.60.2` | Monitoring | Ubuntu 24.04 | Observability dashboards | Active, migration to Proxmox planned |
+| MON01 (Grafana + Prometheus) | `192.168.60.2` | Monitoring | Ubuntu | Observability dashboards | To be rebuilt as a Proxmox guest |
 
 ### Physical Network Layout
 
@@ -121,8 +121,7 @@ The host is an 8 core / 32 GiB / 2.67 TiB node with nightly backups to a dedicat
 |---------|--------|----------|---------|---------|--------|
 | KALI01 (VM 103) | vmbr0 | 30 | 192.168.30.2 | RedTeam attack simulation | Active, containment validated |
 | ANS01 | vmbr0 | 10 | 192.168.10.2 (same IP) | Fresh rebuild of the automation controller | Planned |
-| SIEM01 | vmbr0 | 20 | 192.168.20.2 | Wazuh SIEM rebuild | Planned |
-| MON01 | vmbr0 | 60 | 192.168.60.2 | Grafana and Prometheus migration | Planned |
+| MON01 | vmbr0 | 60 | 192.168.60.2 | Grafana and Prometheus, rebuilt fresh | Planned |
 | DC02, CA01, WKS01/02 | vmbr0 | 50 / client | see `docs/12` | AD estate expansion for security training | Roadmap |
 
 ---
@@ -187,7 +186,8 @@ Complete:
 In progress:
 
 - Ansible controller rebuild as ANS01 (Proxmox guest, retaining `192.168.10.2`)
-- Wazuh rebuild as SIEM01 following the failure of the physical host
+- Wazuh install on SIEM01, whose host is now live on VLAN 20 after the role swap with the monitoring hardware
+- MON01 rebuild as a Proxmox guest, replacing the physical monitoring host
 
 Remaining:
 

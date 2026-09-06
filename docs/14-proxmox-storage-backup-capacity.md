@@ -137,7 +137,7 @@ Two conventions worth stating explicitly, because they are the ones that get bro
 |--------------|--------|------|--------|
 | `DC01` | `DC01` | Domain controller | Correct |
 | `kali01` | `KALI01` | Attack box | Correct |
-| `nbl-core-ub01` | `SIEM01` | Wazuh (after repurposing, see 5.3) | Pending rebuild |
+| `nbl-core-ub01` | `SIEM01` | Wazuh (see 5.3) | **Done 2026-09-05**: renamed, moved to VLAN 20 at `192.168.20.2`, cable moved to Port 4. Wazuh install pending |
 | `lab-devops-svc01` | `VAULT01` | HashiCorp Vault | Pending |
 | `proxmox-01` | `PVE01` | Hypervisor | Pending |
 | pfSense (default) | `FW01` | Firewall | Pending |
@@ -145,7 +145,7 @@ Two conventions worth stating explicitly, because they are the ones that get bro
 | Secondary switch | `SW02` | Switch | Pending |
 | TCM Ubuntu `192.168.10.4` | `LAB01` | Training host | Pending |
 | VM 100 `windows11` | `WKS01` | Workstation | Pending |
-| VM 102 `ubuntu-blueteam` | `MON01` | Metrics and dashboards | Pending rebuild |
+| VM 102 `ubuntu-blueteam` | `MON01` | Metrics and dashboards | Pending rebuild. Grafana and Prometheus will be installed fresh rather than migrated |
 
 ### 5.3 Role swap: monitoring hardware becomes the SIEM
 
