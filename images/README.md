@@ -73,6 +73,16 @@ Add a new area folder only when a genuinely new subsystem appears.
 - Name them exactly like screenshots, with the recording's subject: `dc/dc-07-dcpromo-run.mp4`.
 - Large media bloats git history. Prefer keeping raw video out of the repo (see the repo `.gitignore`) and embedding a still frame plus a link, or committing a compressed clip only when it genuinely adds value.
 
+### Where recordings actually live
+
+A raw screen recording is typically 300 MB or more, which git will carry forever even after the file is deleted. The working arrangement is:
+
+1. Upload the recording to **YouTube**, unlisted or public.
+2. Commit a **still frame** from it under the usual naming convention, so the document has something to display.
+3. Link the video beneath the still, with a one-line description of what it shows.
+
+The sibling `enterprise-iam-lab` repository already uses this pattern for its authentication-flow recordings. Recordings themselves are never committed.
+
 ---
 
 ## 5. Referencing evidence in docs

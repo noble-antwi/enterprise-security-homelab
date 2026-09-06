@@ -127,13 +127,13 @@ Port 443 was included before Wazuh existed, on the expectation that the dashboar
 The rule is **logged**, on the same reasoning as `MGMT-08` on the domain controller: administrative access to a machine holding security evidence is privileged activity and has to be attributable (NIST AC-17, AU-2). Registered in `docs/13` as `MGMT-11`.
 
 ![SIEM01_HOST alias](../images/fw/fw-13-alias-siem01.png)
-*Figure 16.10: The `SIEM01_HOST` alias. Defining the host once means the rule references intent rather than an address, and re-addressing the machine later becomes a single edit instead of a hunt through the ruleset.*
+*Figure 16.5: The `SIEM01_HOST` alias. Defining the host once means the rule references intent rather than an address, and re-addressing the machine later becomes a single edit instead of a hunt through the ruleset.*
 
 ![SIEM_ADMIN ports alias](../images/fw/fw-14-alias-siem-admin.png)
-*Figure 16.11: The `SIEM_ADMIN` ports alias, holding SSH and the dashboard with each port individually described. Port 443 was added before Wazuh was installed, on the expectation that the dashboard would use it.*
+*Figure 16.6: The `SIEM_ADMIN` ports alias, holding SSH and the dashboard with each port individually described. Port 443 was added before Wazuh was installed, on the expectation that the dashboard would use it.*
 
 ![MGMT-11 in the MANAGEMENT ruleset](../images/fw/fw-15-mgmt-11-rule.png)
-*Figure 16.12: `MGMT-11` at the foot of the MANAGEMENT tab, both aliases resolving as links and the logging icon set. The rules above it show the rest of the management plane's ruleset carrying live traffic.*
+*Figure 16.7: `MGMT-11` at the foot of the MANAGEMENT tab, both aliases resolving as links and the logging icon set. The rules above it show the rest of the management plane's ruleset carrying live traffic.*
 
 **The DNS Resolver check.** Before moving the host, the pfSense DNS Resolver was confirmed to be listening on the BLUETEAM interface. This is the third time in this build that a service bound to the wrong interfaces would have produced a correct-looking configuration and a silent failure, after the same issue on VLAN 30 (`docs/15` section 6). It is now a standing pre-flight check when a host moves to a new segment.
 
@@ -167,7 +167,7 @@ Investigation showed no manager, only a `wazuh-agent` left from when this machin
 **A manager and an agent cannot coexist on one host**, because both packages own `/var/ossec`. It is not a limitation to work around: the manager monitors its own host natively, so an agent on the manager would be redundant as well as conflicting.
 
 ![Agent and manager conflict](../images/siem/siem-05-agent-manager-conflict.png)
-*Figure 16.5: The installer refusing, and the investigation that followed. Only `wazuh-agent 4.11.2` was present, a leftover from the machine's previous role.*
+*Figure 16.8: The installer refusing, and the investigation that followed. Only `wazuh-agent 4.11.2` was present, a leftover from the machine's previous role.*
 
 The installer offers `-o/--overwrite`, which erases all existing Wazuh configuration and data. Removing the single package explicitly was preferred, because the overwrite flag is a blunt instrument and on a machine whose job is to be trustworthy it is worth knowing exactly what changed:
 
@@ -178,7 +178,7 @@ sudo rm -rf /var/ossec
 ```
 
 ![Clean removal and install start](../images/siem/siem-06-agent-removed-clean-install.png)
-*Figure 16.6: The agent purged, `/var/ossec` gone, Wazuh's ports confirmed free, and the installer proceeding past the check that had blocked it.*
+*Figure 16.9: The agent purged, `/var/ossec` gone, Wazuh's ports confirmed free, and the installer proceeding past the check that had blocked it.*
 
 ### Running the install
 
@@ -192,10 +192,10 @@ sudo bash ./wazuh-install.sh -a
 The pattern `curl ... | sudo bash` is common and is worth avoiding on principle. It executes code as root that was never seen, from a server that could have been compromised between publication and retrieval. Downloading first costs nothing and makes inspection possible.
 
 ![Components started](../images/siem/siem-07-components-started.png)
-*Figure 16.7: The Indexer, manager, Filebeat and Dashboard each installing and starting in sequence. This screenshot is deliberately cropped: the installer prints the generated admin credentials immediately below, and they must not reach a repository.*
+*Figure 16.10: The Indexer, manager, Filebeat and Dashboard each installing and starting in sequence. This screenshot is deliberately cropped: the installer prints the generated admin credentials immediately below, and they must not reach a repository.*
 
 ![Wazuh dashboard](../images/siem/siem-08-dashboard-overview.png)
-*Figure 16.8: The dashboard on first login. "No agents registered" alongside 336 alerts is not a contradiction: the manager monitors its own host as agent `000`.*
+*Figure 16.11: The dashboard on first login. "No agents registered" alongside 336 alerts is not a contradiction: the manager monitors its own host as agent `000`.*
 
 ---
 
@@ -208,7 +208,7 @@ Failed to reset password. {"status":"FORBIDDEN","message":"Resource 'admin' is r
 ```
 
 ![Reserved resource](../images/siem/siem-09-admin-reserved.png)
-*Figure 16.9: The dashboard refusing to change its own administrative password. The account is a reserved resource in the Indexer's security configuration and cannot be modified through the API the interface uses.*
+*Figure 16.12: The dashboard refusing to change its own administrative password. The account is a reserved resource in the Indexer's security configuration and cannot be modified through the API the interface uses.*
 
 This is a deliberate boundary rather than a defect. The `admin` account is defined in the security plugin's `internal_users.yml` and marked **reserved**, which makes it immutable from the application layer. A compromised dashboard session therefore cannot lock the owner out of their own cluster. Changing it requires filesystem access to the host, which is a meaningfully higher bar:
 
@@ -219,7 +219,7 @@ sudo bash wazuh-passwords-tool.sh -u admin -p '<new password>'
 
 The tool rewrites the hash and reruns `securityadmin` to push the change into the cluster.
 
-**An evidence-handling rule came out of this.** The moment an installer prints a generated credential is exactly the moment people screenshot it. Figure 16.7 is cropped for that reason. Every screenshot is now checked for passwords, keys and tokens before it enters `images/`, and a credential that has appeared in a screenshot is rotated rather than trusted.
+**An evidence-handling rule came out of this.** The moment an installer prints a generated credential is exactly the moment people screenshot it. Figure 16.10 is cropped for that reason. Every screenshot is now checked for passwords, keys and tokens before it enters `images/`, and a credential that has appeared in a screenshot is rotated rather than trusted.
 
 ---
 
@@ -365,7 +365,67 @@ Roughly half a benchmark failing is normal for a default installation, and that 
 
 ---
 
-## 9. What comes next, and where the rules go
+## 9. The first agent: DC01
+
+Deploying the first agent is where the interface-direction reasoning stops being theory.
+
+**Agents dial out to the manager.** The manager listens. So the rule that lets DC01 report does not belong on the BlueTeam tab; it belongs on **ENTERPRISELAN**, the interface DC01's traffic arrives on. Registered as `ENT-05` in `docs/13`.
+
+### Installing it
+
+The deployment command comes from the dashboard (**Agents → Deploy new agent**), which fills in the manager address and matches the agent version to the manager. Run in PowerShell as Administrator on DC01:
+
+```powershell
+Invoke-WebRequest -Uri https://packages.wazuh.com/4.x/windows/wazuh-agent-4.14.7-1.msi -OutFile $env:TEMP\wazuh-agent.msi
+msiexec.exe /i $env:TEMP\wazuh-agent.msi /q WAZUH_MANAGER='192.168.20.2' WAZUH_REGISTRATION_SERVER='192.168.20.2' WAZUH_AGENT_NAME='DC01'
+NET START WazuhSvc
+```
+
+Verification from the agent side, which is the diagnostic worth running first when an agent does not appear:
+
+```powershell
+Get-Service WazuhSvc
+Test-NetConnection 192.168.20.2 -Port 1514
+```
+
+### It did not connect, and why
+
+The agent installed and the service started, but nothing appeared in the dashboard. Two causes, in sequence.
+
+The first was the rule itself, described in `docs/13` section 2.2: `ENT-05` had been copied from `MGMT-11` and carried the wrong source and service, so it matched nothing.
+
+The second, after the rule was corrected, was that **the filter had not been reloaded**. The rule was right, saved, and applied, and the agent still could not connect until **Status → Filter Reload**.
+
+That is the third time a stale filter has produced a different-looking failure in this lab. It has now been promoted to principle 9 of the rulebase in `docs/13`: a saved rule is not an enforced rule.
+
+**The general diagnostic.** An agent that cannot reach its manager is indistinguishable, from the dashboard, from an agent that is broken. Both are simply absent. `Test-NetConnection <manager> -Port 1514` from the endpoint separates the two in seconds: if the port test fails, the problem is the network path and nothing on the endpoint needs touching.
+
+### The result
+
+![DC01 agent detail](../images/siem/siem-12-agent-dc01-detail.png)
+*Figure 16.15: Agent `001`, DC01, active, Windows Server 2025, reporting from `192.168.50.2`. System inventory, MITRE ATT&CK tactic counts, vulnerability detection and a CIS benchmark run all populate from a single agent install.*
+
+![Agents summary](../images/siem/siem-13-agents-summary.png)
+*Figure 16.16: One agent active, none disconnected, and the alert counts on the overview now include a real endpoint rather than the manager alone.*
+
+A full screen recording of the deployment, including the failure and the diagnosis, is linked from the evidence library.
+
+### A second baseline, and an instructive comparison
+
+DC01's first Configuration Assessment run scores against the **CIS Microsoft Windows Server 2025 Benchmark**:
+
+| Host | Benchmark | Passed | Failed | Score |
+|------|-----------|--------|--------|-------|
+| SIEM01 | CIS Ubuntu 24.04 LTS v1.0.0 | 147 | 127 | **53.6%** |
+| DC01 | CIS Microsoft Windows Server 2025 | 105 | 293 | **26%** |
+
+The gap is worth sitting with. It does not mean Windows is less secure than Ubuntu. It means the Windows benchmark is far more prescriptive, covering hundreds of Group Policy settings that simply do not exist as concepts on a Linux host, and that a domain controller installed with defaults satisfies very few of them. A domain controller is also the highest-value host in an Active Directory environment: everything else trusts it.
+
+That makes DC01 the obvious hardening target, and the numbers above the baseline to measure against.
+
+---
+
+## 10. What comes next, and where the rules go
 
 Deploying the first agent is where the firewall model becomes concrete, and it is the point most people get backwards.
 
@@ -387,7 +447,7 @@ Also outstanding: Grafana and Prometheus are still installed on this host and sh
 
 ---
 
-## 10. Standards alignment
+## 11. Standards alignment
 
 | Practice in this document | Standard |
 |---------------------------|----------|
