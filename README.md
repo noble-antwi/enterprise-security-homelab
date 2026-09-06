@@ -6,7 +6,7 @@
 
 The sibling repository [enterprise-iam-lab](https://github.com/noble-antwi/enterprise-iam-lab) documents the same organisation's identity estate (Active Directory, Okta, Entra) and is built on the architecture described here. Both repositories share one visual identity, documented in [images/brand](images/brand/README.md): a vault door inside a shield, where the shield is the protected boundary and the vault door is the controlled way through it. That reads as network segmentation here and as authentication and authorisation there.
 
-**Elsewhere:** project write-ups and other work at [noble-antwi.github.io](https://noble-antwi.github.io/). Selected procedures from this build are recorded on video, linked from the relevant document.
+**Elsewhere:** project write-ups and other work at [noble-antwi.github.io](https://noble-antwi.github.io/). Selected procedures are recorded on video and linked from the document they belong to, for example [deploying the first Wazuh agent](https://youtu.be/Tsh_W0gWIRc) (`docs/16`).
 
 [![Documentation](https://img.shields.io/badge/docs-complete-brightgreen.svg)](docs/)
 [![Lab Status](https://img.shields.io/badge/status-active-brightgreen.svg)]()

@@ -408,7 +408,7 @@ That is the third time a stale filter has produced a different-looking failure i
 ![Agents summary](../images/siem/siem-13-agents-summary.png)
 *Figure 16.16: One agent active, none disconnected, and the alert counts on the overview now include a real endpoint rather than the manager alone.*
 
-A full screen recording of the deployment, including the failure and the diagnosis, is linked from the evidence library.
+**Recording:** [Deploying a Wazuh Agent to Windows Server 2025, and debugging the pfSense rule that blocked it](https://youtu.be/Tsh_W0gWIRc) (5:34). The full deployment including both failures and the diagnosis, rather than an edited clean run. The raw file is not committed; see `images/README.md` for the recording policy.
 
 ### A second baseline, and an instructive comparison
 
