@@ -26,6 +26,7 @@ from pathlib import Path
 # The fictional organisation this environment belongs to. The AD domain really is
 # ad.biira.online and the sibling IAM repository documents the same company, so the
 # documentation, the DNS and the identity estate all name the same entity.
+REPO_ROOT = Path(__file__).resolve().parents[2]
 ORG_NAME = "BIIRA BANK"
 ORG_UNIT = "Enterprise Security Engineering"
 BRAND_MARK = "images/brand/biira-bank-mark.svg"
@@ -56,7 +57,7 @@ CSS = """
   --slate:    #5A6478;   /* captions, subtitles, footer */
   --line:     #D3DEE6;   /* borders and separators */
 }
-@page { size: A4; margin: 18mm 16mm 20mm 16mm; }
+@page { size: A4; margin: 18mm 16mm 24mm 16mm; }
 html { font-size: 10.5pt; }
 body {
   font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
@@ -100,14 +101,14 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 16pt 0; }
 strong { color: var(--navy); }
 img { max-width: 100%; height: auto; display: block; margin: 12pt auto 4pt;
       border: 1px solid var(--line); border-radius: 3px; page-break-inside: avoid; }
-/* caption: a paragraph that is only emphasised text, sitting under a figure */
-img + em, p > em:only-child { display: block; text-align: center; font-size: 8.8pt;
+/* Figure caption: the emphasis that directly follows an image in the same
+   paragraph. Do NOT add `p > em:only-child` here: CSS :only-child counts element
+   children and ignores text, so a sentence containing one italicised word matches
+   it and the whole paragraph is centred as if it were a caption. */
+img + em { display: block; text-align: center; font-size: 8.8pt;
       color: var(--slate); margin: 0 auto 10pt; max-width: 90%; }
 blockquote { border-left: 3px solid var(--cyan); background: #ECFAFD;
       margin: 8pt 0; padding: 6pt 10pt; color: var(--cyan-ink); }
-.footer { margin-top: 24pt; font-size: 8.5pt; color: var(--slate);
-      border-top: 2.5pt solid var(--navy); padding-top: 6pt; }
-.footer strong { color: var(--navy); letter-spacing: .05em; }
 """
 
 
@@ -133,8 +134,7 @@ def render(md_path: Path, edge: str) -> Path:
     base_uri = md_path.parent.resolve().as_uri() + "/"
     # The mark is resolved against the repository root, not the doc, so it is found
     # regardless of where the Markdown lives.
-    repo_root = Path(__file__).resolve().parents[2]
-    mark_uri = (repo_root / BRAND_MARK).as_uri()
+    mark_uri = (REPO_ROOT / BRAND_MARK).as_uri()
     stamp = f"{date.today():%d %B %Y}"
     html = f"""<!doctype html><html><head><meta charset="utf-8"><title>{title}</title>
 <base href="{base_uri}">
@@ -146,7 +146,6 @@ def render(md_path: Path, edge: str) -> Path:
 </div>
 <div class="accentrule"></div>
 {body}
-<div class="footer"><strong>{ORG_NAME}</strong> · {ORG_UNIT} · docs/{md_path.name} · {stamp}</div>
 </body></html>"""
 
     pdf_path = md_path.with_suffix(".pdf").resolve()
@@ -188,6 +187,7 @@ def render(md_path: Path, edge: str) -> Path:
         shutil.rmtree(work_dir, ignore_errors=True)
         shutil.rmtree(profile_dir, ignore_errors=True)
     verify(md_path, pdf_path)
+    stamp_footer(pdf_path, md_path)
     return pdf_path
 
 
@@ -226,6 +226,46 @@ def verify(md_path: Path, pdf_path: Path) -> None:
     elif refs and images < len(refs):
         print(f"  WARNING: {md_path.name} declares {len(refs)} figures but the PDF embeds "
               f"{images} images.", file=sys.stderr)
+
+
+def stamp_footer(pdf_path: Path, md_path: Path) -> None:
+    """Draw a running footer on every page: the mark, the organisation, the source
+    file and the page number.
+
+    Chrome's --print-to-pdf cannot produce page numbers. CSS page counters are
+    unsupported, and the built-in header/footer is a generic browser artefact with
+    the file URL in it. Stamping after rendering gives full control and costs one
+    pass over the file. A document a reviewer might print or cite needs page
+    numbers; without them "see page 4" is meaningless.
+    """
+    try:
+        import fitz
+    except ImportError:
+        print("  note: PyMuPDF not installed, running footer skipped", file=sys.stderr)
+        return
+
+    NAVY, CYAN, SLATE = (0.031, 0.082, 0.184), (0.176, 0.831, 0.910), (0.353, 0.392, 0.471)
+    mark = REPO_ROOT / "images" / "brand" / "biira-bank-mark-64.png"
+
+    doc = fitz.open(pdf_path)
+    total = doc.page_count
+    for i, page in enumerate(doc, start=1):
+        w, h = page.rect.width, page.rect.height
+        y = h - 46
+        page.draw_line((45, y), (w - 45, y), color=CYAN, width=1.1)
+        if mark.exists():
+            page.insert_image(fitz.Rect(45, y + 5, 54.5, y + 19), filename=str(mark))
+        page.insert_textbox(fitz.Rect(59, y + 7, w / 2, y + 21),
+                            f"{ORG_NAME}   {ORG_UNIT}",
+                            fontsize=7.2, fontname="hebo", color=NAVY)
+        page.insert_textbox(fitz.Rect(w / 2, y + 7, w - 45, y + 21),
+                            f"docs/{md_path.name}    Page {i} of {total}",
+                            fontsize=7.2, fontname="helv", color=SLATE,
+                            align=fitz.TEXT_ALIGN_RIGHT)
+    tmp = pdf_path.with_suffix(".stamped.pdf")
+    doc.save(tmp, garbage=3, deflate=True)
+    doc.close()
+    os.replace(tmp, pdf_path)
 
 
 def main(argv: list[str]) -> None:
