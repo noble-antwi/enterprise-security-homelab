@@ -6,6 +6,8 @@
 
 The sibling repository [enterprise-iam-lab](https://github.com/noble-antwi/enterprise-iam-lab) documents the same organisation's identity estate (Active Directory, Okta, Entra) and is built on the architecture described here. Both repositories share one visual identity, documented in [images/brand](images/brand/README.md): a vault door inside a shield, where the shield is the protected boundary and the vault door is the controlled way through it. That reads as network segmentation here and as authentication and authorisation there.
 
+**Elsewhere:** project write-ups and other work at [noble-antwi.github.io](https://noble-antwi.github.io/). Selected procedures from this build are recorded on video, linked from the relevant document.
+
 [![Documentation](https://img.shields.io/badge/docs-complete-brightgreen.svg)](docs/)
 [![Lab Status](https://img.shields.io/badge/status-active-brightgreen.svg)]()
 [![Platform Coverage](https://img.shields.io/badge/platforms-Linux%2BWindows%2BProxmox-blue.svg)]()
@@ -68,7 +70,7 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 | VLAN | Purpose | Subnet | Gateway | Services |
 |------|---------|--------|---------|----------|
 | **10 - Management** | Admin and Control | `192.168.10.0/24` | `.1` | pfSense, Ansible, Windows Systems, Proxmox |
-| **20 - BlueTeam** | Security Monitoring | `192.168.20.0/24` | `.1` | SIEM01 (`192.168.20.2`), Wazuh install pending |
+| **20 - BlueTeam** | Security Monitoring | `192.168.20.0/24` | `.1` | SIEM01 (`192.168.20.2`), Wazuh 4.14.7 manager, indexer and dashboard |
 | **30 - RedTeam** | Attack Simulation | `192.168.30.0/24` | `.1` | Kali Linux (Proxmox VM) |
 | **40 - DevOps** | CI/CD Pipeline | `192.168.40.0/24` | `.1` | HashiCorp Vault desktop (staged, awaiting configuration) |
 | **50 - EnterpriseLAN** | Business Services | `192.168.50.0/24` | `.1` | Windows Server 2025 domain controller (`192.168.50.2`) |
@@ -85,7 +87,7 @@ Machines follow a role-based naming convention, `<ROLE><NN>`: servers such as `D
 | Laptop (Admin) | `192.168.10.3` | Management | Windows 11 | Administration workstation | Active |
 | TCM Ubuntu | `192.168.10.4` | Management | Ubuntu 24.04 | Training and development | Active |
 | Proxmox VE (proxmox-01) | `192.168.10.6` | Management | Proxmox VE 9.2 | Bare-metal VM hypervisor | Active |
-| SIEM01 | `192.168.20.2` | BlueTeam | Ubuntu 24.04 (Dell OptiPlex 9020, 8 core, 16 GB) | SIEM and centralised logging | Host live on VLAN 20, Wazuh install pending |
+| SIEM01 | `192.168.20.2` | BlueTeam | Ubuntu 24.04 (Dell OptiPlex 9020, 8 core, 16 GB) | SIEM and centralised logging | Active, DC01 reporting as agent 001 |
 | KALI01 | `192.168.30.2` | RedTeam | Kali Linux 2026.2 | Attack simulation (Proxmox VM 103) | Active, containment validated |
 | VAULT01 (lab-devops-svc01) | `192.168.40.2` | DevOps | Ubuntu | HashiCorp Vault secrets management | Staged, not yet configured |
 | DC01 | `192.168.50.2` | EnterpriseLAN | Windows Server 2025 | Domain controller for `ad.biira.online` (AD DS + DNS) | Active |
@@ -187,7 +189,7 @@ Complete:
 In progress:
 
 - Ansible controller rebuild as ANS01 (Proxmox guest, retaining `192.168.10.2`)
-- Wazuh install on SIEM01, whose host is now live on VLAN 20 after the role swap with the monitoring hardware
+- Wazuh installed on SIEM01 after the role swap with the monitoring hardware, with DC01 enrolled as the first agent and CIS baselines recorded for both hosts (`docs/16`)
 - MON01 rebuild as a Proxmox guest, replacing the physical monitoring host
 
 Remaining:
