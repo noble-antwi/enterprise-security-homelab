@@ -223,7 +223,69 @@ The tool rewrites the hash and reruns `securityadmin` to push the change into th
 
 ---
 
-## 7. What it monitors today
+## 7. Post-install configuration
+
+### Removing the previous role's software
+
+Grafana and Prometheus were left running through the Wazuh install so nothing was disturbed mid-deployment, then removed. A SIEM holds the evidence for everything else in the environment, which makes unrelated software on it attack surface with no purpose (NIST CM-7).
+
+Grafana came from an apt repository and removed cleanly. Prometheus did not, and the reason is worth knowing:
+
+```bash
+sudo apt purge -y grafana prometheus prometheus-node-exporter
+```
+
+```
+Package 'prometheus' is not installed, so not removed
+```
+
+while `systemctl is-active prometheus` still reported **active**. Prometheus is commonly installed from the project's own tarball rather than a distribution package, so apt has no record of it even though it is plainly running:
+
+```bash
+which prometheus promtool
+ls -d /etc/prometheus /var/lib/prometheus /etc/systemd/system/prometheus.service
+```
+
+Binaries in `/usr/local/bin`, a hand-written unit file, and data directories. Removing it means removing those directly:
+
+```bash
+sudo systemctl disable --now prometheus
+sudo rm -f /etc/systemd/system/prometheus.service
+sudo systemctl daemon-reload
+sudo rm -rf /usr/local/bin/prometheus /usr/local/bin/promtool /etc/prometheus /var/lib/prometheus
+sudo userdel prometheus
+```
+
+**The general point:** "apt says it is not installed" is not the same as "it is not on the machine". `/usr/local` exists precisely for software the package manager does not own, and asking systemd and the filesystem is how you find it. On a host being repurposed, check both.
+
+### Dashboard session lifetime
+
+The default session expired quickly enough to interrupt work. Two settings in `/etc/wazuh-dashboard/opensearch_dashboards.yml` govern it, and the distinction between them is the useful part:
+
+| Setting | What it controls |
+|---------|------------------|
+| `opensearch_security.session.ttl` | How long a session may live, in milliseconds |
+| `opensearch_security.session.keepalive` | Whether that clock restarts on each interaction |
+
+Without `keepalive`, a session ends a fixed time after login regardless of activity, so it can expire in the middle of an investigation. With it, the timeout becomes an **idle** timeout.
+
+```bash
+sudo cp /etc/wazuh-dashboard/opensearch_dashboards.yml /etc/wazuh-dashboard/opensearch_dashboards.yml.bak
+sudo tee -a /etc/wazuh-dashboard/opensearch_dashboards.yml > /dev/null <<'EOF'
+
+# Session: one hour, measured from last activity rather than from login.
+opensearch_security.cookie.ttl: 3600000
+opensearch_security.session.ttl: 3600000
+opensearch_security.session.keepalive: true
+EOF
+sudo systemctl restart wazuh-dashboard
+```
+
+**One hour of inactivity** was chosen deliberately rather than taken as a convenience. A long-lived authenticated session on the machine holding all the security evidence is itself a risk: an unattended workstation stays logged in. A regulated environment would typically use fifteen to thirty minutes with keepalive, backed by single sign-on and MFA, which is the direction the companion IAM lab is building toward. One hour is the lab compromise, and it is recorded here so the choice is visible rather than assumed (NIST AC-11, Session Lock; AC-12, Session Termination).
+
+---
+
+## 8. What it monitors today
 
 With no agents deployed, the dashboard already shows several hundred alerts. They all carry agent ID `000`, which is always the manager itself.
 
@@ -237,7 +299,7 @@ The second is conceptual. SCA is continuous configuration monitoring, which is t
 
 ---
 
-## 8. What comes next, and where the rules go
+## 9. What comes next, and where the rules go
 
 Deploying the first agent is where the firewall model becomes concrete, and it is the point most people get backwards.
 
@@ -259,7 +321,7 @@ Also outstanding: Grafana and Prometheus are still installed on this host and sh
 
 ---
 
-## 9. Standards alignment
+## 10. Standards alignment
 
 | Practice in this document | Standard |
 |---------------------------|----------|
@@ -268,6 +330,7 @@ Also outstanding: Grafana and Prometheus are still installed on this host and sh
 | Administrative access to the SIEM restricted and logged | **NIST SP 800-53 AC-17, AU-2** |
 | Recovery of a failed service onto sound hardware, with placement justified | **NIST SP 800-53 CP-10** (System Recovery) |
 | Unnecessary software removed from a security-critical host | **NIST SP 800-53 CM-7** (Least Functionality) |
+| Dashboard session bounded by an idle timeout, with the value justified | **NIST SP 800-53 AC-11** (Session Lock), **AC-12** (Session Termination) |
 | Host identity verified out of band before trust was re-established | **NIST SP 800-53 IA-3** (Device Identification and Authentication) |
 | Role-based naming supporting asset inventory | **NIST SP 800-53 CM-8** |
 | Segmentation between the monitored estate and the monitoring segment | **NIST SP 800-53 SC-7**, **CIS Controls v8, Control 12** |
