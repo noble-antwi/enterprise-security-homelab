@@ -51,6 +51,7 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 | **[13-firewall-rulebase-governance](docs/13-firewall-rulebase-governance.md)** ([PDF](docs/13-firewall-rulebase-governance.pdf)) | Audit-grade rulebase governance: the 8 principles auditors check, a living rule register with per-rule justification and control mapping, change-control log, review cadence | In Progress |
 | **[14-proxmox-storage-backup-capacity](docs/14-proxmox-storage-backup-capacity.md)** ([PDF](docs/14-proxmox-storage-backup-capacity.pdf)) | Proxmox storage layout, backup/recovery strategy (NIST CP-9), LXC-vs-VM capacity plan, and the lab-wide machine naming convention | Current |
 | **[15-kali-attack-host-build](docs/15-kali-attack-host-build.md)** ([PDF](docs/15-kali-attack-host-build.pdf)) | Building the attack host on the isolated RedTeam segment, the containment evidence, and what the test does and does not prove about reachability | Current |
+| **[16-siem01-build](docs/16-siem01-build.md)** ([PDF](docs/16-siem01-build.pdf)) | Recovering the SIEM after a hardware failure: the role swap that put Wazuh on dedicated hardware, the cloud-init and host-key traps, and where agent firewall rules belong | Current |
 | **[ssh-configuration](docs/ssh-configuration.md)** ([PDF](docs/ssh-configuration.pdf)) | SSH configuration and key management guide | Complete |
 | **[troubleshooting](troubleshooting/)** | Comprehensive troubleshooting guides by component | Complete |
 

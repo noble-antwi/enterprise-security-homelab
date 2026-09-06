@@ -27,7 +27,8 @@ images/
   net/     network: switch ports, VLANs, pfSense interfaces, IP addressing
   fw/      firewall: pfSense rules, aliases, NAT
   dc/      domain controller: AD DS, DNS, promotion, ipconfig
-  mon/     monitoring: Wazuh, Grafana, Prometheus
+  mon/     monitoring: Grafana, Prometheus
+  siem/    SIEM: Wazuh manager, indexer, dashboard, agents
   auto/    automation: Ansible controller, playbooks, runs
   vault/   HashiCorp Vault
   pve/     Proxmox VE: VMs, bridges, snapshots
@@ -60,6 +61,7 @@ Add a new area folder only when a genuinely new subsystem appears.
 | `dc/dc-03-dc01-ipconfig-all.png` | `ipconfig /all` output on the DC |
 | `fw/fw-05-alias-lab-nets.png` | The `LAB_NETS` alias definition |
 | `red/red-16-containment-test.png` | The RedTeam containment test run from KALI01 |
+| `siem/siem-08-dashboard-overview.png` | The Wazuh dashboard on first login |
 | `auto/auto-01-controller-build.mp4` | Recording of the Ansible controller rebuild |
 
 ---
