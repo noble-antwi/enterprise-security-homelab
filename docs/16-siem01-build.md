@@ -258,30 +258,73 @@ sudo userdel prometheus
 
 **The general point:** "apt says it is not installed" is not the same as "it is not on the machine". `/usr/local` exists precisely for software the package manager does not own, and asking systemd and the filesystem is how you find it. On a host being repurposed, check both.
 
-### Dashboard session lifetime
+### Dashboard session lifetime, and an outage caused by fixing it
 
-The default session expired quickly enough to interrupt work. Two settings in `/etc/wazuh-dashboard/opensearch_dashboards.yml` govern it, and the distinction between them is the useful part:
+The session expired quickly enough to interrupt work. Two settings in `/etc/wazuh-dashboard/opensearch_dashboards.yml` govern it, and the distinction between them is the useful part:
 
 | Setting | What it controls |
 |---------|------------------|
 | `opensearch_security.session.ttl` | How long a session may live, in milliseconds |
 | `opensearch_security.session.keepalive` | Whether that clock restarts on each interaction |
 
-Without `keepalive`, a session ends a fixed time after login regardless of activity, so it can expire in the middle of an investigation. With it, the timeout becomes an **idle** timeout.
+Without `keepalive` a session ends a fixed time after login regardless of activity, so it can expire mid-investigation. With it, the timeout becomes an **idle** timeout.
+
+**The first attempt took the dashboard down.** The change was appended to the end of the file. The service then failed to start, and `systemctl status` reported repeated restart attempts until systemd gave up:
+
+```
+wazuh-dashboard.service: Start request repeated too quickly.
+wazuh-dashboard.service: Failed with result 'exit-code'.
+```
+
+Recovery was immediate because a backup had been taken in the same breath as the edit:
 
 ```bash
-sudo cp /etc/wazuh-dashboard/opensearch_dashboards.yml /etc/wazuh-dashboard/opensearch_dashboards.yml.bak
-sudo tee -a /etc/wazuh-dashboard/opensearch_dashboards.yml > /dev/null <<'EOF'
+sudo cp /etc/wazuh-dashboard/opensearch_dashboards.yml.bak /etc/wazuh-dashboard/opensearch_dashboards.yml
+sudo systemctl reset-failed wazuh-dashboard
+sudo systemctl start wazuh-dashboard
+```
 
-# Session: one hour, measured from last activity rather than from login.
-opensearch_security.cookie.ttl: 3600000
-opensearch_security.session.ttl: 3600000
-opensearch_security.session.keepalive: true
-EOF
+`reset-failed` is required: systemd rate-limits a service that keeps failing, and until that counter is cleared `start` silently does nothing.
+
+**The cause was duplicate keys.** One `grep` found it:
+
+```
+17:opensearch_security.cookie.ttl: 900000
+18:opensearch_security.session.ttl: 900000
+19:opensearch_security.session.keepalive: true
+```
+
+The settings were already present. Appending them defined each key twice, and YAML rejects a document that does that, so the configuration would not parse. The defaults also explained the original complaint exactly: `900000` ms is **15 minutes**, and `keepalive` was already enabled, which is why the session survived activity and expired during idle time.
+
+The correct change edits the existing lines rather than adding new ones:
+
+```bash
+sudo sed -i 's/^opensearch_security.cookie.ttl: .*/opensearch_security.cookie.ttl: 3600000/; s/^opensearch_security.session.ttl: .*/opensearch_security.session.ttl: 3600000/' /etc/wazuh-dashboard/opensearch_dashboards.yml
 sudo systemctl restart wazuh-dashboard
 ```
 
-**One hour of inactivity** was chosen deliberately rather than taken as a convenience. A long-lived authenticated session on the machine holding all the security evidence is itself a risk: an unattended workstation stays logged in. A regulated environment would typically use fifteen to thirty minutes with keepalive, backed by single sign-on and MFA, which is the direction the companion IAM lab is building toward. One hour is the lab compromise, and it is recorded here so the choice is visible rather than assumed (NIST AC-11, Session Lock; AC-12, Session Termination).
+**Three lessons, in order of usefulness.** Copy a configuration file before editing it, since the backup turned a failed service into a thirty-second recovery. Check whether a setting already exists before adding it, because appending to a configuration file is not the same as configuring it. And editing a file changes what a service *will* load, not what it is currently running, so the restart and the verification are part of the change rather than optional extras.
+
+**One hour of inactivity** was chosen deliberately rather than for convenience. A long-lived authenticated session on the machine holding all the security evidence is itself a risk, since an unattended workstation stays logged in. A regulated environment would more likely keep the shipped fifteen minutes, backed by single sign-on and MFA, which is the direction the companion IAM lab is building toward. One hour is the lab compromise and is recorded here so the decision is visible rather than assumed (NIST AC-11, Session Lock; AC-12, Session Termination).
+
+### A dormant privileged account
+
+Authenticating a systemd action produced a polkit prompt offering two identities:
+
+```
+1.  Noble Antwi (nantwi)
+2.  Ansible Automation Service Account (ansible)
+```
+
+The second is a local account created when this machine was the monitoring host managed by the Ansible controller. `groups ansible` returns `ansible sudo`, so it holds full administrative rights, and `ANS01` no longer exists, so nothing uses it.
+
+A dormant account with sudo on the host that stores the security evidence is exactly the finding an access review exists to catch. It was locked rather than deleted, because the controller is being rebuilt and will need an account:
+
+```bash
+sudo passwd -l ansible
+```
+
+`passwd -l` disables password authentication but does **not** prevent key-based SSH, so this is a partial control. It is recorded as `H-03` in the hardening register in `docs/13` for review when ANS01 returns, rather than left to drift (NIST AC-2, Account Management; CA-5).
 
 ---
 
@@ -295,7 +338,30 @@ The first is direct: a SIEM holds evidence of everything else in the environment
 
 The second is conceptual. SCA is continuous configuration monitoring, which is the same control family being satisfied by hand for pfSense in `docs/13`: NIST CM-2 (Baseline Configuration) and CM-6 (Configuration Settings). The firewall register is a manual implementation of what SCA does automatically for hosts.
 
-**Planned as an exercise:** record the current SCA score, harden a set of failing checks, and show the score improving. That produces a before-and-after with evidence, in the same shape as the management-plane isolation test in `docs/13` section 3.1.
+### The baseline, recorded before any hardening
+
+Filtering the Configuration Assessment events by result gives the starting position against the **CIS Ubuntu Linux 24.04 LTS Benchmark v1.0.0**:
+
+| Result | Checks |
+|--------|--------|
+| Passed | **147** |
+| Failed | **127** |
+| Total evaluated | **274** |
+| Pass rate | **53.6%** |
+
+![SCA baseline, failed checks](../images/siem/siem-10-sca-baseline-failed.png)
+*Figure 16.13: 127 failing checks at first assessment. The visible failures are representative of a stock installation: `auditd` not installed, AIDE absent, no remote log host configured, audit tool ownership unset.*
+
+![SCA baseline, passed checks](../images/siem/siem-11-sca-baseline-passed.png)
+*Figure 16.14: 147 passing checks. Most are account and permission hygiene that Ubuntu gets right by default, such as shadowed passwords and no duplicate UIDs.*
+
+Roughly half a benchmark failing is normal for a default installation, and that is the point: hardening is work that has to be done, not a property an operating system arrives with.
+
+**This baseline cannot be recreated later**, which is why it was captured before anything was changed. It is the "before" half of a before-and-after, in the same shape as the management-plane isolation test in `docs/13` section 3.1, where a control was measured, changed, and measured again.
+
+**Planned as an exercise:** harden a set of the failing checks, starting with the audit subsystem, and show the pass rate improving against these numbers.
+
+**A note on the Inventory tab.** It is empty, and that is expected rather than a fault. Configuration Assessment's Inventory view is scoped to an agent selected from the agents list, and the manager is agent `000`, which does not appear there. The Events tab reads the alerts index directly, which is why the manager's own results are visible at all. Once agents enrol, their assessments populate the Inventory view normally.
 
 ---
 
