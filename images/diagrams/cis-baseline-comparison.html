@@ -1,0 +1,124 @@
+<!doctype html><html><head><meta charset="utf-8">
+<!--
+  CIS benchmark baselines across the estate, captured before any hardening.
+  Render to PNG with:
+    msedge --headless=new --disable-gpu --no-first-run --user-data-dir=<tmp>
+      --hide-scrollbars --virtual-time-budget=4000
+      --run-all-compositor-stages-before-draw --force-device-scale-factor=2
+      --window-size=1180,686 --screenshot=cis-baseline-comparison.png <file uri>
+
+  Bar length is proportional to the NUMBER OF CHECKS in each benchmark, not
+  normalised to 100%. That is the point of the chart: the Windows benchmarks are
+  roughly twice the size of the Linux ones, which is most of why their scores are
+  lower. Normalising would hide the explanation.
+
+  Colours are the reserved status set (passed / failed / not applicable), never
+  the categorical series palette, and every segment carries a number so the
+  result is never conveyed by colour alone.
+-->
+<style>
+  html,body{margin:0;padding:0;background:#ffffff;}
+  svg{display:block;font-family:"Segoe UI",system-ui,Arial,sans-serif;}
+  .t{font-weight:600;}
+  .mono{font-family:"Cascadia Code",Consolas,monospace;}
+</style></head><body>
+<svg width="1180" height="672" viewBox="0 0 1180 672" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <g id="bbmark">
+      <path fill="#08152F" d="M12 20C12 14 16 10 22 10h76c6 0 10 4 10 10v54c0 29-20 48-48 58C32 122 12 103 12 74Z"/>
+      <path fill="none" stroke="#2DD4E8" stroke-width="3.4" d="M20.5 24c0-4 2.6-6.6 6.6-6.6h65.8c4 0 6.6 2.6 6.6 6.6v49c0 24.5-17 40.5-39.5 49.5C37.5 113.5 20.5 97.5 20.5 73Z"/>
+      <circle cx="60" cy="66" r="23" fill="none" stroke="#2DD4E8" stroke-width="3.4"/>
+      <line x1="70.62" y1="70.40" x2="78.02" y2="73.46" stroke="#2DD4E8" stroke-width="3.2" stroke-linecap="round"/>
+      <line x1="64.40" y1="76.62" x2="67.46" y2="84.02" stroke="#2DD4E8" stroke-width="3.2" stroke-linecap="round"/>
+      <line x1="55.60" y1="76.62" x2="52.54" y2="84.02" stroke="#2DD4E8" stroke-width="3.2" stroke-linecap="round"/>
+      <line x1="49.38" y1="70.40" x2="41.98" y2="73.46" stroke="#2DD4E8" stroke-width="3.2" stroke-linecap="round"/>
+      <line x1="49.38" y1="61.60" x2="41.98" y2="58.54" stroke="#2DD4E8" stroke-width="3.2" stroke-linecap="round"/>
+      <line x1="55.60" y1="55.38" x2="52.54" y2="47.98" stroke="#2DD4E8" stroke-width="3.2" stroke-linecap="round"/>
+      <line x1="64.40" y1="55.38" x2="67.46" y2="47.98" stroke="#2DD4E8" stroke-width="3.2" stroke-linecap="round"/>
+      <line x1="70.62" y1="61.60" x2="78.02" y2="58.54" stroke="#2DD4E8" stroke-width="3.2" stroke-linecap="round"/>
+      <circle cx="60" cy="66" r="7" fill="#7FE9F5"/>
+    </g>
+  </defs>
+
+  <rect x="0" y="0" width="1180" height="672" fill="#ffffff"/>
+
+  <!-- Masthead -->
+  <use href="#bbmark" transform="translate(40,14) scale(0.40)"/>
+  <text x="94" y="37" font-size="15" class="t" fill="#08152F" letter-spacing="1.5">BIIRA BANK</text>
+  <text x="95" y="51" font-size="8.5" fill="#5A6478" letter-spacing="2.1">ENTERPRISE SECURITY ENGINEERING</text>
+  <text x="330" y="38" font-size="20" class="t" fill="#08152F">CIS Benchmark Baselines</text>
+  <text x="330" y="57" font-size="11.5" fill="#5A6478">Captured 2026-09-06, before any hardening · Wazuh Security Configuration Assessment</text>
+  <rect x="40" y="68" width="1100" height="2.5" fill="#08152F"/>
+  <rect x="40" y="70.5" width="1100" height="2.5" fill="#2DD4E8"/>
+
+  <text x="40" y="98" font-size="12" fill="#5A6478">Bar length shows the <tspan class="t" fill="#08152F">number of checks in each benchmark</tspan>, so the Windows policies are visibly larger. Scores are not normalised.</text>
+
+  <!-- ===================== DC01 ===================== -->
+  <text x="40" y="140" font-size="13.5" class="t" fill="#08152F">DC01</text>
+  <text x="40" y="156" font-size="10" fill="#5A6478">Domain controller</text>
+  <text x="40" y="170" font-size="9.5" fill="#8A93A5">CIS Windows Server 2025</text>
+  <rect x="250" y="128" width="139.4" height="30" fill="#008300"/>
+  <rect x="389.4" y="128" width="389.1" height="30" fill="#e34948"/>
+  <text x="319" y="148" font-size="12" class="t" text-anchor="middle" fill="#ffffff">105</text>
+  <text x="584" y="148" font-size="12" class="t" text-anchor="middle" fill="#ffffff">293 failed</text>
+  <text x="795" y="148" font-size="17" class="t" fill="#e34948">26%</text>
+  <text x="852" y="148" font-size="10.5" fill="#8A93A5">398 checks</text>
+
+  <!-- ===================== ADM01 ===================== -->
+  <text x="40" y="212" font-size="13.5" class="t" fill="#08152F">ADM01</text>
+  <text x="40" y="228" font-size="10" fill="#5A6478">Administrative workstation</text>
+  <text x="40" y="242" font-size="9.5" fill="#8A93A5">CIS Windows 11 Enterprise v3.0.0</text>
+  <rect x="250" y="200" width="164.7" height="30" fill="#008300"/>
+  <rect x="414.7" y="200" width="462.2" height="30" fill="#e34948"/>
+  <rect x="876.9" y="200" width="13.3" height="30" fill="#8A93A5"/>
+  <text x="332" y="220" font-size="12" class="t" text-anchor="middle" fill="#ffffff">124</text>
+  <text x="645" y="220" font-size="12" class="t" text-anchor="middle" fill="#ffffff">348 failed</text>
+  <text x="906" y="220" font-size="17" class="t" fill="#e34948">26%</text>
+  <text x="963" y="220" font-size="10.5" fill="#8A93A5">482 checks</text>
+
+  <!-- ===================== PVE01 ===================== -->
+  <text x="40" y="284" font-size="13.5" class="t" fill="#08152F">PVE01</text>
+  <text x="40" y="300" font-size="10" fill="#5A6478">Hypervisor</text>
+  <text x="40" y="314" font-size="9.5" fill="#8A93A5">CIS Debian Linux 13</text>
+  <rect x="250" y="272" width="106.2" height="30" fill="#008300"/>
+  <rect x="356.2" y="272" width="139.4" height="30" fill="#e34948"/>
+  <rect x="495.6" y="272" width="29.2" height="30" fill="#8A93A5"/>
+  <text x="303" y="292" font-size="12" class="t" text-anchor="middle" fill="#ffffff">80</text>
+  <text x="426" y="292" font-size="12" class="t" text-anchor="middle" fill="#ffffff">105 failed</text>
+  <text x="541" y="292" font-size="17" class="t" fill="#8A5E00">43%</text>
+  <text x="598" y="292" font-size="10.5" fill="#8A93A5">207 checks</text>
+
+  <!-- ===================== SIEM01 ===================== -->
+  <text x="40" y="356" font-size="13.5" class="t" fill="#08152F">SIEM01</text>
+  <text x="40" y="372" font-size="10" fill="#5A6478">SIEM (Wazuh manager)</text>
+  <text x="40" y="386" font-size="9.5" fill="#8A93A5">CIS Ubuntu Linux 24.04 LTS</text>
+  <rect x="250" y="344" width="195.2" height="30" fill="#008300"/>
+  <rect x="445.2" y="344" width="168.7" height="30" fill="#e34948"/>
+  <text x="347" y="364" font-size="12" class="t" text-anchor="middle" fill="#ffffff">147</text>
+  <text x="529" y="364" font-size="12" class="t" text-anchor="middle" fill="#ffffff">127 failed</text>
+  <text x="630" y="364" font-size="17" class="t" fill="#065F27">53.6%</text>
+  <text x="700" y="364" font-size="10.5" fill="#8A93A5">274 checks</text>
+
+  <!-- Legend -->
+  <rect x="250" y="400" width="14" height="14" fill="#008300"/>
+  <text x="270" y="412" font-size="11" fill="#08152F">Passed</text>
+  <rect x="336" y="400" width="14" height="14" fill="#e34948"/>
+  <text x="356" y="412" font-size="11" fill="#08152F">Failed</text>
+  <rect x="416" y="400" width="14" height="14" fill="#8A93A5"/>
+  <text x="436" y="412" font-size="11" fill="#08152F">Not applicable</text>
+  <text x="540" y="412" font-size="10.5" fill="#8A93A5">Every segment is labelled, so the result never depends on colour alone.</text>
+
+  <!-- Reading the chart -->
+  <rect x="40" y="438" width="1100" height="158" rx="8" fill="#F4FBFD" stroke="#0E7490" stroke-width="1.4"/>
+  <text x="60" y="462" font-size="13" class="t" fill="#0E7490">How to read this, and how not to</text>
+  <text x="60" y="484" font-size="11.5" fill="#16202B">This is <tspan class="t">not</tspan> a ranking of how secure the four operating systems are. The Windows benchmarks contain roughly twice as many checks as the Linux ones,</text>
+  <text x="60" y="501" font-size="11.5" fill="#16202B">covering hundreds of Group Policy settings, audit subcategories and user rights assignments that have no equivalent concept on a Linux host. A larger,</text>
+  <text x="60" y="518" font-size="11.5" fill="#16202B">more prescriptive benchmark produces more failures against a default installation, so the score falls.</text>
+  <text x="60" y="542" font-size="11.5" fill="#16202B"><tspan class="t" fill="#08152F">What the numbers are for is measuring a host against its own future.</tspan> DC01 at 26% today against DC01 in a month is a meaningful statement. DC01 at 26%</text>
+  <text x="60" y="559" font-size="11.5" fill="#16202B">against SIEM01 at 53.6% is not. Two things do carry across: every default installation fails most of its benchmark, so hardening is deliberate work rather</text>
+  <text x="60" y="576" font-size="11.5" fill="#16202B">than a property the operating system ships with; and the most important host, the one every other machine trusts, currently scores worst.</text>
+
+  <text x="40" y="626" font-size="9.5" fill="#8A93A5">SIEM01's figures are derived from assessment events rather than a policy summary, because the Wazuh manager is agent 000 and does not appear in the agent list. The arithmetic is identical: passed / (passed + failed).</text>
+  <text x="40" y="642" font-size="9.5" fill="#8A93A5">Source: Wazuh 4.14.7 Security Configuration Assessment, first scan after agent enrolment on each host. Recorded before any hardening so that later scans have a baseline to be measured against.</text>
+</svg>
+</body></html>

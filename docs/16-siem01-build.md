@@ -499,31 +499,54 @@ grep -A3 "<server>" /var/ossec/etc/ossec.conf
 
 ---
 
-## 10. Three baselines, and what the comparison actually shows
+## 10. Four baselines, and what the comparison actually shows
 
-Each agent runs its platform's CIS benchmark on enrolment. Three hosts, three operating systems, three very different results:
+Every agent runs its platform's CIS benchmark on enrolment, and the manager assesses itself. Four hosts, four operating systems, captured before any hardening:
 
-| Host | Role | Benchmark | Passed | Failed | Score |
-|------|------|-----------|--------|--------|-------|
-| DC01 | Domain controller | CIS Microsoft Windows Server 2025 | 105 | 293 | **26%** |
-| PVE01 | Hypervisor | CIS Debian Linux 13 | 80 | 105 | **43%** |
-| SIEM01 | SIEM | CIS Ubuntu Linux 24.04 LTS | 147 | 127 | **53.6%** |
+![CIS benchmark baselines across the estate](../images/diagrams/cis-baseline-comparison.png)
+*Figure 16.20: The four baselines. Bar length is proportional to the number of checks in each benchmark rather than normalised, because the size difference is most of the explanation for the score difference.*
 
-**The obvious reading is the wrong one.** This is not a ranking of how secure the three operating systems are.
+| Host | Role | Benchmark | Passed | Failed | N/A | Checks | Score |
+|------|------|-----------|--------|--------|-----|--------|-------|
+| DC01 | Domain controller | CIS Microsoft Windows Server 2025 | 105 | 293 | 0 | 398 | **26%** |
+| ADM01 | Administrative workstation | CIS Microsoft Windows 11 Enterprise v3.0.0 | 124 | 348 | 10 | 482 | **26%** |
+| PVE01 | Hypervisor | CIS Debian Linux 13 | 80 | 105 | 22 | 207 | **43%** |
+| SIEM01 | SIEM | CIS Ubuntu Linux 24.04 LTS | 147 | 127 | n/a | 274 | **53.6%** |
 
-The Windows Server benchmark is far more prescriptive than either Linux one. It covers hundreds of Group Policy settings, audit subcategories, user rights assignments and security options that have no equivalent concept on a Linux host. A larger and more detailed benchmark produces more failures against a default installation, so the score falls. A Debian minimal install has less surface to assess in the first place, which is part of why it sits in the middle.
+SIEM01's figures come from assessment events rather than a policy summary, because the Wazuh manager is agent `000` and does not appear in the agent list, so the Configuration Assessment view cannot be opened for it. The arithmetic is identical: passed divided by passed plus failed.
 
-**What the numbers are genuinely useful for is measuring change against yourself**, not against another platform. DC01 at 26% today, compared with DC01 in a month, is a meaningful statement. DC01 at 26% versus SIEM01 at 53.6% is not.
+### The obvious reading is the wrong one
 
-Two things do carry across, though.
+This is **not** a ranking of how secure the four operating systems are, and presenting it as one would be a mistake.
 
-**Every default installation fails most of its benchmark.** Roughly half on Linux, three quarters on Windows. Hardening is work that must be done deliberately; it is not a property an operating system arrives with. That is the single most useful thing these three numbers say together.
+The **number of checks** is the missing variable. The Windows benchmarks contain roughly twice as many checks as the Linux ones: 482 and 398 against 274 and 207. They cover hundreds of Group Policy settings, audit subcategories, user rights assignments and security options that have no equivalent concept on a Linux host. A larger and more prescriptive benchmark produces more failures against a default installation, so the score falls.
 
-**The most important host scores worst.** DC01 is the machine every other machine trusts. Compromise it and Active Directory falls, and with it every authentication decision in the environment. It has the lowest score and the largest benchmark, so it is both the highest-value target and the one with the most outstanding work. It is the obvious place to start.
+That is why the chart above keeps the bars proportional to benchmark size instead of normalising each to 100%. Normalising would make the four look directly comparable, which is precisely the misreading to avoid.
 
-`PVE01` deserves attention for the same reason at the infrastructure layer: it holds every virtual machine, and its 313 detected vulnerabilities, 22 of them critical, are a separate finding from the benchmark score.
+### What the numbers are actually for
 
-**Planned:** harden DC01 against a chosen set of failing checks, re-run the assessment, and record the before and after. That is the same shape as the management-plane isolation test in `docs/13` section 3.1, where a control was measured, changed, and measured again. A score on its own proves nothing; a score that moves proves the work happened.
+**Measuring a host against its own future.** DC01 at 26% today, against DC01 in a month, is a meaningful statement about work performed. DC01 at 26% against SIEM01 at 53.6% is not a statement about anything.
+
+Two conclusions do carry across all four, and they are the useful ones:
+
+**Every default installation fails most of its benchmark.** Roughly half on Linux, three quarters on Windows. Hardening is deliberate work that has to be scheduled and done; it is not a property an operating system arrives with. Four independent data points make that hard to argue with.
+
+**The most important host scores worst.** DC01 is the machine every other machine trusts: compromise it and every authentication decision in the environment is compromised with it. It has one of the largest benchmarks and the lowest score. ADM01 sits alongside it at 26%, and that pairing is uncomfortable for a reason, since the administrative workstation is where domain credentials are typed. Those two are the obvious place to start, and they are the two hosts already carrying `H-01` in the hardening register.
+
+![DC01 assessment detail](../images/siem/siem-19-sca-dc01-detail.png)
+*Figure 16.21: DC01 against the CIS Windows Server 2025 Benchmark. The individual checks show what the score is made of: password history, lockout thresholds, minimum password length, all evaluated by a specific command or registry key rather than asserted.*
+
+![ADM01 assessment detail](../images/siem/siem-18-sca-adm01-detail.png)
+*Figure 16.22: ADM01 against CIS Windows 11 Enterprise v3.0.0, the largest benchmark in the estate at 482 checks. This is the machine domain credentials are entered on, which is why its result matters as much as the domain controller's.*
+
+![PVE01 assessment detail](../images/siem/siem-17-sca-pve01-detail.png)
+*Figure 16.23: PVE01 against CIS Debian Linux 13. The failing checks here are recognisably different in character: filesystem partitioning and mount options rather than Group Policy, which is why the two families are not comparable by score.*
+
+### Planned
+
+Harden DC01 against a chosen set of failing checks, re-run the assessment, and record the before and after. That is the same shape as the management-plane isolation test in `docs/13` section 3.1, where a control was measured, changed, and measured again.
+
+A score on its own proves nothing. **A score that moves proves the work happened**, and that is what an auditor is actually asking for.
 
 ### A note on what Wazuh's vulnerability detection is, and is not
 
