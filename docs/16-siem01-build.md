@@ -4,7 +4,7 @@
 
 **Host**: `SIEM01`, Dell OptiPlex 9020, Ubuntu 24.04.2 LTS, `192.168.20.2/24` on VLAN 20 (BlueTeam), switch Port 4.
 
-**Status**: Host live and Wazuh 4.14.7 installed 2026-09-05. No agents deployed yet.
+**Status**: Wazuh 4.14.7 live since 2026-09-05. Three agents reporting as of 2026-09-06: DC01, ADM01 and PVE01.
 
 ---
 
@@ -438,22 +438,104 @@ The route degrades sensibly. Away from home, `192.168.10.1` is unreachable, the 
 
 **Two things worth carrying forward.** An agent's registered address is whichever source address the manager observed, so it reports the path taken rather than the machine's primary identity. And a firewall rule that has never passed traffic proves nothing, however correct it looks: this is the same lesson as the stale filter, arriving by a different route.
 
-### A second baseline, and an instructive comparison
+### The third agent: the hypervisor, and three platform surprises
 
-DC01's first Configuration Assessment run scores against the **CIS Microsoft Windows Server 2025 Benchmark**:
+`PVE01`, the Proxmox host, was enrolled last and is arguably the most important of the three. It runs KALI01 today and will run MON01 and VAULT01. Compromise it and every guest goes with it, which makes it the highest-value host in the lab after the domain controller. Nothing had been watching it.
 
-| Host | Benchmark | Passed | Failed | Score |
-|------|-----------|--------|--------|-------|
-| SIEM01 | CIS Ubuntu 24.04 LTS v1.0.0 | 147 | 127 | **53.6%** |
-| DC01 | CIS Microsoft Windows Server 2025 | 105 | 293 | **26%** |
+It needed no new firewall rule. `MGMT-12` was written against the management subnet rather than a single address, so the hypervisor at `192.168.10.6` was already covered.
 
-The gap is worth sitting with. It does not mean Windows is less secure than Ubuntu. It means the Windows benchmark is far more prescriptive, covering hundreds of Group Policy settings that simply do not exist as concepts on a Linux host, and that a domain controller installed with defaults satisfies very few of them. A domain controller is also the highest-value host in an Active Directory environment: everything else trusts it.
+**The route was checked before installing anything**, which is the habit the ADM01 episode produced:
 
-That makes DC01 the obvious hardening target, and the numbers above the baseline to measure against.
+```bash
+ip route get 192.168.20.2
+```
+```
+192.168.20.2 via 192.168.10.1 dev vmbr0.10 src 192.168.10.6
+```
+
+Through pfSense, out of the VLAN 10 interface, from the host's real address. No Tailscale client on this machine, so no overlay route could win. This agent's traffic genuinely crosses the firewall, which makes it the honest validation of `MGMT-12`.
+
+The install then failed three times, each for a different reason, and each worth recording because they are the same class of problem: **a vendor's generated command assumes a platform you may not be running.**
+
+**`sudo: command not found`.** The dashboard generates `sudo dpkg -i ...`. Proxmox is a minimal Debian where you operate as root, and `sudo` is not installed. The `wget` half of the chained command succeeded, `sudo` failed, and `dpkg` never ran, so the service did not exist. The download looking successful made it appear the install had worked.
+
+**`wazuh-agent depends on lsb-release; however: Package lsb-release is not installed`.** `dpkg -i` installs exactly the file it is given and does not resolve dependencies; that is `apt`'s job. Most Debian systems carry `lsb-release`; a minimal Proxmox install does not. The package unpacked but was left unconfigured, so the service still failed to start.
+
+**`Invalid server address found: 'MANAGER_IP'`.** This is the instructive one. After installing the dependency and re-running, the agent started and immediately exited:
+
+```
+wazuh-agentd: ERROR: (4112): Invalid server address found: 'MANAGER_IP'
+wazuh-agentd: ERROR: (1215): No client configured. Exiting.
+```
+
+`MANAGER_IP` is the literal placeholder in Wazuh's shipped configuration template. The `WAZUH_MANAGER` and `WAZUH_AGENT_NAME` environment variables are read by the package's configure script **on first install only**. Because the earlier attempt had already unpacked the package, the re-run was treated as a reinstall, the substitution was skipped, and the placeholder survived. The variables were on the command line and had no effect.
+
+Repeating the install cannot fix this. A purge can:
+
+```bash
+systemctl stop wazuh-agent 2>/dev/null; apt-get purge -y wazuh-agent && rm -rf /var/ossec
+WAZUH_MANAGER='192.168.20.2' WAZUH_AGENT_GROUP='default' WAZUH_AGENT_NAME='PVE01' dpkg -i ./wazuh-agent_4.14.7-1_amd64.deb
+```
+
+And the configuration is verified **before** starting the service, rather than after it fails:
+
+```bash
+grep -A3 "<server>" /var/ossec/etc/ossec.conf
+```
+```xml
+<server>
+    <address>192.168.20.2</address>
+    <port>1514</port>
+    <protocol>tcp</protocol>
+```
+
+**The general lesson.** A failed installation is not a neutral state. It leaves artifacts that change how the next attempt behaves, and the second attempt can fail in a way that has nothing to do with the original cause. When an install fails partway, purge before retrying rather than running the same command again.
+
+![PVE01 active](../images/siem/siem-15-agent-pve01-active.png)
+*Figure 16.18: Three agents active across two operating system families: two Windows and one Debian.*
+
+![PVE01 detail](../images/siem/siem-16-pve01-detail.png)
+*Figure 16.19: The hypervisor as the SIEM now sees it. Hardware inventory, a CIS Debian 13 benchmark result, and 313 detected vulnerabilities including 22 rated critical, on a machine that had no monitoring at all an hour earlier.*
 
 ---
 
-## 10. What comes next, and where the rules go
+## 10. Three baselines, and what the comparison actually shows
+
+Each agent runs its platform's CIS benchmark on enrolment. Three hosts, three operating systems, three very different results:
+
+| Host | Role | Benchmark | Passed | Failed | Score |
+|------|------|-----------|--------|--------|-------|
+| DC01 | Domain controller | CIS Microsoft Windows Server 2025 | 105 | 293 | **26%** |
+| PVE01 | Hypervisor | CIS Debian Linux 13 | 80 | 105 | **43%** |
+| SIEM01 | SIEM | CIS Ubuntu Linux 24.04 LTS | 147 | 127 | **53.6%** |
+
+**The obvious reading is the wrong one.** This is not a ranking of how secure the three operating systems are.
+
+The Windows Server benchmark is far more prescriptive than either Linux one. It covers hundreds of Group Policy settings, audit subcategories, user rights assignments and security options that have no equivalent concept on a Linux host. A larger and more detailed benchmark produces more failures against a default installation, so the score falls. A Debian minimal install has less surface to assess in the first place, which is part of why it sits in the middle.
+
+**What the numbers are genuinely useful for is measuring change against yourself**, not against another platform. DC01 at 26% today, compared with DC01 in a month, is a meaningful statement. DC01 at 26% versus SIEM01 at 53.6% is not.
+
+Two things do carry across, though.
+
+**Every default installation fails most of its benchmark.** Roughly half on Linux, three quarters on Windows. Hardening is work that must be done deliberately; it is not a property an operating system arrives with. That is the single most useful thing these three numbers say together.
+
+**The most important host scores worst.** DC01 is the machine every other machine trusts. Compromise it and Active Directory falls, and with it every authentication decision in the environment. It has the lowest score and the largest benchmark, so it is both the highest-value target and the one with the most outstanding work. It is the obvious place to start.
+
+`PVE01` deserves attention for the same reason at the infrastructure layer: it holds every virtual machine, and its 313 detected vulnerabilities, 22 of them critical, are a separate finding from the benchmark score.
+
+**Planned:** harden DC01 against a chosen set of failing checks, re-run the assessment, and record the before and after. That is the same shape as the management-plane isolation test in `docs/13` section 3.1, where a control was measured, changed, and measured again. A score on its own proves nothing; a score that moves proves the work happened.
+
+### A note on what Wazuh's vulnerability detection is, and is not
+
+The 22 critical and 120 high findings on PVE01 are produced by matching the host's installed package inventory against CVE feeds. This is **credentialed, agent-based** detection: it knows precisely which versions are installed rather than inferring from service banners, so it is accurate and produces very few false positives.
+
+It does not perform unauthenticated network scanning, so it will not tell you which services are exposed, which ports answer from another VLAN, whether TLS is weak, or whether default credentials are in use. Nor does it manage the remediation lifecycle: triage, ownership, deadlines, verification and reporting.
+
+That distinction matters, because compliance regimes assess the process rather than the tool. **PCI-DSS 11.3** and **NIST SP 800-53 RA-5** both describe a cycle: identify, rank, remediate, verify, repeat. A scanner produces findings; vulnerability management is what is done with them. Extending this lab with a network scanner and a findings-aggregation layer is tracked in `docs/12`.
+
+---
+
+## 11. What comes next, and where the rules go
 
 Deploying the first agent is where the firewall model becomes concrete, and it is the point most people get backwards.
 
@@ -475,7 +557,7 @@ Also outstanding: Grafana and Prometheus are still installed on this host and sh
 
 ---
 
-## 11. Standards alignment
+## 12. Standards alignment
 
 | Practice in this document | Standard |
 |---------------------------|----------|
