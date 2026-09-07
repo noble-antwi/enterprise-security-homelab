@@ -95,6 +95,13 @@ Convention in `docs/14` section 5.
 - First real role: **deploy the Wazuh agent**. By then it will have been done by hand on Windows, Debian and Ubuntu, so the role will handle what actually happens
 - Habits from day one: `--check --diff` before applying, `--limit` to one host, never `all` while learning, snapshot anything virtual, treat physical hosts as production
 
+### APP01 follow-ups
+
+- **`iam-job-scout-web-1` is bound to `0.0.0.0:5000`**, unlike the other two containers which listen on `127.0.0.1` and are reached only through Tailscale Serve. It is therefore directly reachable from anything that can route to `192.168.40.2` and from the whole tailnet. Bind it to localhost and put it behind Serve like the others, unless the exposure is deliberate
+- **Re-enable the third-party apt repositories** after the release upgrade: `azure-cli`, `github-cli`, `hashicorp`, `tailscale`. `do-release-upgrade` disables them, and they will point at the old Ubuntu codename afterwards, so packages keep working but stop receiving updates
+- **Rebuild the Stock Copilot virtualenv** if the system Python moved: `python3 -m venv --clear .venv` then reinstall requirements. The venv's interpreter is a symlink to the system `python3.13`
+- Physical host, so **no Proxmox backup covers it**. If the application data matters, that needs solving separately
+
 ### Documentation debt
 
 - `docs/02` describes the failed Rocky Linux Wazuh host. Superseded by `docs/16`
