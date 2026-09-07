@@ -2,7 +2,7 @@
 
 The working list for this lab. Documentation in `docs/` records what was built and why; this file records **what is true right now and what comes next**, so work can be picked up without reconstructing context.
 
-**Updated:** 2026-09-06
+**Updated:** 2026-09-07
 
 ---
 
@@ -37,11 +37,9 @@ The working list for this lab. Documentation in `docs/` records what was built a
 
 ## Next up
 
-**1. Upgrade APP01 to Ubuntu 26.04 LTS.** Still running 25.10, which is end of life and receiving no security updates. It is reachable over Tailscale and serves two web applications, which makes it the weakest position in the estate. `sudo do-release-upgrade`. Note that `apt upgrade` alone does not do this; the release upgrade is a separate command.
+**1. `DEV-01` and a Wazuh agent on APP01.** APP01 is the only host with no monitoring. The rule goes on the **DEVOPS** tab because that is where its traffic originates: source `DEVOPS subnets`, destination `SIEM01_HOST`, ports `WAZUH_AGENT`. First real rule on that interface.
 
-**2. `DEV-01` and a Wazuh agent on APP01.** APP01 is the only host with no monitoring. The rule goes on the **DEVOPS** tab because that is where its traffic originates: source `DEVOPS subnets`, destination `SIEM01_HOST`, ports `WAZUH_AGENT`. First real rule on that interface.
-
-**3. Harden DC01 against its CIS baseline.** 26% recorded before any changes (`docs/16` section 10). Pick a set of failing checks, apply, re-run the assessment, record the delta. A score that moves is the evidence; a score on its own is not.
+**2. Harden DC01 against its CIS baseline.** 26% recorded before any changes (`docs/16` section 10). Pick a set of failing checks, apply, re-run the assessment, record the delta. A score that moves is the evidence; a score on its own is not.
 
 ---
 
@@ -99,8 +97,9 @@ Convention in `docs/14` section 5.
 
 - **`iam-job-scout-web-1` is bound to `0.0.0.0:5000`**, unlike the other two containers which listen on `127.0.0.1` and are reached only through Tailscale Serve. It is therefore directly reachable from anything that can route to `192.168.40.2` and from the whole tailnet. Bind it to localhost and put it behind Serve like the others, unless the exposure is deliberate
 - **Re-enable the third-party apt repositories** after the release upgrade: `azure-cli`, `github-cli`, `hashicorp`, `tailscale`. `do-release-upgrade` disables them, and they will point at the old Ubuntu codename afterwards, so packages keep working but stop receiving updates
-- **Rebuild the Stock Copilot virtualenv** if the system Python moved: `python3 -m venv --clear .venv` then reinstall requirements. The venv's interpreter is a symlink to the system `python3.13`
+- **Done 2026-09-07: upgraded to Ubuntu 26.04.1 LTS** (codename resolute, kernel 7.0). The virtualenv was rebuilt against Python 3.14, which required installing `python3.14-venv` first. Both applications and all three containers returned
 - Physical host, so **no Proxmox backup covers it**. If the application data matters, that needs solving separately
+- Note for future work on this host: **Stock Copilot is supervised by a user-level systemd service**, not a system one, with `Linger=yes` so it starts at boot without a login. It runs two processes, `--serve` on 8765 and `--poll-alerts`. Check `systemctl --user list-units` before assuming anything about how a service on this machine is managed
 
 ### Documentation debt
 
