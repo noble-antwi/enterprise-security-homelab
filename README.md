@@ -34,6 +34,8 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 
 ---
 
+**Working list:** [BACKLOG.md](BACKLOG.md) records the current state of every host and what is outstanding, so the plan does not live only in someone's memory.
+
 ## Documentation Structure
 
 | Module | Description | Status |
@@ -72,7 +74,7 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 | **10 - Management** | Admin and Control | `192.168.10.0/24` | `.1` | pfSense, Ansible, Windows Systems, Proxmox |
 | **20 - BlueTeam** | Security Monitoring | `192.168.20.0/24` | `.1` | SIEM01 (`192.168.20.2`), Wazuh 4.14.7 manager, indexer and dashboard |
 | **30 - RedTeam** | Attack Simulation | `192.168.30.0/24` | `.1` | Kali Linux (Proxmox VM) |
-| **40 - DevOps** | CI/CD Pipeline | `192.168.40.0/24` | `.1` | HashiCorp Vault desktop (staged, awaiting configuration) |
+| **40 - DevOps** | CI/CD Pipeline | `192.168.40.0/24` | `.1` | APP01 (`192.168.40.2`), application host. VAULT01 planned |
 | **50 - EnterpriseLAN** | Business Services | `192.168.50.0/24` | `.1` | Windows Server 2025 domain controller (`192.168.50.2`) |
 | **60 - Monitoring** | Observability | `192.168.60.0/24` | `.1` | Grafana and Prometheus, moving to a Proxmox guest |
 
@@ -89,7 +91,7 @@ Machines follow a role-based naming convention, `<ROLE><NN>`: servers such as `D
 | PVE01 (proxmox-01) | `192.168.10.6` | Management | Proxmox VE 9.2 (Debian 13) | Bare-metal VM hypervisor, Wazuh agent 003 | Active |
 | SIEM01 | `192.168.20.2` | BlueTeam | Ubuntu 24.04 (Dell OptiPlex 9020, 8 core, 16 GB) | SIEM and centralised logging | Active, 3 agents reporting (DC01, ADM01, PVE01) |
 | KALI01 | `192.168.30.2` | RedTeam | Kali Linux 2026.2 | Attack simulation (Proxmox VM 103) | Active, containment validated |
-| VAULT01 (lab-devops-svc01) | `192.168.40.2` | DevOps | Ubuntu | HashiCorp Vault secrets management | Staged, not yet configured |
+| APP01 | `192.168.40.2` | DevOps | Ubuntu | DevOps application host, two web apps behind Tailscale Serve | Active. VAULT01 will be a separate Proxmox guest |
 | DC01 | `192.168.50.2` | EnterpriseLAN | Windows Server 2025 | Domain controller for `ad.biira.online` (AD DS + DNS) | Active |
 | MON01 (Grafana + Prometheus) | `192.168.60.2` | Monitoring | Ubuntu | Observability dashboards | To be rebuilt as a Proxmox guest |
 
