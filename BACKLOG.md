@@ -12,7 +12,8 @@ The working list for this lab. Documentation in `docs/` records what was built a
 |------|--------|
 | Network | pfSense, 6 VLANs, 2 switches, Proxmox on a VLAN-aware trunk |
 | Firewall | MANAGEMENT, ENTERPRISELAN and REDTEAM have explicit rulesets. BLUETEAM, DEVOPS and MONITORING are still `any→any` |
-| Identity | DC01 live, `ad.biira.online`, AD DS and DNS healthy |
+| Identity | DC01 live on **`corp.biirabank.com`** (NetBIOS `CORP`), rebuilt 2026-09-07. 20 OUs, 32 users and 12 security groups restored from export. `ad.biira.online` retired |
+| Public web | **`biirabank.com` live**, Cloudflare Worker static assets. HTTPS enforced, TLS 1.2 minimum, six security headers, zero-JavaScript CSP. securityheaders.com **A+** |
 | SIEM | SIEM01 running Wazuh 4.14.7. Four hosts assessed, three agents reporting |
 | Attack segment | KALI01 built and containment validated |
 | Monitoring | **None.** Grafana and Prometheus removed from the old host, MON01 not yet rebuilt |
@@ -31,7 +32,7 @@ The working list for this lab. Documentation in `docs/` records what was built a
 | SIEM01 | `192.168.20.2` | 20 | manager (000) | Wazuh manager, indexer, dashboard |
 | KALI01 | `192.168.30.2` | 30 | none | Attack box, contained |
 | APP01 | `192.168.40.2` | 40 | none | Two web apps behind Tailscale Serve |
-| DC01 | `192.168.50.2` | 50 | 001 | Domain controller |
+| DC01 | `192.168.50.2` | 50 | 001 | Domain controller, `corp.biirabank.com`. Agent 001 to be reconfirmed after the rebuild |
 
 ---
 
@@ -39,7 +40,11 @@ The working list for this lab. Documentation in `docs/` records what was built a
 
 **1. `DEV-01` and a Wazuh agent on APP01.** APP01 is the only host with no monitoring. The rule goes on the **DEVOPS** tab because that is where its traffic originates: source `DEVOPS subnets`, destination `SIEM01_HOST`, ports `WAZUH_AGENT`. First real rule on that interface.
 
-**2. Harden DC01 against its CIS baseline.** 26% recorded before any changes (`docs/16` section 10). Pick a set of failing checks, apply, re-run the assessment, record the delta. A score that moves is the evidence; a score on its own is not.
+**2. Finish the domain migration tail.** The forest is rebuilt but three things trail it: recreate the reverse DNS zone for `192.168.50.0/24` so logs show hostnames rather than addresses, rejoin any machine still bound to the retired `ad.biira.online`, and reconfirm Wazuh agent 001 is reporting from the rebuilt controller. See `docs/17` section 7.
+
+**3. Harden DC01 against its CIS baseline.** 26% recorded before any changes (`docs/16` section 10). Note the baseline predates the rebuild, so re-run the assessment first to get a current figure. Then pick a set of failing checks, apply, re-run, record the delta. A score that moves is the evidence; a score on its own is not.
+
+**4. Enforce the tiered admin model with Group Policy.** The `Tier0` / `Tier1` / `Tier2` organisational units and their matching `SG-` groups exist, but nothing enforces the tier restrictions. Structure without enforcement. Found during the migration export, recorded in `docs/17` section 2.
 
 ---
 
@@ -101,8 +106,19 @@ Convention in `docs/14` section 5.
 - Physical host, so **no Proxmox backup covers it**. If the application data matters, that needs solving separately
 - Note for future work on this host: **Stock Copilot is supervised by a user-level systemd service**, not a system one, with `Linger=yes` so it starts at boot without a login. It runs two processes, `--serve` on 8765 and `--poll-alerts`. Check `systemctl --user list-units` before assuming anything about how a service on this machine is managed
 
+### Public web and edge
+
+Detail in `docs/18`.
+
+- **SSL Labs** grade capture, a second independent scoreboard for the TLS work
+- **SPF, DMARC and null-MX** records on `biirabank.com` so the domain cannot be used to spoof email, per `ADR-001`
+- **WAF managed rules** on, with a Security Events screenshot showing a real blocked request
+- Screenshots owed: the Transform Rule with its six headers, the TLS minimum setting, the `workers.dev` routes disabled
+- Later: the **Okta sign-in hand-off** from the site to `corp.biirabank.com`, which closes the identity chain from the public internet to the on-premises directory
+
 ### Documentation debt
 
+- `docs/08` and `docs/11` reference `ad.biira.online`, retired 2026-09-07. Update to `corp.biirabank.com` when those chapters are next revised
 - `docs/02` describes the failed Rocky Linux Wazuh host. Superseded by `docs/16`
 - `docs/08` and `docs/09` describe the retired Windows Server 2022 setup
 - `docs/03` describes Grafana and Prometheus on the old host. Rewrite when MON01 exists

@@ -35,6 +35,7 @@ images/
   red/     RedTeam: Kali, attack evidence (lab-only)
   vpn/     remote access: Tailscale
   sys/     endpoints: Windows clients, member servers, Linux members
+  web/     public web presence: biirabank.com, Cloudflare edge, external security grades
 ```
 
 Add a new area folder only when a genuinely new subsystem appears.
