@@ -81,23 +81,38 @@ To restore a guest: Proxmox UI → `backup` storage → Backups → select the b
 
 ## 4. Capacity plan
 
-RAM is the limit (~32 GiB). The rule that keeps the lab within budget:
+RAM is the limit (~32 GiB). The original rule was purely economic:
 
-> **Linux services run as LXC containers; Windows runs as full VMs.**
+> ~~Linux services run as LXC containers; Windows runs as full VMs.~~
 
-LXC containers share the host kernel, a fraction of the RAM and disk of a VM. Windows cannot be a container, so it uses full VMs.
+LXC containers share the host kernel and use a fraction of the RAM and disk of a VM. Windows cannot be a container, so it uses full VMs. That much still holds, but the rule was revised on 8 September 2026 because it decided on cost alone and ignored the isolation boundary.
 
-| Guest | Type | Planned RAM |
-|-------|------|-------------|
-| DC01 / DC02 (if virtual) | VM | 2–4 GB |
-| CA01 | VM | 2–4 GB |
-| WKS01 / WKS02 | VM | 4 GB each |
-| ANS01 (Ansible) | **LXC** | ~1 GB |
-| SIEM01 (Wazuh) | **LXC/VM** | ~4 GB |
-| MON01 (Grafana/Prometheus) | **LXC** | ~2 GB |
-| Kali | VM | ~3 GB |
+### The revised rule
 
-All-running total is roughly 28 GB, within 32 GB, and guests can be powered on **on demand** rather than all at once. Verdict: the host comfortably carries the planned estate.
+> **Windows runs as a VM. Tier 0 assets run as VMs. Everything else Linux runs as an LXC container.**
+
+A **Tier 0 asset** is one whose compromise yields control of the wider estate. In this lab that means anything holding credentials or secrets for other machines: the vulnerability scanner, which stores administrative credentials for every host it scans, and Vault, which stores every secret in the environment.
+
+The reasoning is the isolation boundary. An LXC container shares the host's kernel, so escaping it means defeating a namespace. A virtual machine has its own kernel behind hardware virtualisation, which is a materially harder boundary to cross. For a convenience service the container is the right trade. For the one machine that can authenticate to everything, it is not.
+
+There is a practical reason alongside the security one: a scanner performs raw socket operations that require privileges an unprivileged container does not have, and granting them would erode the isolation that made the container attractive.
+
+| Guest | Type | Planned RAM | Why this type |
+|-------|------|-------------|---------------|
+| DC01 / DC02 (if virtual) | VM | 2–4 GB | Windows |
+| CA01 | VM | 2–4 GB | Windows |
+| WKS01 / WKS02 | VM | 4 GB each | Windows |
+| **NESSUS01** | **VM** | **~4 GB** | **Tier 0: holds scan credentials for every host** |
+| **VAULT01** | **VM** | **~2 GB** | **Tier 0: holds every secret in the estate** |
+| ANS01 (Ansible) | **LXC** | ~1 GB | Convenience service |
+| MON01 (Grafana/Prometheus) | **LXC** | ~2 GB | Convenience service |
+| Kali | VM | ~3 GB | Needs its own kernel for offensive tooling |
+
+SIEM01 is no longer listed: it moved to physical hardware in the role swap recorded in section 8.
+
+All-running total is roughly 28 GB, within 32 GB, and guests can be powered on **on demand** rather than all at once. The scanner in particular is a bursty workload, powered on to scan and off afterwards, so its allocation is rarely held. Verdict: the host comfortably carries the planned estate.
+
+**Note on ANS01.** Ansible is a convenience service today, but it will eventually hold credentials for every host it configures. When it does, it becomes Tier 0 by the same test and should move to a VM. The classification follows what a machine holds, not what it is called.
 
 ---
 

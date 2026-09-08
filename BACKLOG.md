@@ -60,7 +60,8 @@ The working list for this lab. Documentation in `docs/` records what was built a
 
 ### Vulnerability management
 
-- **Nessus Essentials** as a Proxmox guest on VLAN 20. Free for 16 IPs, and the industry reference
+- **NESSUS01**: Nessus Essentials as a Proxmox **VM** (not LXC) on VLAN 20, `192.168.20.3`, 4 GB, 2 vCPU, 60 GB. Free for 16 IPs, and the industry reference. VM rather than container because the scanner is a **Tier 0 asset**: it stores administrative credentials for every host it scans, so it gets a hardware isolation boundary. Rule recorded in `docs/14` section 4
+- **A dedicated scan account** in `corp.biirabank.com`, least privilege, never Domain Admin. Its credentials eventually issued by VAULT01, its logins shipped to Wazuh. Same non-human identity pattern as the AI agent scenario, rehearsed on a service that exists first
 - Write the **BLUETEAM ruleset** around what the scanner actually needs. The scanner dials out to everything, so this is the first genuine reason to write rules on that tab
 - **Greenbone / OpenVAS** as a fully open-source alternative, later
 - **DefectDojo** once there are two sources of findings to aggregate. This is the management layer that turns findings into a process, which is what PCI-DSS 11.3 and NIST RA-5 actually assess
@@ -69,7 +70,7 @@ The working list for this lab. Documentation in `docs/` records what was built a
 
 - **MON01** on Proxmox, VLAN 60, `192.168.60.2`. Grafana and Prometheus installed fresh, no state migrated. Repurpose VM 102
 - **ANS01** on Proxmox, VLAN 10, `192.168.10.2`. After the Ansible course
-- **VAULT01** on Proxmox, VLAN 40. Deliberately not on APP01: Vault holds every secret in the environment and should not share a host with a web application. Store the unseal keys **outside** the machine and outside the backup
+- **VAULT01** on Proxmox, VLAN 40, as a **VM not an LXC**. Deliberately not on APP01: Vault holds every secret in the environment and should not share a host with a web application. Tier 0 by the same test as the scanner, so it gets hardware isolation rather than a shared kernel. Store the unseal keys **outside** the machine and outside the backup
 - **PAW01**, a dedicated administrative workstation, which is the proper resolution to `H-01`
 
 ### Firewall
