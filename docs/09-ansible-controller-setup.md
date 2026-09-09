@@ -858,11 +858,11 @@ ansible_connection: winrm
 ansible_winrm_transport: basic
 ansible_winrm_server_cert_validation: ignore
 ansible_user: Administrator
-ansible_password: "YourWindowsPassword"
+ansible_password: "<ADMIN_PASSWORD>"
 ansible_port: 5985
 ```
 
-**Important:** Replace `YourWindowsPassword` with actual password!
+**Important:** Replace `<ADMIN_PASSWORD>` with actual password!
 
 **Set secure permissions:**
 ```bash

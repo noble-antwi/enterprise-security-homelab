@@ -155,7 +155,7 @@ try {
         Write-Host "1. From your Ansible Controller (192.168.10.2), test connectivity:" -ForegroundColor White
         Write-Host "   ansible $($ipAddresses[0]) -m win_ping \" -ForegroundColor Gray
         Write-Host "     -e `"ansible_user=Administrator`" \" -ForegroundColor Gray
-        Write-Host "     -e `"ansible_password=YourAdminPassword`" \" -ForegroundColor Gray
+        Write-Host "     -e `"ansible_password=<ADMIN_PASSWORD>`" \" -ForegroundColor Gray
         Write-Host "     -e `"ansible_connection=winrm`" \" -ForegroundColor Gray
         Write-Host "     -e `"ansible_winrm_transport=basic`" \" -ForegroundColor Gray
         Write-Host "     -e `"ansible_port=5985`"" -ForegroundColor Gray
@@ -164,8 +164,8 @@ try {
         Write-Host "   ansible-playbook bootstrap_windows.yml \" -ForegroundColor Gray
         Write-Host "     -e `"target_host=$($ipAddresses[0])`" \" -ForegroundColor Gray
         Write-Host "     -e `"initial_user=Administrator`" \" -ForegroundColor Gray
-        Write-Host "     -e `"initial_password=YourAdminPassword`" \" -ForegroundColor Gray
-        Write-Host "     -e `"ansible_service_password=Password123`"" -ForegroundColor Gray
+        Write-Host "     -e `"initial_password=<ADMIN_PASSWORD>`" \" -ForegroundColor Gray
+        Write-Host "     -e `"ansible_service_password=<ANSIBLE_PASSWORD>`"" -ForegroundColor Gray
         Write-Host ""
         Write-Host "3. After bootstrap, the system will be fully managed by Ansible" -ForegroundColor White
         Write-Host ""

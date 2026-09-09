@@ -42,8 +42,8 @@ Ansible Controller (192.168.10.2) - Ubuntu 24.04
 
 ### Authentication Configuration
 Both Windows systems use dedicated `ansible` service accounts with platform-appropriate passwords:
-- **Host Laptop**: `AnsiblePass123!` (manually configured)
-- **Server 2022**: `Password123` (bootstrap configured)
+- **Host Laptop**: `<ANSIBLE_PASSWORD>` (manually configured)
+- **Server 2022**: `<ANSIBLE_PASSWORD>` (bootstrap configured)
 
 ## Windows Host Preparation
 
@@ -85,7 +85,7 @@ Created dedicated automation user account:
 
 **User Account Details**:
 - **Username**: `ansible`
-- **Password**: `AnsiblePass123!` or `Password123` (system dependent)
+- **Password**: `<ANSIBLE_PASSWORD>` or `<ANSIBLE_PASSWORD>` (system dependent)
 - **Group Membership**: Administrators
 - **Properties**: Password never expires
 
@@ -101,7 +101,7 @@ Created dedicated automation user account:
 **Method 2: PowerShell Command Line**
 ```powershell
 # Create user account
-net user ansible AnsiblePass123! /add
+net user ansible <ANSIBLE_PASSWORD> /add
 
 # Add to administrators group
 net localgroup administrators ansible /add
@@ -203,7 +203,7 @@ The bootstrap playbook leverages the variable management structure for flexible 
     ansible_winrm_scheme: http
     
     # Service account password (can be overridden)
-    ansible_service_password: "{{ ansible_service_password | default('Password123') }}"
+    ansible_service_password: "{{ ansible_service_password | default('<ANSIBLE_PASSWORD>') }}"
     
   tasks:
     - name: Test initial connectivity to target system
@@ -293,8 +293,8 @@ The bootstrap playbook leverages the variable management structure for flexible 
 ansible-playbook ansible/playbooks/bootstrap_windows.yml \
     -e "target_host=192.168.10.5" \
     -e "initial_user=Administrator" \
-    -e "initial_password=YourAdminPassword" \
-    -e "ansible_service_password=Password123"
+    -e "initial_password=<ADMIN_PASSWORD>" \
+    -e "ansible_service_password=<ANSIBLE_PASSWORD>"
 
 # Bootstrap will automatically create host_vars/192.168.10.5.yml
 ```
@@ -319,8 +319,8 @@ ansible/
 # Test connectivity using the variable hierarchy
 ansible windows -m win_ping
 # Results:
-# 192.168.10.3: Uses group_vars + host_vars/192.168.10.3.yml (AnsiblePass123!)
-# 192.168.10.5: Uses group_vars + host_vars/192.168.10.5.yml (Password123)
+# 192.168.10.3: Uses group_vars + host_vars/192.168.10.3.yml (<ANSIBLE_PASSWORD>)
+# 192.168.10.5: Uses group_vars + host_vars/192.168.10.5.yml (<ANSIBLE_PASSWORD>)
 
 # Verify variable loading
 ansible-inventory --host 192.168.10.3 | grep ansible_password
@@ -335,8 +335,8 @@ ansible-inventory --host 192.168.10.5 | grep ansible_password
 ansible-playbook bootstrap_windows.yml \
     -e "target_host=192.168.10.5" \
     -e "initial_user=Administrator" \
-    -e "initial_password=YourAdminPassword" \
-    -e "ansible_service_password=Password123"
+    -e "initial_password=<ADMIN_PASSWORD>" \
+    -e "ansible_service_password=<ANSIBLE_PASSWORD>"
 ```
 
 #### Bootstrap Process Flow
@@ -403,7 +403,7 @@ ansible_connection: winrm
 ansible_winrm_transport: basic
 ansible_winrm_server_cert_validation: ignore
 ansible_user: ansible
-ansible_password: AnsiblePass123!
+ansible_password: <ANSIBLE_PASSWORD>
 ansible_port: 5985
 ansible_winrm_scheme: http
 ```
@@ -455,12 +455,12 @@ Different Windows systems may have different passwords due to setup methods:
 # /etc/ansible/host_vars/192.168.10.3.yml (Manual Setup)
 ---
 # Host-specific password for manually configured system
-ansible_password: AnsiblePass123!
+ansible_password: <ANSIBLE_PASSWORD>
 
 # /etc/ansible/host_vars/192.168.10.5.yml (Bootstrap Setup)
 ---
 # Host-specific password for bootstrap configured system
-ansible_password: Password123
+ansible_password: <ANSIBLE_PASSWORD>
 ```
 
 ### Authentication Architecture Benefits
@@ -484,11 +484,11 @@ Windows Server systems enforce password complexity requirements that can affect 
 During implementation, we discovered that password complexity varies between systems:
 
 **Failed Passwords:**
-- `AnsibleMgmt2024!` - Failed complexity requirements
-- `AnsiblePass123!` - Failed (contained username "Ansible")
+- `<ANSIBLE_PASSWORD>` - Failed complexity requirements
+- `<ANSIBLE_PASSWORD>` - Failed (contained username "Ansible")
 
 **Successful Passwords:**
-- `Password123` - Met complexity requirements for Server 2022
+- `<ANSIBLE_PASSWORD>` - Met complexity requirements for Server 2022
 
 ### Password Policy Verification
 To check password requirements on any Windows system:
@@ -598,8 +598,8 @@ sudo apt install python3-winrm -y
 ansible-playbook ansible/playbooks/bootstrap_windows.yml \
     -e "target_host=192.168.10.6" \
     -e "initial_user=Administrator" \
-    -e "initial_password=AdminPassword" \
-    -e "ansible_service_password=NewPassword123"
+    -e "initial_password=<ADMIN_PASSWORD>" \
+    -e "ansible_service_password=<ANSIBLE_PASSWORD>"
 
 # 2. Add to inventory
 echo "192.168.10.6   # Windows Server 2025" >> ansible/hosts
@@ -617,7 +617,7 @@ ansible 192.168.10.6 -m win_ping
 ansible-inventory --list | jq '.windows.hosts'
 
 # Update password for specific host
-echo "ansible_password: NewSecurePassword123!" > ansible/host_vars/192.168.10.3.yml
+echo "ansible_password: <ANSIBLE_PASSWORD>" > ansible/host_vars/192.168.10.3.yml
 
 # Test updated configuration
 ansible 192.168.10.3 -m win_ping
@@ -680,7 +680,7 @@ ansible-inventory --graph windows
 
 # Test password authentication specifically
 ansible 192.168.10.3 -m win_shell -a "whoami" \
-    -e "ansible_password=TestPassword"
+    -e "ansible_password=<ANSIBLE_PASSWORD>"
 ```
 
 ## Security Implementation
@@ -791,8 +791,8 @@ For future Windows systems, automation can be implemented:
 ansible-playbook ansible/playbooks/bootstrap_windows.yml \
     -e "target_host=192.168.10.6" \
     -e "initial_user=Administrator" \
-    -e "initial_password=YourWindowsPassword" \
-    -e "ansible_service_password=Password123"
+    -e "initial_password=<ADMIN_PASSWORD>" \
+    -e "ansible_service_password=<ANSIBLE_PASSWORD>"
 ```
 
 ## Best Practices Established

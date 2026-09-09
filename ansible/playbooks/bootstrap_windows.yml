@@ -10,7 +10,7 @@
     ansible_winrm_server_cert_validation: ignore
     ansible_port: 5985
     ansible_service_user: ansible
-    ansible_service_password: AnsibleMgmt2024!
+    ansible_service_password: <ANSIBLE_PASSWORD>
     
   tasks:
     - name: Test initial connectivity to target system

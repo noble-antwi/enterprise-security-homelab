@@ -1,2 +1,6 @@
 ---
-ansible_password: Password123
+# The password is deliberately not stored here. This repository is public.
+# Supply it at run time from Ansible Vault or the command line:
+#   ansible-playbook ... -e "ansible_password=$(read -s -p 'password: ' p; echo $p)"
+# Migrating these to Ansible Vault is tracked in BACKLOG.md.
+ansible_password: <ANSIBLE_PASSWORD>

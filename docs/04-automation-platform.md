@@ -282,7 +282,7 @@ ssh-copy-id -i ~/.ssh/id_ed25519.pub ansible@192.168.10.2  # Controller
 #### Local User Account Configuration
 ```powershell
 # Create dedicated ansible user on Windows system
-net user ansible "SecurePassword123!" /add
+net user ansible "<ANSIBLE_PASSWORD>" /add
 net localgroup administrators ansible /add
 
 # Enable WinRM for remote management
@@ -298,7 +298,7 @@ ansible_connection: winrm
 ansible_winrm_transport: basic
 ansible_winrm_server_cert_validation: ignore
 ansible_user: ansible
-ansible_password: SecurePassword123!
+ansible_password: <ANSIBLE_PASSWORD>
 ```
 
 ## Cross-Platform Automation Capabilities

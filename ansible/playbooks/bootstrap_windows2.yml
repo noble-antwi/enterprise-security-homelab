@@ -10,7 +10,7 @@
     ansible_winrm_server_cert_validation: ignore
     ansible_port: 5985
     ansible_winrm_scheme: http
-    ansible_service_password: "{{ ansible_service_password | default('Password123') }}"
+    ansible_service_password: "{{ ansible_service_password | default('<ANSIBLE_PASSWORD>') }}"
     
   tasks:
     - name: Test initial connectivity to target system

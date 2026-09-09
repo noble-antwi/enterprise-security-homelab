@@ -111,14 +111,14 @@ Traditional Windows user management interfaces not available or accessible in Wi
 2. Click "Accounts" → "Other users"  
 3. Click "Add account" → "I don't have this person's sign-in information"
 4. Click "Add a user without a Microsoft account"
-5. Username: ansible, Password: AnsiblePass123!
+5. Username: ansible, Password: <ANSIBLE_PASSWORD>
 6. Click account → "Change account type" → "Administrator"
 ```
 
 ##### Method 2: PowerShell (Alternative)
 ```powershell
 # Create user account
-net user ansible AnsiblePass123! /add
+net user ansible <ANSIBLE_PASSWORD> /add
 
 # Add to administrators group
 net localgroup administrators ansible /add
@@ -170,7 +170,7 @@ winrm get winrm/config/service/auth
 winrm get winrm/config/client/auth
 
 # Test local WinRM authentication
-winrs -r:http://localhost:5985 -u:ansible -p:AnsiblePass123! cmd /c "echo Hello"
+winrs -r:http://localhost:5985 -u:ansible -p:<ANSIBLE_PASSWORD> cmd /c "echo Hello"
 ```
 
 ---
@@ -185,7 +185,7 @@ Long, unwieldy inventory lines with inline Windows connection parameters.
 #### **Before (Problematic)**
 ```ini
 [windows]
-192.168.10.3 ansible_user=ansible ansible_password=AnsiblePass123! ansible_connection=winrm ansible_winrm_transport=basic ansible_winrm_server_cert_validation=ignore ansible_port=5985 ansible_winrm_scheme=http
+192.168.10.3 ansible_user=ansible ansible_password=<ANSIBLE_PASSWORD> ansible_connection=winrm ansible_winrm_transport=basic ansible_winrm_server_cert_validation=ignore ansible_port=5985 ansible_winrm_scheme=http
 ```
 
 #### **Solution: Group Variables Implementation**
@@ -210,7 +210,7 @@ ansible_connection: winrm
 ansible_winrm_transport: basic
 ansible_winrm_server_cert_validation: ignore
 ansible_user: ansible
-ansible_password: AnsiblePass123!
+ansible_password: <ANSIBLE_PASSWORD>
 ansible_port: 5985
 ansible_winrm_scheme: http
 ```
@@ -333,7 +333,7 @@ ansible windows -m win_ping -vvv
 ansible 192.168.10.3 -m win_ping \
   -e "ansible_connection=winrm" \
   -e "ansible_user=ansible" \
-  -e "ansible_password=AnsiblePass123!" \
+  -e "ansible_password=<ANSIBLE_PASSWORD>" \
   -e "ansible_winrm_transport=basic"
 
 # Check inventory parsing
