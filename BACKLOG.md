@@ -60,10 +60,12 @@ The working list for this lab. Documentation in `docs/` records what was built a
 
 ### Vulnerability management
 
-- **NESSUS01**: Nessus Essentials as a Proxmox **VM** (not LXC) on VLAN 20, `192.168.20.3`, 4 GB, 2 vCPU, 60 GB. Free for 16 IPs, and the industry reference. VM rather than container because the scanner is a **Tier 0 asset**: it stores administrative credentials for every host it scans, so it gets a hardware isolation boundary. Rule recorded in `docs/14` section 4
+- **NESSUS01**: built 2026-09-08 as a Proxmox **VM** (not LXC) on VLAN 20, `192.168.20.3`, 4 GB, 2 vCPU, 60 GB, Ubuntu 26.04. VM rather than container because the scanner is a **Tier 0 asset**: it stores administrative credentials for every host it scans, so it gets a hardware isolation boundary. Rule recorded in `docs/14` section 4
+- **Nessus Essentials licence reality**: **5 IPs, 30 days**, non-commercial. Not the 16-IP perpetual licence it used to be. Treat it as a time-boxed exercise on the industry-reference tool, not the lab's ongoing scanner. Pick 5 targets across 4 VLANs so the scan also exercises the firewall: DC01, PVE01, APP01, SIEM01, ADM01
+- **Greenbone Community Edition** becomes the **permanent** scanner, not the "later alternative" it was listed as. Unlimited targets, no expiry, fully open source. Heavier than Nessus on RAM and the feed sync is large, so size it deliberately
 - **A dedicated scan account** in `corp.biirabank.com`, least privilege, never Domain Admin. Its credentials eventually issued by VAULT01, its logins shipped to Wazuh. Same non-human identity pattern as the AI agent scenario, rehearsed on a service that exists first
 - Write the **BLUETEAM ruleset** around what the scanner actually needs. The scanner dials out to everything, so this is the first genuine reason to write rules on that tab
-- **Greenbone / OpenVAS** as a fully open-source alternative, later
+- Note on **overlap with Wazuh**: Wazuh already performs credentialed, agent-based CVE detection from package inventory across the estate, and it found 22 critical and 120 high on PVE01. A network scanner is not duplicating that. What it adds is the **outside perspective**: which ports actually answer, which services are exposed across VLANs, weak TLS, default credentials. Both are needed, and the distinction is worth stating in the write-up
 - **DefectDojo** once there are two sources of findings to aggregate. This is the management layer that turns findings into a process, which is what PCI-DSS 11.3 and NIST RA-5 actually assess
 
 ### Rebuilds
