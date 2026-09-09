@@ -102,7 +102,7 @@ There is a practical reason alongside the security one: a scanner performs raw s
 | DC01 / DC02 (if virtual) | VM | 2–4 GB | Windows |
 | CA01 | VM | 2–4 GB | Windows |
 | WKS01 / WKS02 | VM | 4 GB each | Windows |
-| **NESSUS01** | **VM** | **~4 GB** | **Tier 0: holds scan credentials for every host** |
+| **SCAN01** | **VM** | **~8 GB** | **Tier 0: holds scan credentials for every host** |
 | **VAULT01** | **VM** | **~2 GB** | **Tier 0: holds every secret in the estate** |
 | ANS01 (Ansible) | **LXC** | ~1 GB | Convenience service |
 | MON01 (Grafana/Prometheus) | **LXC** | ~2 GB | Convenience service |
@@ -131,6 +131,7 @@ Adopted 2026-08-30 for servers. **Extended 2026-09-04** to cover the categories 
 | File / SQL servers | `FS`, `SQL` | `FS01`, `SQL01` |
 | Workstations | `WKS` | `WKS01`, `WKS02` |
 | SIEM / log collection | `SIEM` | `SIEM01` |
+| Vulnerability scanning | `SCAN` | `SCAN01` |
 | Metrics and dashboards | `MON` | `MON01` |
 | Secrets management | `VAULT` | `VAULT01` |
 | Automation controller | `ANS` | `ANS01` |
@@ -148,6 +149,8 @@ Two conventions worth stating explicitly, because they are the ones that get bro
 - **The number is per role, not global.** The second domain controller is `DC02`, not `DC10`, regardless of how many other machines exist.
 - **A machine is named for what it does, not what it runs.** A Wazuh server is `SIEM01` whether it runs Rocky Linux or Ubuntu. Naming after the operating system or the hardware is what produced names like `nbl-core-ub01`, which tell a reader nothing about the machine's purpose.
 
+The second rule earned its keep on 8 September 2026. The vulnerability scanner was built as `NESSUS01`, after the product intended to run on it. Within hours the product choice changed to Greenbone, and the hostname was already wrong. It was renamed `SCAN01`, which describes the role and stays correct through any future change of tool. Naming after a product is a bet that the product will not change.
+
 ### 5.2 Inventory and rename status
 
 | Current name | Target | Role | Status |
@@ -157,6 +160,7 @@ Two conventions worth stating explicitly, because they are the ones that get bro
 | `nbl-core-ub01` | `SIEM01` | Wazuh (see 5.3) | **Done 2026-09-05**: renamed, moved to VLAN 20 at `192.168.20.2`, cable moved to Port 4, Wazuh installed and collecting from two agents |
 | Admin laptop | `ADM01` | Administrative workstation | Named at Wazuh enrolment 2026-09-06. To be superseded by `PAW01`; see the note below |
 | `lab-devops-svc01` | `APP01` | DevOps application host | **Done 2026-09-06**: OS hostname and Tailscale node both renamed, Serve re-applied. See the note below |
+| VM 104 `nessus01` | `SCAN01` | Vulnerability scanning | **Renamed 2026-09-08**, hours after the build, when the tool choice changed from Nessus to Greenbone. See the note in 5.1 |
 | (new Proxmox guest) | `VAULT01` | HashiCorp Vault | Planned, deliberately not on APP01 |
 | `proxmox-01` | `PVE01` | Hypervisor | Pending |
 | pfSense (default) | `FW01` | Firewall | Pending |
