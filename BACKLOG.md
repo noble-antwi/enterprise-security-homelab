@@ -41,7 +41,7 @@ The working list for this lab. Documentation in `docs/` records what was built a
 
 ## Next up
 
-**0. WKS01, then the scanner's first credentialed scan.** Prove `SEC-Scanner-Access` lands on WKS01 (joined 2026-09-11), add the logon-rights restrictions to the policy after reading WKS01's existing values, snapshot SCAN01 now its feeds are loaded, then scan. Full list in `docs/19` section 7.
+**0. WKS01, then the scanner's first credentialed scan.** `SEC-Scanner-Access` is proven on WKS01 (2026-09-11). Add the logon-rights restrictions to the policy after reading WKS01's existing values, snapshot SCAN01 now its feeds are loaded, then scan. Full list in `docs/19` section 7.
 
 **1. `DEV-01` and a Wazuh agent on APP01.** APP01 is the only host with no monitoring. The rule goes on the **DEVOPS** tab because that is where its traffic originates: source `DEVOPS subnets`, destination `SIEM01_HOST`, ports `WAZUH_AGENT`. First real rule on that interface.
 
@@ -49,7 +49,7 @@ The working list for this lab. Documentation in `docs/` records what was built a
 
 **3. Harden DC01 against its CIS baseline.** 26% recorded before any changes (`docs/16` section 10). Note the baseline predates the rebuild, so re-run the assessment first to get a current figure. Then pick a set of failing checks, apply, re-run, record the delta. A score that moves is the evidence; a score on its own is not.
 
-**4. Enforce the tiered admin model with Group Policy.** Include delegating *join computers to the domain* on the Workstations OU to a Tier 2 group: WKS01 was joined with `CORP\Administrator`, a Tier 0 credential typed on a Tier 2 machine (`docs/19` 6.3). The `Tier0` / `Tier1` / `Tier2` organisational units and their matching `SG-` groups exist, but nothing enforces the tier restrictions. Structure without enforcement. Found during the migration export, recorded in `docs/17` section 2.
+**4. Enforce the tiered admin model with Group Policy.** Deny Domain Admins every logon type on member workstations and servers (joining adds `CORP\Domain Admins` to every member's local Administrators, seen on WKS01). Include delegating *join computers to the domain* on the Workstations OU to a Tier 2 group: WKS01 was joined with `CORP\Administrator`, a Tier 0 credential typed on a Tier 2 machine (`docs/19` 6.3). The `Tier0` / `Tier1` / `Tier2` organisational units and their matching `SG-` groups exist, but nothing enforces the tier restrictions. Structure without enforcement. Found during the migration export, recorded in `docs/17` section 2.
 
 ---
 
@@ -71,7 +71,7 @@ The working list for this lab. Documentation in `docs/` records what was built a
 - **Bind the Greenbone web interface to `192.168.20.3:9392`**, not `0.0.0.0`. The default compose file binds to localhost only; the fix is to name the interface explicitly rather than open it to everything. Same mistake as `iam-job-scout-web-1` on APP01
 - **Docker group membership is equivalent to root** on this host, because a container can mount the host filesystem. On a Tier 0 asset that is worth a deliberate decision rather than a convenience default
 - **Done 2026-09-09 (account, group) and 2026-09-11 (policy): the scan identity.** `svc-greenbone` (cannot be delegated, cannot change its password, password never expires as a recorded debt), in `SG-Scanner-LocalAdmin`, which `SEC-Scanner-Access` adds to local Administrators on members only. Linked to `BIIRA\Computers`, never the Domain Controllers OU. Credentials eventually issued by VAULT01, logins shipped to Wazuh. Same non-human identity pattern as the AI agent scenario, rehearsed on a service that exists first. `docs/19` sections 5 and 6
-- **Still open on the policy:** add the logon-rights restrictions and prove it on WKS01. Enforced cleared and user configuration disabled on 2026-09-11
+- **Proven on WKS01 2026-09-11:** `gpresult` lists `SEC-Scanner-Access`, and `CORP\SG-Scanner-LocalAdmin` is in WKS01's local Administrators. Still open: the logon-rights restrictions
 - **Domain controllers are scanned unauthenticated**, with Wazuh SCA covering their configuration. No least-privilege credential exists for a DC, so none is issued
 - Write the **BLUETEAM ruleset** around what the scanner actually needs. The scanner dials out to everything, so this is the first genuine reason to write rules on that tab
 - Note on **overlap with Wazuh**: Wazuh already performs credentialed, agent-based CVE detection from package inventory across the estate, and it found 22 critical and 120 high on PVE01. A network scanner is not duplicating that. What it adds is the **outside perspective**: which ports actually answer, which services are exposed across VLANs, weak TLS, default credentials. Both are needed, and the distinction is worth stating in the write-up
