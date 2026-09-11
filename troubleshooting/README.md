@@ -1,32 +1,32 @@
-#  Troubleshooting Guide
+# Troubleshooting Guide
 
-##  Quick Issue Finder
+## Quick Issue Finder
 
-###  Critical Issues (Immediate Action Required)
-- [Lost pfSense Access](network-infrastructure.md#issue-1-lost-administrative-access-after-interface-changes)
-- [Complete Tailscale Connectivity Loss](remote-access.md#issue-1-complete-connectivity-loss-after-isp-migration)
+### Critical Issues (Immediate Action Required)
+- [Lost pfSense Access](network_infrastructure.md#issue-1-lost-administrative-access-after-interface-changes)
+- [Complete Tailscale Connectivity Loss](remote_access.md#issue-1-complete-connectivity-loss-after-isp-migration)
 
-###  Network & Connectivity Issues
-- [pfSense Access Problems](network-infrastructure.md#lost-administrative-access-after-interface-changes)
-- [ICMP Connectivity Failures](network-infrastructure.md#windows-client-icmp-connectivity-failures)
-- [Inter-VLAN Communication](network-infrastructure.md#inter-vlan-communication-challenges)
-- [VMware Network Bridge](network-infrastructure.md#vmware-network-bridge-configuration)
+### Network & Connectivity Issues
+- [pfSense Access Problems](network_infrastructure.md#lost-administrative-access-after-interface-changes)
+- [ICMP Connectivity Failures](network_infrastructure.md#windows-client-icmp-connectivity-failures)
+- [Inter-VLAN Communication](network_infrastructure.md#inter-vlan-communication-challenges)
+- [VMware Network Bridge](network_infrastructure.md#vmware-network-bridge-configuration)
 
-###  Remote Access & VPN
-- [ISP Migration Issues](remote-access.md#complete-connectivity-loss-after-isp-migration)
+### Remote Access & VPN
+- [ISP Migration Issues](remote_access.md#complete-connectivity-loss-after-isp-migration)
 
-###  System Configuration
-- [Netplan Gateway Warnings](system-administration.md#netplan-gateway-deprecation-warnings)
-- [SSH Authentication Problems](system-administration.md#ssh-host-key-verification-failures)
-- [Package Installation Conflicts](system-administration.md#rocky-linux-package-installation-conflicts)
+### System Configuration
+- [Netplan Gateway Warnings](system_admin.md#netplan-gateway-deprecation-warnings)
+- [SSH Authentication Problems](system_admin.md#ssh-host-key-verification-failures)
+- [Package Installation Conflicts](system_admin.md#rocky-linux-package-installation-conflicts)
 
-###  Windows Integration
+### Windows Integration
 - [WinRM Connection Timeouts](windows-integration.md#issue-1-winrm-connection-timeouts)
 - [Python Package Installation](windows-integration.md#issue-2-python-package-installation-for-windows-support)
 - [Windows User Account Creation](windows-integration.md#issue-3-windows-user-account-creation-methods)
 - [Cross-Platform Module Conflicts](windows-integration.md#issue-6-cross-platform-module-conflicts)
 
-## 🔍 Quick Diagnostic Commands
+## Quick Diagnostic Commands
 
 ### Network Troubleshooting
 ```bash
@@ -59,21 +59,20 @@ tailscale status
 ping 100.81.37.60
 ```
 
-##  Documentation by Component
+## Documentation by Component
 
 | Component | Troubleshooting Guide | Based on Real Issues |
 |-----------|----------------------|---------------------|
-| **Network Infrastructure** | [network-infrastructure.md](network-infrastructure.md) | pfSense, VLAN, ICMP issues |
-| **Remote Access** | [remote-access.md](remote-access.md) | ISP migration, Tailscale conflicts |
-| **System Administration** | [system-administration.md](system-administration.md) | SSH, Netplan, package issues |
+| **Network Infrastructure** | [network_infrastructure.md](network_infrastructure.md) | pfSense, VLAN, ICMP issues |
+| **Remote Access** | [remote_access.md](remote_access.md) | ISP migration, Tailscale conflicts |
+| **System Administration** | [system_admin.md](system_admin.md) | SSH, Netplan, package issues |
+| **Windows Integration** | [windows-integration.md](windows-integration.md) | WinRM, Python packages, account creation |
+| **Ansible Automation** | [ansible-automation.md](ansible-automation.md) | Inventory, connectivity, module issues |
 
-##  How to Use This Guide
+## How to Use This Guide
 
 ### If You're Experiencing...
-- **Can't access pfSense** → Start with [Network Infrastructure](network-infrastructure.md)
-- **Tailscale not working** → Check [Remote Access](remote-access.md)
-- **SSH/service issues** → Review [System Administration](system-administration.md)
+- **Can't access pfSense**: Start with [Network Infrastructure](network_infrastructure.md)
+- **Tailscale not working**: Check [Remote Access](remote_access.md)
+- **SSH/service issues**: Review [System Administration](system_admin.md)
 
----
-
-*Troubleshooting Guide Status: ✅ Based on Real Implementation Experience*

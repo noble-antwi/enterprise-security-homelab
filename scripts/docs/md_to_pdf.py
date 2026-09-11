@@ -24,7 +24,7 @@ from datetime import date
 from pathlib import Path
 
 # The fictional organisation this environment belongs to. The AD domain really is
-# ad.biira.online and the sibling IAM repository documents the same company, so the
+# corp.biirabank.com and the sibling IAM repository documents the same company, so the
 # documentation, the DNS and the identity estate all name the same entity.
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ORG_NAME = "BIIRA BANK"

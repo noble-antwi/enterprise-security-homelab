@@ -46,13 +46,13 @@ Internet ↔ ISP Router (208.59.146.187) ↔ pfSense WAN (192.168.4.32) ↔ Lab 
 
 **Step 1: Account Creation**
 1. Registered at [tailscale.com](https://tailscale.com)
-2. Authenticated using Google account (`amnworlanyo@gmail.com`)
+2. Authenticated with a Google account as the identity provider
 3. Completed user survey (Personal/Security use case)
 4. Obtained free plan (100 devices, unlimited routes)
 
 **Step 2: Initial Dashboard Access**
 - Accessed admin console at `login.tailscale.com/admin`
-- Confirmed tailnet creation: `amnworlanyo@gmail.com`
+- Confirmed the tailnet was created under that account
 - Prepared for device enrollment
 
 ### Phase 2: pfSense Integration

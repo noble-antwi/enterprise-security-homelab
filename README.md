@@ -2,7 +2,7 @@
 
 # Enterprise Information Security Lab
 
-**The scenario.** This environment is built and documented as the infrastructure of a fictional regional bank, **Biira Bank**. The domain is real (`ad.biira.online`), the segmentation is real, and the controls are tested rather than described. Working to a named organisation rather than an abstract "lab" forces the decisions a real environment forces: who needs to reach what, why a rule exists, what an auditor would ask, and what happens when something fails. Financial services was chosen deliberately, because it is the sector where segmentation, least privilege, change control and evidence are least optional.
+**The scenario.** This environment is built and documented as the infrastructure of a fictional regional bank, **Biira Bank**. The domain is real (`corp.biirabank.com`), the segmentation is real, and the controls are tested rather than described. Working to a named organisation rather than an abstract "lab" forces the decisions a real environment forces: who needs to reach what, why a rule exists, what an auditor would ask, and what happens when something fails. Financial services was chosen deliberately, because it is the sector where segmentation, least privilege, change control and evidence are least optional.
 
 The sibling repository [enterprise-iam-lab](https://github.com/noble-antwi/enterprise-iam-lab) documents the same organisation's identity estate (Active Directory, Okta, Entra) and is built on the architecture described here. Both repositories share one visual identity, documented in [images/brand](images/brand/README.md): a vault door inside a shield, where the shield is the protected boundary and the vault door is the controlled way through it. That reads as network segmentation here and as authentication and authorisation there.
 
@@ -25,16 +25,13 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 
 - **pfSense Firewall** - Enterprise routing and security with 6-VLAN segmentation
 - **Proxmox VE Hypervisor** - Bare-metal virtualisation with full multi-VLAN VM hosting
-- **Cross-Platform Automation** - Ansible managing Linux, Windows, and Proxmox nodes
-- **Wazuh SIEM** - Security monitoring and incident response across all platforms
-- **Grafana/Prometheus** - Infrastructure observability and performance monitoring
-- **Tailscale Mesh VPN** - Secure remote access to all lab resources globally
-- **Windows Integration** - Professional Windows automation via WinRM and service accounts
-- **Enterprise Security** - VLAN isolation, professional authentication, centralised monitoring
+- **Active Directory** - `corp.biirabank.com` on a physical domain controller, with a tiered OU and group structure
+- **Wazuh SIEM** - Agent-based monitoring and CIS configuration assessment on SIEM01
+- **Greenbone** - Network vulnerability scanning from a Tier 0 VM, with a least-privilege scan identity
+- **Tailscale Mesh VPN** - Remote access to lab resources
+- **Ansible and Grafana/Prometheus** - Previously deployed (`docs/03`, `docs/04`), both awaiting rebuild as Proxmox guests
 
 ---
-
-**Working list:** [BACKLOG.md](BACKLOG.md) records the current state of every host and what is outstanding, so the plan does not live only in someone's memory.
 
 ## Documentation Structure
 
@@ -93,9 +90,11 @@ Machines follow a role-based naming convention, `<ROLE><NN>`: servers such as `D
 | TCM Ubuntu | `192.168.10.4` | Management | Ubuntu 24.04 | Training and development | Active |
 | PVE01 (proxmox-01) | `192.168.10.6` | Management | Proxmox VE 9.2 (Debian 13) | Bare-metal VM hypervisor, Wazuh agent 003 | Active |
 | SIEM01 | `192.168.20.2` | BlueTeam | Ubuntu 24.04 (Dell OptiPlex 9020, 8 core, 16 GB) | SIEM and centralised logging | Active, 3 agents reporting (DC01, ADM01, PVE01) |
+| SCAN01 | `192.168.20.3` | BlueTeam | Ubuntu 26.04 (Proxmox VM 104) | Vulnerability scanning, Greenbone Community Edition | Active, feeds loaded (`docs/19`) |
 | KALI01 | `192.168.30.2` | RedTeam | Kali Linux 2026.2 | Attack simulation (Proxmox VM 103) | Active, containment validated |
 | APP01 | `192.168.40.2` | DevOps | Ubuntu | DevOps application host, two web apps behind Tailscale Serve | Active. VAULT01 will be a separate Proxmox guest |
-| DC01 | `192.168.50.2` | EnterpriseLAN | Windows Server 2025 | Domain controller for `ad.biira.online` (AD DS + DNS) | Active |
+| DC01 | `192.168.50.2` | EnterpriseLAN | Windows Server 2025 | Domain controller for `corp.biirabank.com` (AD DS + DNS) | Active, rebuilt 2026-09-07 (`docs/17`) |
+| WKS01 | DHCP, VLAN 50 | EnterpriseLAN | Windows 11 Pro (Proxmox VM 100) | First domain-joined workstation, scan target | Active, joined 2026-09-11 |
 | MON01 (Grafana + Prometheus) | `192.168.60.2` | Monitoring | Ubuntu | Observability dashboards | To be rebuilt as a Proxmox guest |
 
 ### Physical Network Layout
@@ -114,7 +113,7 @@ TP-Link TL-SG108E Managed Switch
     |               |-- Laptop        (192.168.10.3)
     |-- Port 4  VLAN 20 Access     BlueTeam segment
     |-- Port 5  VLAN 30 Access     RedTeam segment
-    |-- Port 6  VLAN 40 Access     Vault desktop (192.168.40.2, awaiting configuration)
+    |-- Port 6  VLAN 40 Access     APP01 application host (192.168.40.2)
     |-- Port 7  VLAN 50 Access     Windows Server 2025 DC (192.168.50.2)
     |-- Port 8  VLAN 60 Access     Monitoring segment
 ```
@@ -127,10 +126,12 @@ The host is an 8 core / 32 GiB / 2.67 TiB node with nightly backups to a dedicat
 
 | VM / CT | Bridge | VLAN Tag | Network | Purpose | Status |
 |---------|--------|----------|---------|---------|--------|
+| WKS01 (VM 100) | vmbr0 | 50 | DHCP | Domain-joined Windows 11 workstation | Active |
 | KALI01 (VM 103) | vmbr0 | 30 | 192.168.30.2 | RedTeam attack simulation | Active, containment validated |
+| SCAN01 (VM 104) | vmbr0 | 20 | 192.168.20.3 | Greenbone vulnerability scanner, a Tier 0 VM | Active |
 | ANS01 | vmbr0 | 10 | 192.168.10.2 (same IP) | Fresh rebuild of the automation controller | Planned |
 | MON01 | vmbr0 | 60 | 192.168.60.2 | Grafana and Prometheus, rebuilt fresh | Planned |
-| DC02, CA01, WKS01/02 | vmbr0 | 50 / client | see `docs/12` | AD estate expansion for security training | Roadmap |
+| DC02, CA01, WKS02 | vmbr0 | 50 / client | see `docs/12` | AD estate expansion for security training | Roadmap |
 
 ---
 
@@ -139,13 +140,13 @@ The host is an 8 core / 32 GiB / 2.67 TiB node with nightly backups to a dedicat
 ### Operational Capabilities
 
 - **Virtualisation**: Proxmox VE node with multi-VLAN VM hosting across all lab segments, plus nightly backups to a dedicated disk
-- **Identity Services**: Active Directory (`ad.biira.online`) on DC01 with AD-integrated DNS, forward and reverse zones, verified healthy
-- **Network Segmentation**: six VLANs with per-interface default-deny firewall rulesets
-- **Remote Operations**: Global access to all lab resources via Tailscale mesh VPN
+- **Identity Services**: Active Directory (`corp.biirabank.com`) on DC01 with AD-integrated DNS, one domain-joined workstation, and a least-privilege scan identity delivered by Group Policy (`docs/17`, `docs/19`)
+- **Network Segmentation**: six VLANs; three with explicit default-deny rulesets, three still permissive
+- **Remote Operations**: access to lab resources via Tailscale mesh VPN
 - **Scalability**: Proxmox enables rapid deployment of new VMs on any VLAN without physical changes
-- **Cross-Platform Automation**: Ansible (currently offline while the controller is rebuilt as ANS01)
-- **Security Monitoring**: Wazuh SIEM (currently offline after a hardware failure, rebuild planned as a Proxmox guest)
-- **Performance Monitoring**: Infrastructure health via Grafana and Prometheus on MON01
+- **Security Monitoring**: Wazuh on SIEM01 with agents on DC01, ADM01 and PVE01 (`docs/16`)
+- **Vulnerability Scanning**: Greenbone Community Edition on SCAN01 with 186,567 vulnerability tests loaded (`docs/19`)
+- **Not yet running**: Ansible, while the controller is rebuilt as ANS01, and Grafana and Prometheus, until MON01 is rebuilt
 
 ### Security Posture
 
@@ -157,16 +158,6 @@ The host is an 8 core / 32 GiB / 2.67 TiB node with nightly backups to a dedicat
 - **Software Integrity**: installation media verified by SHA256 before use (NIST SI-7)
 - **Secure Remote Access**: WireGuard encryption via Tailscale. Its ability to bypass per-interface rules is recorded as a known, risk-accepted hardening item (H-02)
 
-### Platform Coverage Metrics
-
-| Platform | Systems | Authentication | Management | Status |
-|----------|---------|---------------|------------|--------|
-| Linux | MON01, TCM Ubuntu (ANS01 and SIEM01 pending rebuild) | SSH keys (ED25519) | Ansible + SSH | Automation paused until ANS01 is rebuilt |
-| Windows | Admin laptop, DC01 | WinRM + service accounts | Ansible + WinRM | DC01 onboarding pending |
-| Kali | KALI01 (VM 103, VLAN 30) | Local account + SSH | Manual | Active, containment validated |
-| Proxmox VE | proxmox-01 (1 node) | SSH + Web UI (port 8006) | Web UI + SSH | Active, nightly backups |
-| Network | pfSense + 2 switches | Web UI + SSH | Manual | 3 of 6 VLAN rulesets hardened |
-| Total | 7 active, 1 staged, 2 rebuilding | Multi-method | Cross-platform | Phase 2 in progress |
 
 ---
 
@@ -185,16 +176,19 @@ The host is an 8 core / 32 GiB / 2.67 TiB node with nightly backups to a dedicat
 Complete:
 
 - Proxmox VE hypervisor deployed with VLAN-aware trunk port configuration
-- DC01 (Windows Server 2025) promoted as domain controller for `ad.biira.online`, with AD-integrated forward and reverse DNS zones and clean `dcdiag` health
+- DC01 (Windows Server 2025) promoted as domain controller, then migrated to a new forest, `corp.biirabank.com`, with the directory rebuilt and verified against an export (`docs/17`)
 - pfSense rulebase hardened on three interfaces: MANAGEMENT (MGMT-01 to 10), ENTERPRISELAN (ENT-01 to 04) and REDTEAM (RED-01 to 03), each rule justified and control-mapped
 - Management-plane isolation proven by before and after testing (`docs/13` section 3.1)
 - KALI01 (Kali Linux) built on VLAN 30 and its containment validated against a live host: no reachability to the domain controller or the firewall management plane, while DNS, time and internet all function (`docs/15`)
 - Nightly Proxmox backups to a dedicated second disk, verified by an on-demand restore point
+- Wazuh on SIEM01 after the role swap with the monitoring hardware, with agents on DC01, ADM01 and PVE01 and CIS baselines recorded (`docs/16`)
+- `biirabank.com` published and hardened at the Cloudflare edge, graded A+ (`docs/18`)
+- SCAN01 running Greenbone, with a least-privilege scan identity delivered by Group Policy and proven on the first domain-joined workstation (`docs/19`)
 
 In progress:
 
 - Ansible controller rebuild as ANS01 (Proxmox guest, retaining `192.168.10.2`)
-- Wazuh installed on SIEM01 after the role swap with the monitoring hardware, with DC01 enrolled as the first agent and CIS baselines recorded for both hosts (`docs/16`)
+- First credentialed and unauthenticated scans, and the BlueTeam ruleset they require (`docs/19` section 7)
 - MON01 rebuild as a Proxmox guest, replacing the physical monitoring host
 
 Remaining:
@@ -219,66 +213,12 @@ Remaining:
 
 ---
 
-## Monitoring and Health Checks
 
-- **All Systems**: Accessible and manageable via Tailscale mesh network
-- **Centralised Logging**: Comprehensive log collection through Wazuh SIEM
-- **Infrastructure Metrics**: Real-time performance monitoring via Prometheus
-- **Visual Dashboards**: System health and security status via Grafana
-- **Cross-Platform Status**: Unified monitoring via Ansible automation platform
-- **Network Health**: pfSense monitoring and VLAN performance tracking
 
----
 
-## Maintenance and Operations
 
-### Regular Maintenance Tasks
+## Current State
 
-- **Security Updates**: Automated and manual patching across Linux and Windows systems
-- **Wazuh Rule Tuning**: Continuous optimisation of detection rules and alert thresholds
-- **Grafana Dashboard Enhancement**: Regular improvement of monitoring visualisations
-- **Ansible Playbook Development**: Ongoing automation enhancement and capability additions
-- **System Performance Optimisation**: Regular review and tuning of infrastructure performance
-- **Documentation Updates**: Continuous improvement of procedures and troubleshooting guides
-- **Proxmox Maintenance**: Periodic host and VM updates via web UI and CLI
+**In place:** an Active Directory forest, `corp.biirabank.com`, behind a pfSense rulebase converted from permissive any-to-any rules to explicit, least-privilege, control-mapped rulesets on three interfaces. Management-plane isolation and RedTeam containment are enforced and evidenced by repeatable tests (`docs/13`, `docs/15`). Wazuh monitors the domain controller, the hypervisor and the admin workstation (`docs/16`). Greenbone is deployed with a scan identity that is administrator on member machines and nothing else (`docs/19`). Proxmox hosts the growing estate with nightly backups to a separate disk.
 
----
-
-## Contributing
-
-This project serves as a comprehensive reference implementation for enterprise-grade security homelabs.
-
-Community involvement is welcomed:
-
-- **Fork and Adapt**: Use as foundation for your own security lab environment
-- **Submit Improvements**: Pull requests for documentation, procedures, and automation enhancements
-- **Share Experiences**: Issue discussions for troubleshooting and best practices
-- **Knowledge Sharing**: Contribute lessons learned and advanced configurations
-
-### Contribution Guidelines
-
-- Maintain focus on enterprise-grade practices and professional standards
-- Include comprehensive documentation for any new features or procedures
-- Test thoroughly across all platforms where applicable
-- Follow existing documentation structure and formatting standards
-
----
-
-## Acknowledgments
-
-- **pfSense Community** - Outstanding firewall platform with comprehensive VLAN and routing capabilities
-- **Proxmox Team** - Excellent bare-metal hypervisor with powerful VLAN-aware networking
-- **Wazuh Team** - Exceptional SIEM solution with powerful threat detection and analysis features
-- **Tailscale** - Revolutionary mesh networking solution that transformed remote access capabilities
-- **Grafana Labs** - Excellent observability platform with powerful visualisation and monitoring tools
-- **Ansible Community** - Robust automation platform with outstanding cross-platform support
-
----
-
-## Quick Status Overview
-
-The enterprise homelab demonstrates professional security practices, comprehensive cross-platform automation, advanced monitoring capabilities, and bare-metal virtualisation in a scalable, well-documented infrastructure. The implementation showcases real-world enterprise security operations, making it suitable for Blue Team training, security research, professional development, and demonstrating advanced cybersecurity capabilities.
-
-**Current Achievement**: an Active Directory domain (`ad.biira.online`) running on DC01, sitting behind a pfSense rulebase that has been converted from permissive any-to-any rules to explicit, least-privilege, control-mapped rulesets on three interfaces. Management-plane isolation and RedTeam containment are enforced and evidenced by repeatable tests, with every change recorded in a firewall rule register (`docs/13`). Proxmox VE hosts the growing estate on a VLAN-aware trunk with nightly backups to a separate disk.
-
-**Being honest about current state**: the Wazuh SIEM host has failed and the Ansible controller was deliberately destroyed for rebuild, so centralised monitoring and automation are offline while both are rebuilt as Proxmox guests. Three of the six VLANs still carry permissive rules. Those gaps are tracked openly in the roadmap above and in `docs/13` rather than presented as complete.
+**Not yet in place:** three of the six VLANs still carry permissive rules, the Ansible controller and the metrics stack are awaiting rebuild, and no credentialed scan has run yet. These gaps are stated here and in the chapters rather than presented as complete.
