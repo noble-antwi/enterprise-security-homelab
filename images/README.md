@@ -36,6 +36,7 @@ images/
   vpn/     remote access: Tailscale
   sys/     endpoints: Windows clients, member servers, Linux members
   web/     public web presence: biirabank.com, Cloudflare edge, external security grades
+  scan/    vulnerability scanning: SCAN01, Greenbone, the scan identity and its Group Policy
 ```
 
 Add a new area folder only when a genuinely new subsystem appears.

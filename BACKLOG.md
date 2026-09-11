@@ -2,7 +2,7 @@
 
 The working list for this lab. Documentation in `docs/` records what was built and why; this file records **what is true right now and what comes next**, so work can be picked up without reconstructing context.
 
-**Updated:** 2026-09-07
+**Updated:** 2026-09-11
 
 ---
 
@@ -12,7 +12,8 @@ The working list for this lab. Documentation in `docs/` records what was built a
 |------|--------|
 | Network | pfSense, 6 VLANs, 2 switches, Proxmox on a VLAN-aware trunk |
 | Firewall | MANAGEMENT, ENTERPRISELAN and REDTEAM have explicit rulesets. BLUETEAM, DEVOPS and MONITORING are still `any→any` |
-| Identity | DC01 live on **`corp.biirabank.com`** (NetBIOS `CORP`), rebuilt 2026-09-07. 20 OUs, 32 users and 12 security groups restored from export. `ad.biira.online` retired |
+| Identity | DC01 live on **`corp.biirabank.com`** (NetBIOS `CORP`), rebuilt 2026-09-07. 20 OUs, 32 users and 12 security groups restored from export. `ad.biira.online` retired. **WKS01 joined 2026-09-11**, the first member since the rebuild, into the pre-staged account in `BIIRA\Computers\Workstations` |
+| Vulnerability scanning | SCAN01 running Greenbone CE, 186,567 vulnerability tests loaded, all four feeds loaded (confirmed 2026-09-11). Snapshot and a weekly feed refresh outstanding. Scan identity `svc-greenbone` and group `SG-Scanner-LocalAdmin` built 2026-09-09, policy `SEC-Scanner-Access` 2026-09-11. No credentialed scan yet. `docs/19` |
 | Public web | **`biirabank.com` live**, Cloudflare Worker static assets. HTTPS enforced, TLS 1.2 minimum, six security headers, zero-JavaScript CSP. securityheaders.com **A+** |
 | SIEM | SIEM01 running Wazuh 4.14.7. Four hosts assessed, three agents reporting |
 | Attack segment | KALI01 built and containment validated |
@@ -30,21 +31,25 @@ The working list for this lab. Documentation in `docs/` records what was built a
 | LAB01 (TCM Ubuntu) | `192.168.10.4` | 10 | none | Rename pending |
 | PVE01 (proxmox-01) | `192.168.10.6` | 10 | 003 | Node rename pending, carries risk |
 | SIEM01 | `192.168.20.2` | 20 | manager (000) | Wazuh manager, indexer, dashboard |
+| SCAN01 | `192.168.20.3` | 20 | none | Greenbone CE, Tier 0 VM 104. `docs/19` |
 | KALI01 | `192.168.30.2` | 30 | none | Attack box, contained |
 | APP01 | `192.168.40.2` | 40 | none | Two web apps behind Tailscale Serve |
 | DC01 | `192.168.50.2` | 50 | 001 | Domain controller, `corp.biirabank.com`. Agent 001 to be reconfirmed after the rebuild |
+| WKS01 | `192.168.50.56` (DHCP) | 50 | none | VM 100, Windows 11 Pro. **Joined `corp.biirabank.com` 2026-09-11** into its pre-staged account in `BIIRA\Computers\Workstations`. DNS pointed at DC01 by hand |
 
 ---
 
 ## Next up
 
+**0. WKS01, then the scanner's first credentialed scan.** Prove `SEC-Scanner-Access` lands on WKS01 (joined 2026-09-11), add the logon-rights restrictions to the policy after reading WKS01's existing values, snapshot SCAN01 now its feeds are loaded, then scan. Full list in `docs/19` section 7.
+
 **1. `DEV-01` and a Wazuh agent on APP01.** APP01 is the only host with no monitoring. The rule goes on the **DEVOPS** tab because that is where its traffic originates: source `DEVOPS subnets`, destination `SIEM01_HOST`, ports `WAZUH_AGENT`. First real rule on that interface.
 
-**2. Finish the domain migration tail.** The forest is rebuilt but three things trail it: recreate the reverse DNS zone for `192.168.50.0/24` so logs show hostnames rather than addresses, rejoin any machine still bound to the retired `ad.biira.online`, and reconfirm Wazuh agent 001 is reporting from the rebuilt controller. See `docs/17` section 7.
+**2. Finish the domain migration tail.** The forest is rebuilt but three things trail it: recreate the reverse DNS zone for `192.168.50.0/24` so logs show hostnames rather than addresses, rejoin the machines that were bound to the retired `ad.biira.online` (WKS01 joined fresh 2026-09-11; no older machine has rejoined), and reconfirm Wazuh agent 001 is reporting from the rebuilt controller. See `docs/17` section 7.
 
 **3. Harden DC01 against its CIS baseline.** 26% recorded before any changes (`docs/16` section 10). Note the baseline predates the rebuild, so re-run the assessment first to get a current figure. Then pick a set of failing checks, apply, re-run, record the delta. A score that moves is the evidence; a score on its own is not.
 
-**4. Enforce the tiered admin model with Group Policy.** The `Tier0` / `Tier1` / `Tier2` organisational units and their matching `SG-` groups exist, but nothing enforces the tier restrictions. Structure without enforcement. Found during the migration export, recorded in `docs/17` section 2.
+**4. Enforce the tiered admin model with Group Policy.** Include delegating *join computers to the domain* on the Workstations OU to a Tier 2 group: WKS01 was joined with `CORP\Administrator`, a Tier 0 credential typed on a Tier 2 machine (`docs/19` 6.3). The `Tier0` / `Tier1` / `Tier2` organisational units and their matching `SG-` groups exist, but nothing enforces the tier restrictions. Structure without enforcement. Found during the migration export, recorded in `docs/17` section 2.
 
 ---
 
@@ -60,12 +65,14 @@ The working list for this lab. Documentation in `docs/` records what was built a
 
 ### Vulnerability management
 
-- **SCAN01**: built 2026-09-08 as a Proxmox **VM** (not LXC) on VLAN 20, `192.168.20.3`, Ubuntu 26.04, 2 vCPU, 60 GB. Raised to 8 GB for Greenbone. VM rather than container because the scanner is a **Tier 0 asset**: it stores administrative credentials for every host it scans, so it gets a hardware isolation boundary. Rule recorded in `docs/14` section 4. Originally built as `NESSUS01` and renamed, because the convention names roles, not products
+- **SCAN01**: built 2026-09-08 as a Proxmox **VM** (not LXC) on VLAN 20, `192.168.20.3`, Ubuntu 26.04, 2 vCPU, 60 GB disk, later grown to 100 GB after the feeds filled it twice (`docs/19` section 4). Raised to 8 GB for Greenbone. VM rather than container because the scanner is a **Tier 0 asset**: it stores administrative credentials for every host it scans, so it gets a hardware isolation boundary. Rule recorded in `docs/14` section 4. Originally built as `NESSUS01` and renamed, because the convention names roles, not products
 - **Greenbone Community Edition is the scanner.** Deployed as the Greenbone Community Containers via Docker Compose, which is the supported route for CE. Unlimited targets, no expiry, fully open source
 - **Nessus Essentials was evaluated and rejected**, 2026-09-08. Current terms are **5 IPs on a 30-day licence**, not the 16-IP perpetual licence it once had. Five of nine hosts cannot demonstrate estate coverage, which is the point of vulnerability management, and a licence that expires in a month cannot support a remediation loop that depends on before-and-after comparison. Tenable interface familiarity is obtainable from a trial in an afternoon if a specific role asks for it, and is not worth structuring the lab around
 - **Bind the Greenbone web interface to `192.168.20.3:9392`**, not `0.0.0.0`. The default compose file binds to localhost only; the fix is to name the interface explicitly rather than open it to everything. Same mistake as `iam-job-scout-web-1` on APP01
 - **Docker group membership is equivalent to root** on this host, because a container can mount the host filesystem. On a Tier 0 asset that is worth a deliberate decision rather than a convenience default
-- **A dedicated scan account** in `corp.biirabank.com`, least privilege, never Domain Admin. Its credentials eventually issued by VAULT01, its logins shipped to Wazuh. Same non-human identity pattern as the AI agent scenario, rehearsed on a service that exists first
+- **Done 2026-09-09 (account, group) and 2026-09-11 (policy): the scan identity.** `svc-greenbone` (cannot be delegated, cannot change its password, password never expires as a recorded debt), in `SG-Scanner-LocalAdmin`, which `SEC-Scanner-Access` adds to local Administrators on members only. Linked to `BIIRA\Computers`, never the Domain Controllers OU. Credentials eventually issued by VAULT01, logins shipped to Wazuh. Same non-human identity pattern as the AI agent scenario, rehearsed on a service that exists first. `docs/19` sections 5 and 6
+- **Still open on the policy:** add the logon-rights restrictions and prove it on WKS01. Enforced cleared and user configuration disabled on 2026-09-11
+- **Domain controllers are scanned unauthenticated**, with Wazuh SCA covering their configuration. No least-privilege credential exists for a DC, so none is issued
 - Write the **BLUETEAM ruleset** around what the scanner actually needs. The scanner dials out to everything, so this is the first genuine reason to write rules on that tab
 - Note on **overlap with Wazuh**: Wazuh already performs credentialed, agent-based CVE detection from package inventory across the estate, and it found 22 critical and 120 high on PVE01. A network scanner is not duplicating that. What it adds is the **outside perspective**: which ports actually answer, which services are exposed across VLANs, weak TLS, default credentials. Both are needed, and the distinction is worth stating in the write-up
 - **DefectDojo** once there are two sources of findings to aggregate. This is the management layer that turns findings into a process, which is what PCI-DSS 11.3 and NIST RA-5 actually assess
@@ -79,6 +86,7 @@ The working list for this lab. Documentation in `docs/` records what was built a
 
 ### Firewall
 
+- **VLAN 50 DHCP hands out public DNS.** Found 2026-09-11 on WKS01: `8.8.8.8`, `1.1.1.1` and a `duckdns.org` suffix, so no new Windows client can find the domain. In pfSense DHCP for ENTERPRISELAN, set DNS to `192.168.50.2`, domain to `corp.biirabank.com`, and add a static mapping for WKS01. `docs/19` section 6.3
 - BLUETEAM ruleset, driven by the scanner's needs
 - DEVOPS ruleset, starting with `DEV-01`
 - MONITORING ruleset, once MON01 exists. Prometheus dials **out** to scrape, so its rules go on the MONITORING tab
