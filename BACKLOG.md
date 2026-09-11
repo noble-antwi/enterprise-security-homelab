@@ -13,7 +13,7 @@ The working list for this lab. Documentation in `docs/` records what was built a
 | Network | pfSense, 6 VLANs, 2 switches, Proxmox on a VLAN-aware trunk |
 | Firewall | MANAGEMENT, ENTERPRISELAN and REDTEAM have explicit rulesets. BLUETEAM, DEVOPS and MONITORING are still `any→any` |
 | Identity | DC01 live on **`corp.biirabank.com`** (NetBIOS `CORP`), rebuilt 2026-09-07. 20 OUs, 32 users and 12 security groups restored from export. `ad.biira.online` retired. **WKS01 joined 2026-09-11**, the first member since the rebuild, into the pre-staged account in `BIIRA\Computers\Workstations` |
-| Vulnerability scanning | SCAN01 running Greenbone CE, 186,567 vulnerability tests loaded, all four feeds loaded (confirmed 2026-09-11). Snapshot and a weekly feed refresh outstanding. Scan identity `svc-greenbone` and group `SG-Scanner-LocalAdmin` built 2026-09-09, policy `SEC-Scanner-Access` 2026-09-11. No credentialed scan yet. `docs/19` |
+| Vulnerability scanning | SCAN01 running Greenbone CE, 186,567 vulnerability tests loaded, all four feeds loaded and snapshotted as `greenbone-feeds-loaded` (2026-09-11). Weekly feed refresh outstanding. Scan identity `svc-greenbone` and group `SG-Scanner-LocalAdmin` built 2026-09-09, policy `SEC-Scanner-Access` 2026-09-11. No credentialed scan yet. `docs/19` |
 | Public web | **`biirabank.com` live**, Cloudflare Worker static assets. HTTPS enforced, TLS 1.2 minimum, six security headers, zero-JavaScript CSP. securityheaders.com **A+** |
 | SIEM | SIEM01 running Wazuh 4.14.7. Four hosts assessed, three agents reporting |
 | Attack segment | KALI01 built and containment validated |
@@ -41,7 +41,7 @@ The working list for this lab. Documentation in `docs/` records what was built a
 
 ## Next up
 
-**0. WKS01, then the scanner's first credentialed scan.** `SEC-Scanner-Access` is proven on WKS01 (2026-09-11). Add the logon-rights restrictions to the policy after reading WKS01's existing values, snapshot SCAN01 now its feeds are loaded, then scan. Full list in `docs/19` section 7.
+**0. WKS01, then the scanner's first credentialed scan.** `SEC-Scanner-Access` is proven on WKS01 (2026-09-11). Add the logon-rights restrictions to the policy after reading WKS01's existing values, then scan. Full list in `docs/19` section 7.
 
 **1. `DEV-01` and a Wazuh agent on APP01.** APP01 is the only host with no monitoring. The rule goes on the **DEVOPS** tab because that is where its traffic originates: source `DEVOPS subnets`, destination `SIEM01_HOST`, ports `WAZUH_AGENT`. First real rule on that interface.
 
