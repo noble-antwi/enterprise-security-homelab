@@ -1,4 +1,7 @@
-<img src="images/brand/biira-bank-lockup-960.png" alt="Biira Bank" width="380">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/brand/biira-bank-lockup-reverse-960.png">
+  <img src="images/brand/biira-bank-lockup-960.png" alt="Biira Bank" width="380">
+</picture>
 
 # Enterprise Information Security Lab
 

@@ -4,4 +4,7 @@ Biira Bank is the fictional regional bank both lab repositories are built for: t
 
 The mark is a vault door inside a shield. The shield is the protected boundary and the vault door is the controlled way through it, which reads as network segmentation here and as authentication and authorisation in the IAM repository.
 
-![Biira Bank lockup](biira-bank-lockup-960.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="biira-bank-lockup-reverse-960.png">
+  <img src="biira-bank-lockup-960.png" alt="Biira Bank" width="480">
+</picture>
