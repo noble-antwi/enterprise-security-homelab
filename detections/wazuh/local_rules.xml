@@ -38,12 +38,22 @@
     filename shape and the writing process must match, so a dropper merely
     named __PSScriptPolicyTest_something.ps1 still alerts at level 15.
 
+    Deliberately NOT anchored to a folder. The probe lands in whichever temp
+    directory belongs to the caller: %LOCALAPPDATA%\Temp for a logged-on
+    user, C:\Windows\SystemTemp for SYSTEM. Both were observed in this lab.
+
+    Deliberately NO backslashes in either pattern. Sysmon field values arrive
+    with their backslashes doubled (verified with wazuh-logtest: a path shows
+    as C:\\Windows\\SystemTemp\\...), so any regex written against single
+    backslashes silently never matches. Anchoring on the parts of the string
+    that contain no separators avoids the whole problem.
+
     If this ever stops matching, loosen the {8} and {3} quantifiers first.
   -->
   <rule id="100010" level="0">
     <if_sid>92213</if_sid>
-    <field name="win.eventdata.targetFilename" type="pcre2">(?i)\\Temp\\__PSScriptPolicyTest_[a-z0-9]{8}\.[a-z0-9]{3}\.ps1$</field>
-    <field name="win.eventdata.image" type="pcre2">(?i)\\powershell(_ise)?\.exe$</field>
+    <field name="win.eventdata.targetFilename" type="pcre2">(?i)__PSScriptPolicyTest_[a-z0-9]{8}\.[a-z0-9]{3}\.ps1$</field>
+    <field name="win.eventdata.image" type="pcre2">(?i)powershell(_ise)?\.exe$</field>
     <description>Sysmon 11: PowerShell execution policy probe file. Expected, not alerted.</description>
   </rule>
 
