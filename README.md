@@ -16,6 +16,8 @@ The sibling repository [enterprise-iam-lab](https://github.com/noble-antwi/enter
 [![Platform Coverage](https://img.shields.io/badge/platforms-Linux%2BWindows%2BProxmox-blue.svg)]()
 [![Automation](https://img.shields.io/badge/automation-Ansible-red.svg)]()
 
+**Start here:** [SKILLS.md](SKILLS.md) maps every capability this lab has taught me to the document and the screenshots that prove it, and is honest about the ones I am still building.
+
 ---
 
 ## Project Overview
