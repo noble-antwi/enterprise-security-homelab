@@ -1,0 +1,88 @@
+<!--
+  Biira Bank lab, Wazuh manager custom ruleset.
+  Deploys to SIEM01 at /var/ossec/etc/rules/local_rules.xml
+
+  Numbering: custom rules must be >= 100000. Blocks used here:
+    100010-100019  Sysmon noise suppression
+    100020-100029  Authorised scanner activity
+
+  Two standing principles for everything in this file:
+
+  1. Suppress at the alert layer, not the collection layer. The raw event
+     still lands in the endpoint log and in the Wazuh archive. Only the
+     alert is withheld. That keeps the forensic record intact, and it is
+     reversible by deleting a rule instead of redeploying agent config.
+
+  2. Never suppress on one field. Every exclusion below pins at least two
+     independent conditions, so an attacker cannot walk into the exclusion
+     just by copying a filename or a username.
+-->
+
+<group name="local,">
+
+  <!--
+    100010: PowerShell's own execution-policy probe.
+
+    Parent 92213 ("Executable file dropped in folder commonly used by
+    malware", level 15, T1105) fires on any script or binary written into a
+    temp or profile folder. It is a sound heuristic and it is left enabled.
+
+    PowerShell trips it constantly. Before running any script or loading any
+    module it must resolve the execution policy, and it does that by writing
+    a throwaway .ps1 into %TEMP%, submitting it to the policy provider,
+    reading the verdict and deleting the file. Milliseconds, dozens of times
+    an hour, on every Windows host.
+
+    The filename is .NET Path.GetRandomFileName() output, which is always
+    8.3 with lowercase alphanumerics, hence the tight pattern. Both the
+    filename shape and the writing process must match, so a dropper merely
+    named __PSScriptPolicyTest_something.ps1 still alerts at level 15.
+
+    If this ever stops matching, loosen the {8} and {3} quantifiers first.
+  -->
+  <rule id="100010" level="0">
+    <if_sid>92213</if_sid>
+    <field name="win.eventdata.targetFilename" type="pcre2">(?i)\\Temp\\__PSScriptPolicyTest_[a-z0-9]{8}\.[a-z0-9]{3}\.ps1$</field>
+    <field name="win.eventdata.image" type="pcre2">(?i)\\powershell(_ise)?\.exe$</field>
+    <description>Sysmon 11: PowerShell execution policy probe file. Expected, not alerted.</description>
+  </rule>
+
+
+  <!--
+    100020 and 100021: the Greenbone credentialed scanner.
+
+    Parent 92652 reports a successful network logon over NTLM and reads it as
+    a possible pass-the-hash. During a credentialed scan svc-greenbone
+    authenticates to every open service on the target, which produced 2051
+    level 6 alerts from a single scan of one workstation.
+
+    ORDER MATTERS. Wazuh evaluates sibling rules in file order and stops at
+    the first match, so the narrow rule must come first. Reverse these two
+    and every scanner logon alerts at level 12.
+
+    The failure direction is deliberately safe: if ipAddress is absent or
+    does not match SCAN01, 100020 misses and 100021 fires loudly. Silence is
+    never the default.
+  -->
+
+  <!-- Expected: the scanner account, from SCAN01, and only from SCAN01. -->
+  <rule id="100020" level="0">
+    <if_sid>92652</if_sid>
+    <field name="win.eventdata.targetUserName" type="pcre2">(?i)^svc-greenbone$</field>
+    <field name="win.eventdata.ipAddress" type="pcre2">^192\.168\.20\.3$</field>
+    <description>Authorised Greenbone credentialed scan logon from SCAN01. Expected, not alerted.</description>
+  </rule>
+
+  <!-- Anything else using that account is a real finding. It is a scanner
+       service account: it has no interactive use and no reason to originate
+       anywhere but SCAN01. -->
+  <rule id="100021" level="12">
+    <if_sid>92652</if_sid>
+    <field name="win.eventdata.targetUserName" type="pcre2">(?i)^svc-greenbone$</field>
+    <description>Scanner service account svc-greenbone authenticated from an unexpected source.</description>
+    <mitre>
+      <id>T1078.002</id>
+    </mitre>
+  </rule>
+
+</group>
