@@ -61,8 +61,9 @@ The `◐` rows are the honest ones. They are where the work is.
 | Sysmon deployment | Installed and configured on three Windows endpoints with a curated config, and collected centrally | [images/sys](images/sys/) | ● |
 | Reading Sysmon events | Event 1 process creation with parent command line, 3 network, 11 file create, 22 DNS. Knowing what each one is good for | [images/sys](images/sys/) | ◐ |
 | CIS configuration assessment | Benchmark scoring running against Windows endpoints | [images/siem](images/siem/) | ◐ |
-| Custom rule authoring and tuning | Silencing a level 15 false positive without going blind to the real thing, and pinning at least two fields so an exclusion cannot be walked through | [detections/](detections/README.md) | ◐ |
-| Alert triage | Taking an alert from "this looks bad" to a decision, using the fields rather than the headline | [detections/](detections/README.md) | ○ |
+| Custom rule authoring and tuning | Silenced a level 15 false positive without going blind to the real thing, pinning two fields so the exclusion cannot be walked through, and inverted the scanner rule so unexpected use of the scan account is now louder than it was | [docs/20](docs/20-detection-engineering-tuning-and-archives.md), [detections/](detections/README.md) | ◐ |
+| Alert triage | Took one alert from "this looks bad" to a decision: read the rule metadata, worked out what the host was really doing, and proved the fix on live data rather than in a test harness | [docs/20](docs/20-detection-engineering-tuning-and-archives.md) | ◐ |
+| Log pipeline and retention | Enabled archives across three systems in the right order, measured the growth, reverted the duplicate writer, and planned retention against what the indexer actually costs | [docs/20](docs/20-detection-engineering-tuning-and-archives.md) | ◐ |
 
 ## Vulnerability management
 
