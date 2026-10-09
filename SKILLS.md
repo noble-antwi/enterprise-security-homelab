@@ -12,7 +12,7 @@ screenshots taken while doing it. Nothing is listed because I read about it.
 If a capability is claimed here, something in this repository shows it
 running, failing, or being fixed.
 
-[![Chapters](https://img.shields.io/badge/chapters-19-brightgreen.svg)](docs/)
+[![Chapters](https://img.shields.io/badge/chapters-21-brightgreen.svg)](docs/)
 [![Evidence](https://img.shields.io/badge/screenshots-150%2B-blue.svg)](images/)
 [![Scenario](https://img.shields.io/badge/scenario-corp.biirabank.com-08152F.svg)](README.md)
 
@@ -73,7 +73,9 @@ The `◐` rows are the honest ones. They are where the work is.
 | Unauthenticated vs credentialed scanning | A scan that "succeeds" with 4 applications and 0 CVEs is telling you the credential path is broken, not that the host is clean | [docs/19](docs/19-vulnerability-scanning-scan01.md) | ● |
 | The credentialed scan chain | Admin rights, then SMB 445 through the host firewall, then the Remote Registry service. Break any link and the scan still reports success while seeing nothing | [docs/19](docs/19-vulnerability-scanning-scan01.md), [images/scan](images/scan/) | ● |
 | Scanner identity design | A scan account scoped to one source host, with the host firewall rule scoped to that address and profile rather than opened to the subnet | [images/scan](images/scan/) | ● |
-| Reading a scan report | Results, hosts, ports, applications, operating systems and CVEs as a set of cross-checks on each other | [docs/19](docs/19-vulnerability-scanning-scan01.md) | ◐ |
+| Reading a scan report | Results, hosts, ports, applications, operating systems and CVEs as a set of cross-checks on each other | [docs/19](docs/19-vulnerability-scanning-scan01.md), [docs/21](docs/21-find-fix-prove-tls-on-wks01.md) | ◐ |
+| Remediation loop: find, fix, prove | Chose a finding by triage rather than by score, fixed it with a scoped and reversible Group Policy change, checked it landed with `gpresult`, the registry and a restart, then proved it gone with a rescan from three independent angles | [docs/21](docs/21-find-fix-prove-tls-on-wks01.md), [images/scan](images/scan/) | ◐ |
+| Windows protocol hardening | Removed TLS 1.0 and 1.1 from SCHANNEL by Group Policy Preferences, knowing why both `Enabled` and `DisabledByDefault` are set and why the change needs a restart | [docs/21](docs/21-find-fix-prove-tls-on-wks01.md) | ◐ |
 
 ## Virtualisation and platform
 
