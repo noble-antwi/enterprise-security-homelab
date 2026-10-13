@@ -91,6 +91,7 @@ silently: the rule simply never fires, with no error anywhere. Where possible,
 anchor on the portion of a Windows path that contains no separators at all.
 | 100020 | 0 | 92652 | Silences `svc-greenbone` network logons originating from SCAN01 (192.168.20.3) |
 | 100021 | 12 | 92652 | Alerts on `svc-greenbone` from any other source |
+| 100022 | 0 | 60137 | Silences `svc-greenbone` network logoffs (logon type 3). Misuse of the account is caught at logon by 100021 |
 
 Every suppression pins at least two independent fields, so the exclusion
 cannot be entered by copying a single filename or username.

@@ -95,4 +95,29 @@
     </mitre>
   </rule>
 
+  <!--
+    100022: the scanner's logoffs.
+
+    Once 100020 silenced the logons, the next credentialed scan showed the
+    remaining scanner noise was entirely parent 60137, "Windows User Logoff"
+    (event 4634, level 3): every logon the scanner makes is followed by a
+    logoff. 622 such alerts in the first hour of a single scan.
+
+    A logoff carries no source address, so the second condition cannot be the
+    IP that rule 100020 pins. It is the logon type instead. Type 3 is a network
+    logon, which is how the scanner connects. svc-greenbone is denied
+    interactive (2) and Remote Desktop (10) logon by policy, so a type 2 or 10
+    logoff for this account would mean a logon that should be impossible, and
+    it stays visible.
+
+    Silencing the logoff loses no detection: misuse of the account shows up on
+    the logon, where rule 100021 fires at level 12 for any source but SCAN01.
+  -->
+  <rule id="100022" level="0">
+    <if_sid>60137</if_sid>
+    <field name="win.eventdata.targetUserName" type="pcre2">(?i)^svc-greenbone$</field>
+    <field name="win.eventdata.logonType" type="pcre2">^3$</field>
+    <description>Greenbone scanner network logoff. Expected, not alerted.</description>
+  </rule>
+
 </group>
