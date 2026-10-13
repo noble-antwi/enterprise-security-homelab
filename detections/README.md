@@ -76,6 +76,12 @@ Custom rules must be 100000 or above. Blocks in use:
 | ID | Level | Parent | Effect |
 |---|---|---|---|
 | 100010 | 0 | 92213 | Silences PowerShell's execution policy probe file, when written by `powershell.exe` and matching the 8.3 random-name shape |
+| 100020 | 0 | 92652 | Silences `svc-greenbone` network logons originating from SCAN01 (192.168.20.3) |
+| 100021 | 12 | 92652 | Alerts on `svc-greenbone` from any other source |
+| 100022 | 0 | 60137 | Silences `svc-greenbone` network logoffs (logon type 3). Misuse of the account is caught at logon by 100021 |
+
+Every suppression pins at least two independent fields, so the exclusion
+cannot be entered by copying a single filename or username.
 
 ### Gotcha: Sysmon backslashes arrive doubled
 
@@ -89,9 +95,3 @@ Those are two literal backslashes, not an escaping artifact of the display. A
 pattern written against single backslashes matches nothing, and it fails
 silently: the rule simply never fires, with no error anywhere. Where possible,
 anchor on the portion of a Windows path that contains no separators at all.
-| 100020 | 0 | 92652 | Silences `svc-greenbone` network logons originating from SCAN01 (192.168.20.3) |
-| 100021 | 12 | 92652 | Alerts on `svc-greenbone` from any other source |
-| 100022 | 0 | 60137 | Silences `svc-greenbone` network logoffs (logon type 3). Misuse of the account is caught at logon by 100021 |
-
-Every suppression pins at least two independent fields, so the exclusion
-cannot be entered by copying a single filename or username.
