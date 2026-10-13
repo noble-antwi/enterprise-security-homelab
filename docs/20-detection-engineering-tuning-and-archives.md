@@ -2,7 +2,7 @@
 
 **Purpose**: Records the lab's first piece of detection engineering. A built-in Wazuh rule was firing at the highest severity on behaviour Windows performs on itself, several times an hour, on every endpoint. This chapter covers how it was found, why the rule was not wrong, how it was tuned without creating a blind spot, and the two traps that made the first attempt fail silently. It then covers the change that makes such tuning honest: enabling archives, so that a suppressed alert still leaves an event on the record. Written so a reviewer can see the reasoning, not only the configuration.
 
-**Status**: Current. Rules deployed to SIEM01 on 2026-09-26 and verified. Archives enabled the same day. Retention is outstanding and is listed in section 8.
+**Status**: Current. Rules deployed to SIEM01 on 2026-09-26 and verified. Archives enabled the same day. Retention is planned and listed in section 10.
 
 Related: `docs/16` (the SIEM build and the agent estate), `docs/19` section 7 (the credentialed scan whose 2,051 alerts motivated half of this work).
 
@@ -235,13 +235,14 @@ Zero drops with empty queues: the additional disk write per event has not strain
 
 PCI DSS requires twelve months of audit log retention with the most recent three months immediately available for analysis. A fourteen-day policy on a single node does not meet that. The gap is not hidden here: it is the difference between what one server can carry and what a real institution would be required to buy, and it is the reason tiered storage exists in commercial deployments.
 
-## 10. Outstanding
+## 10. Next steps
+
+Open weaknesses and gaps in detection are not listed here. They are tracked in a private backlog until fixed, and are then written up publicly with their evidence, as `docs/21` does for deprecated TLS.
 
 - **Retention.** ISM policy on `wazuh-archives-*`, plus a cleanup job for the compressed files. Not urgent at 7% disk, and deliberately deferred rather than forgotten
 - **Audit the remaining high-severity rules.** 92213 was found by accident. Sort alerts by rule id, take the top ten by volume, and make a decision on each
-- **Confirm the scanner pair under load.** The next credentialed scan should produce close to zero rule 92652 alerts. Until that run happens, rules 100020 and 100021 are deployed but not proven at scale
+- ~~**Confirm the scanner pair under load.**~~ **Done.** On the next credentialed scan rule 92652 raised no alerts, against 2,051 the time before, while the archive kept every sign-in (`docs/21` section 9)
 - **Exclude the dashboard's own access logs.** With archives enabled, SIEM01 records every request made by its own web interface, inflating volume with pure noise
-- **A detection for the inverse case.** The execution policy is not a security control: `-ExecutionPolicy Bypass` requires no administrative rights, which is why it appears constantly in real intrusions. Sysmon event 1 already captures full command lines on all three Windows endpoints, so the data to detect it is being collected
 
 ## 11. Control mapping
 

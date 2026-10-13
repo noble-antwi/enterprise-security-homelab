@@ -2,7 +2,7 @@
 
 **Purpose**: Records the lab's first complete remediation loop. A credentialed scan found deprecated TLS versions offered by the Remote Desktop service on `WKS01`. A Group Policy change removed them. A third scan proved, from three independent angles, that they are gone. The chapter covers how the finding was chosen, how the fix was scoped and made reversible, how it was verified on the machine before any rescan, and what the rescan showed. Written so a reviewer can follow the evidence end to end without taking any step on trust.
 
-**Status**: Complete for the finding it addresses. Remaining results from the same scans are triaged and tracked separately (section 3). Outstanding items in section 10.
+**Status**: Complete for the finding it addresses. Remaining results from the same scans are triaged and tracked separately (section 3). Scope and next steps in section 10.
 
 Related: `docs/19` (the scanner, the scan identity and the first credentialed scan, whose section 8 asked for exactly this loop), `docs/20` (the Wazuh rules the same rescan put under load).
 
@@ -142,15 +142,16 @@ Report three also confirms the scan identity still works after the change: host 
 
 The rescan doubled as the first real load test of the Wazuh rules written in `docs/20`. On the previous scan, rule 92652 raised 2,051 "possible pass-the-hash" alerts as the scanner signed in repeatedly. During this scan it raised none: rule 100020 recognised the scanner's account arriving from the scanner's address and kept it out of the alert queue, while the archive still recorded every sign-in. The remaining scanner noise is its logoffs, which are the next rule to write.
 
-## 10. Outstanding
+## 10. Scope and next steps
 
-| Item | Detail | Control |
-|---|---|---|
-| Client-side TLS | Only the `Server` role was changed. `WKS01` can still offer TLS 1.0 and 1.1 when it connects out. The same four values under `...\Client` close that, after checking nothing in the estate still needs them | `SC-8`, `SC-13` |
-| Widen the scope | The policy reaches `Workstations` only. Assess servers, then decide whether a server equivalent is safe to link | `CM-6` |
-| Remaining results | Triaged, each with a decision. Tracked privately while open | `RA-5`, `RA-7` |
-| DefectDojo | The rule set in `docs/19` was to wait for three reports and one closed finding. Both conditions are now met, so findings can be tracked from open to closed across scans rather than compared by hand | `RA-5`, `CA-7` |
-| Kerberos over NTLM | The scan still authenticates with NTLM (`docs/19` 7.4) | `IA-2` |
+**Scope.** The change covers what the scan tested: workstations accepting connections, on the `Workstations` unit only. Servers and domain controllers were left out deliberately. They are assessed before the same pattern is extended to them, rather than inheriting a change that was only ever tested on a workstation.
+
+**Next.**
+
+- **Track findings across scans.** The condition set in `docs/19` for adopting DefectDojo was three reports and one closed finding. Both are now met, so findings can be followed from open to closed rather than compared by hand.
+- **The remaining results.** Each result from these scans has been triaged and has a recorded decision.
+
+Open weaknesses and gaps in detection are not listed here. They are tracked in a private backlog until fixed, and are then written up publicly with their evidence, as this chapter does for deprecated TLS.
 
 ## 11. Control mapping
 
