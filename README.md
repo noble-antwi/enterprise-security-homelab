@@ -96,12 +96,12 @@ Machines follow a role-based naming convention, `<ROLE><NN>`: servers such as `D
 | ADM01 (Admin laptop) | `192.168.10.3` | Management | Windows 11 | Administration workstation, Wazuh agent 002 | Active |
 | TCM Ubuntu | `192.168.10.4` | Management | Ubuntu 24.04 | Training and development | Active |
 | PVE01 (proxmox-01) | `192.168.10.6` | Management | Proxmox VE 9.2 (Debian 13) | Bare-metal VM hypervisor, Wazuh agent 003 | Active |
-| SIEM01 | `192.168.20.2` | BlueTeam | Ubuntu 24.04 (Dell OptiPlex 9020, 8 core, 16 GB) | SIEM and centralised logging | Active, 3 agents reporting (DC01, ADM01, PVE01) |
+| SIEM01 | `192.168.20.2` | BlueTeam | Ubuntu 24.04 (Dell OptiPlex 9020, 8 core, 16 GB) | SIEM and centralised logging | Active, 4 agents reporting (DC01, ADM01, PVE01, WKS01) |
 | SCAN01 | `192.168.20.3` | BlueTeam | Ubuntu 26.04 (Proxmox VM 104) | Vulnerability scanning, Greenbone Community Edition | Active, feeds loaded (`docs/19`) |
 | KALI01 | `192.168.30.2` | RedTeam | Kali Linux 2026.2 | Attack simulation (Proxmox VM 103) | Active, containment validated |
 | APP01 | `192.168.40.2` | DevOps | Ubuntu | DevOps application host, two web apps behind Tailscale Serve | Active. VAULT01 will be a separate Proxmox guest |
 | DC01 | `192.168.50.2` | EnterpriseLAN | Windows Server 2025 | Domain controller for `corp.biirabank.com` (AD DS + DNS) | Active, rebuilt 2026-09-07 (`docs/17`) |
-| WKS01 | DHCP, VLAN 50 | EnterpriseLAN | Windows 11 Pro (Proxmox VM 100) | First domain-joined workstation, scan target | Active, joined 2026-09-11 |
+| WKS01 | DHCP, VLAN 50 | EnterpriseLAN | Windows 11 Pro (Proxmox VM 100) | First domain-joined workstation, scan target, Wazuh agent 004 | Active, joined 2026-09-11 |
 | MON01 (Grafana + Prometheus) | `192.168.60.2` | Monitoring | Ubuntu | Observability dashboards | To be rebuilt as a Proxmox guest |
 
 ### Physical Network Layout
@@ -151,7 +151,7 @@ The host is an 8 core / 32 GiB / 2.67 TiB node with nightly backups to a dedicat
 - **Network Segmentation**: six VLANs; three with explicit default-deny rulesets, three still permissive
 - **Remote Operations**: access to lab resources via Tailscale mesh VPN
 - **Scalability**: Proxmox enables rapid deployment of new VMs on any VLAN without physical changes
-- **Security Monitoring**: Wazuh on SIEM01 with agents on DC01, ADM01 and PVE01 (`docs/16`)
+- **Security Monitoring**: Wazuh on SIEM01 with agents on DC01, ADM01, PVE01 and WKS01 (`docs/16`, `docs/19`), and the lab's own detection rules in `detections/wazuh` (`docs/20`)
 - **Vulnerability Scanning**: Greenbone Community Edition on SCAN01 with 186,567 vulnerability tests loaded (`docs/19`)
 - **Not yet running**: Ansible, while the controller is rebuilt as ANS01, and Grafana and Prometheus, until MON01 is rebuilt
 
@@ -188,7 +188,7 @@ Complete:
 - Management-plane isolation proven by before and after testing (`docs/13` section 3.1)
 - KALI01 (Kali Linux) built on VLAN 30 and its containment validated against a live host: no reachability to the domain controller or the firewall management plane, while DNS, time and internet all function (`docs/15`)
 - Nightly Proxmox backups to a dedicated second disk, verified by an on-demand restore point
-- Wazuh on SIEM01 after the role swap with the monitoring hardware, with agents on DC01, ADM01 and PVE01 and CIS baselines recorded (`docs/16`)
+- Wazuh on SIEM01 after the role swap with the monitoring hardware, with agents on DC01, ADM01 and PVE01 and CIS baselines recorded (`docs/16`); WKS01 joined later as agent 004
 - `biirabank.com` published and hardened at the Cloudflare edge, graded A+ (`docs/18`)
 - SCAN01 running Greenbone, with a least-privilege scan identity delivered by Group Policy and proven on the first domain-joined workstation (`docs/19`)
 
