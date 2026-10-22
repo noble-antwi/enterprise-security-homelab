@@ -1,0 +1,241 @@
+<!--
+  Stock Copilot identity lab: detections on the app's identity audit log.
+
+  Source: APP01, ~/githubProjects/stock-copilot-lab/logs/auth-audit.jsonl,
+  shipped by the Wazuh agent as JSON (log_format json). Every event carries
+  service.name "stock-copilot" and service.type "identity", which is how
+  rule 100400 claims them; service.environment says lab or live.
+
+  The event vocabulary (event.action, event.outcome, detail.reason) is
+  defined in the stock-copilot repo, docs/identity/DESIGN.md; the Sigma
+  rules, ATT&CK map and runbooks for every rule below are in
+  docs/identity/detections/ there. Rule ids: block 100400-100499.
+
+  Deploys to SIEM01:/var/ossec/etc/rules/stock_copilot_identity_rules.xml
+  (see ../README.md). Tested with wazuh-logtest 4.14.7 against the lab's
+  real Stage 10, 12 and 13 traffic before it was deployed.
+-->
+<group name="stock_copilot,identity,">
+
+  <!-- Every identity event from the app. Silent on its own. -->
+  <rule id="100400" level="0">
+    <decoded_as>json</decoded_as>
+    <field name="service.name">^stock-copilot$</field>
+    <field name="service.type">^identity$</field>
+    <description>Stock Copilot identity: $(event.action)</description>
+  </rule>
+
+  <!-- ===================================================== sign-in -->
+  <rule id="100401" level="3">
+    <if_sid>100400</if_sid>
+    <field name="event.action">^sign-in$</field>
+    <description>Stock Copilot: $(user.name) signed in through $(idp.key)</description>
+    <group>authentication_success,</group>
+  </rule>
+
+  <rule id="100402" level="5">
+    <if_sid>100400</if_sid>
+    <field name="event.action">^sign-in-failure$</field>
+    <description>Stock Copilot: sign-in refused for $(user.name): $(detail.reason)</description>
+    <group>authentication_failed,</group>
+  </rule>
+
+  <!-- Only a CREDENTIAL failure counts towards guessing. A refusal by
+       policy (an email already linked elsewhere, not provisioned, no mapped
+       group) is a configuration story, not an attack: counting those made
+       the first test run raise seven false password-guessing alerts.
+       Guessing is counted per tailnet device, not per email: a refused
+       passkey names nobody, and a guesser can change the email every try. -->
+  <rule id="100407" level="5">
+    <if_sid>100402</if_sid>
+    <field name="detail.reason" type="pcre2">(?i)wrong email or password|passkey rejected|stale passkey|locked out|stale or reused login form</field>
+    <description>Stock Copilot: a credential was refused for $(user.name): $(detail.reason)</description>
+    <group>authentication_failed,</group>
+  </rule>
+
+  <rule id="100403" level="10" frequency="5" timeframe="120">
+    <if_matched_sid>100407</if_matched_sid>
+    <same_field>source.tailnet_node</same_field>
+    <description>Stock Copilot: repeated refused credentials from $(source.tailnet_node) (password guessing?)</description>
+    <mitre><id>T1110</id></mitre>
+    <group>authentication_failures,</group>
+  </rule>
+
+  <rule id="100404" level="10">
+    <if_sid>100400</if_sid>
+    <field name="event.action">^break-glass-used$</field>
+    <description>Stock Copilot: the break-glass owner login was used</description>
+    <mitre><id>T1078.003</id></mitre>
+  </rule>
+
+  <rule id="100405" level="12">
+    <if_sid>100400</if_sid>
+    <field name="event.action">^break-glass-reset$</field>
+    <description>Stock Copilot: the break-glass owner was reset on APP01</description>
+    <mitre><id>T1098</id></mitre>
+  </rule>
+
+  <rule id="100406" level="7">
+    <if_sid>100400</if_sid>
+    <field name="event.action">^step-up-failure$</field>
+    <description>Stock Copilot: a step-up to a sensitive area failed for $(user.name)</description>
+    <mitre><id>T1621</id></mitre>
+  </rule>
+
+  <!-- ============================================ refused tokens -->
+  <rule id="100410" level="6">
+    <if_sid>100400</if_sid>
+    <field name="event.action">^token-rejected$</field>
+    <description>Stock Copilot: token refused ($(idp.key)): $(detail.reason)</description>
+    <group>invalid_access,</group>
+  </rule>
+
+  <rule id="100411" level="12">
+    <if_sid>100410</if_sid>
+    <field name="detail.reason" type="pcre2">(?i)algorithm|alg</field>
+    <description>Stock Copilot: forged token, unsigned or algorithm confusion: $(detail.reason)</description>
+    <mitre><id>T1606</id></mitre>
+  </rule>
+
+  <!-- Forgery only. "assertion expired", "not yet valid" and "replayed
+       assertion" also name an assertion; matching on that word alone would
+       have paged clock skew as forgery and sent replays to the wrong rule. -->
+  <rule id="100412" level="12">
+    <if_sid>100410</if_sid>
+    <field name="detail.reason" type="pcre2">(?i)signed|signature|exactly one assertion|wrapping|comment|DOCTYPE</field>
+    <field name="idp.protocol">^saml$</field>
+    <description>Stock Copilot: forged SAML assertion (unsigned, wrapped or tampered): $(detail.reason)</description>
+    <mitre><id>T1606.002</id></mitre>
+  </rule>
+
+  <rule id="100413" level="10">
+    <if_sid>100410</if_sid>
+    <field name="detail.reason" type="pcre2">(?i)replay|nonce|used once|unknown, expired</field>
+    <description>Stock Copilot: replayed token, nonce or login state: $(detail.reason)</description>
+    <mitre><id>T1550.001</id></mitre>
+  </rule>
+
+  <rule id="100414" level="10">
+    <if_sid>100410</if_sid>
+    <field name="detail.surface">^scim$</field>
+    <description>Stock Copilot: SCIM call without a valid credential: $(detail.reason)</description>
+    <mitre><id>T1136</id></mitre>
+  </rule>
+
+  <rule id="100415" level="10" frequency="10" timeframe="120">
+    <if_matched_sid>100410</if_matched_sid>
+    <same_field>source.tailnet_node</same_field>
+    <description>Stock Copilot: a burst of refused tokens from $(source.tailnet_node)</description>
+    <mitre><id>T1110</id></mitre>
+  </rule>
+
+  <rule id="100416" level="8">
+    <if_sid>100410</if_sid>
+    <field name="detail.reason" type="pcre2">(?i)no longer active</field>
+    <description>Stock Copilot: a revoked API token was used again</description>
+    <mitre><id>T1550.001</id></mitre>
+  </rule>
+
+  <!-- ===================================================== the API -->
+  <rule id="100420" level="8">
+    <if_sid>100400</if_sid>
+    <field name="event.action">^oauth-scope-denied$</field>
+    <description>Stock Copilot: API token used beyond its scope ($(detail.client)): $(detail.reason)</description>
+    <mitre><id>T1550.001</id></mitre>
+  </rule>
+
+  <rule id="100421" level="10" frequency="5" timeframe="300">
+    <if_matched_sid>100420</if_matched_sid>
+    <same_field>detail.client</same_field>
+    <description>Stock Copilot: client $(detail.client) keeps reaching beyond its scopes</description>
+    <mitre><id>T1550.001</id></mitre>
+  </rule>
+
+  <!-- ===================================================== the web -->
+  <rule id="100430" level="8">
+    <if_sid>100400</if_sid>
+    <field name="event.action">^csrf-refused$</field>
+    <description>Stock Copilot: cross-site request refused on $(detail.path) for $(user.name)</description>
+    <mitre><id>T1185</id></mitre>
+  </rule>
+
+  <rule id="100440" level="5">
+    <if_sid>100400</if_sid>
+    <field name="event.action">^access-denied$</field>
+    <description>Stock Copilot: $(user.name) refused $(detail.path): $(detail.reason)</description>
+  </rule>
+
+  <rule id="100441" level="10" frequency="10" timeframe="300">
+    <if_matched_sid>100440</if_matched_sid>
+    <same_field>user.name</same_field>
+    <description>Stock Copilot: $(user.name) keeps reaching for what was not given</description>
+    <mitre><id>T1083</id></mitre>
+  </rule>
+
+  <rule id="100442" level="6">
+    <if_sid>100440</if_sid>
+    <field name="detail.reason" type="pcre2">(?i)without a session</field>
+    <description>Stock Copilot: a tailnet device asked for data without signing in ($(source.tailnet_node))</description>
+  </rule>
+
+  <rule id="100450" level="8">
+    <if_sid>100400</if_sid>
+    <field name="event.action">^redirect-refused$</field>
+    <description>Stock Copilot: open-redirect attempt to $(detail.asked)</description>
+    <mitre><id>T1566.002</id></mitre>
+  </rule>
+
+  <!-- =========================================== accounts and keys -->
+  <rule id="100460" level="12">
+    <if_sid>100400</if_sid>
+    <field name="event.action">^link$</field>
+    <field name="event.outcome">^failure$</field>
+    <description>Stock Copilot: refused attempt to link an identity: $(detail.reason)</description>
+    <mitre><id>T1098</id></mitre>
+  </rule>
+
+  <rule id="100461" level="8">
+    <if_sid>100400</if_sid>
+    <field name="event.action">^role-change$</field>
+    <field name="detail.to" type="pcre2">lab-admin</field>
+    <description>Stock Copilot: $(user.name) now holds lab-admin</description>
+    <mitre><id>T1098</id></mitre>
+  </rule>
+
+  <!-- The owner pointing a whole directory group at lab-admin. -->
+  <rule id="100463" level="8">
+    <if_sid>100400</if_sid>
+    <field name="event.action">^role-change$</field>
+    <field name="detail.change" type="pcre2">lab-admin</field>
+    <description>Stock Copilot: group $(detail.mapping) now maps to lab-admin</description>
+    <mitre><id>T1098</id></mitre>
+  </rule>
+
+  <rule id="100462" level="3">
+    <if_sid>100400</if_sid>
+    <field name="event.action">^scim-deactivate$</field>
+    <description>Stock Copilot: the directory deactivated $(user.name)</description>
+  </rule>
+
+  <rule id="100470" level="12">
+    <if_sid>100400</if_sid>
+    <field name="event.action">^key-rotation$</field>
+    <field name="detail.scheduled">^false$</field>
+    <description>Stock Copilot: signing keys changed at $(idp.key) outside any declared rotation</description>
+    <mitre><id>T1556</id></mitre>
+  </rule>
+
+  <rule id="100471" level="3">
+    <if_sid>100400</if_sid>
+    <field name="event.action">^key-rotation$</field>
+    <field name="detail.scheduled">^true$</field>
+    <description>Stock Copilot: scheduled rotation, $(detail.drill): $(detail.step)</description>
+  </rule>
+
+  <rule id="100480" level="3">
+    <if_sid>100400</if_sid>
+    <field name="event.action">^access-review-signed$</field>
+    <description>Stock Copilot: access review signed off</description>
+  </rule>
+
+</group>
