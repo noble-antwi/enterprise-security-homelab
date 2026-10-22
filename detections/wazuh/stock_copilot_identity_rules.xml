@@ -211,6 +211,16 @@
     <mitre><id>T1098</id></mitre>
   </rule>
 
+  <!-- Stage 15: a provider connected or turned on from the IAM lab page.
+       A provider that is on can sign people in: a change of trust. -->
+  <rule id="100464" level="10">
+    <if_sid>100400</if_sid>
+    <field name="event.action">^config-change$</field>
+    <field name="detail.change" type="pcre2">^provider (connected|turned on)</field>
+    <description>Stock Copilot: identity provider $(detail.provider) trusted: $(detail.change)</description>
+    <mitre><id>T1484.002</id></mitre>
+  </rule>
+
   <rule id="100462" level="3">
     <if_sid>100400</if_sid>
     <field name="event.action">^scim-deactivate$</field>
