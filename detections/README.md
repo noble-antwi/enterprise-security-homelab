@@ -112,7 +112,7 @@ cannot be entered by copying a single filename or username.
 
 ### Stock Copilot identity (100400-100499): written and tested, deploy pending
 
-Tested with `wazuh-logtest` 4.14.7: 59 of 59 sample events reach their rule,
+Tested with `wazuh-logtest` 4.14.7: 61 of 61 sample events reach their rule,
 and a replay of the lab's real audit log (676 events from the Stage 10
 scenarios, Stage 12 rotation drills and Stage 13 attack probe) lands every
 refusal on its rule. Waiting on the Wazuh agent on APP01.
@@ -144,6 +144,7 @@ refusal on its rule. Waiting on the Wazuh agent on APP01.
 | 100460 | 12 | 100400 | T1098 | refused attempt to link an identity: `detail.reason` |
 | 100461 | 8 | 100400 | T1098 | `user.name` now holds lab-admin |
 | 100463 | 8 | 100400 | T1098 | group `detail.mapping` now maps to lab-admin |
+| 100464 | 10 | 100400 | T1484.002 | identity provider `detail.provider` trusted: `detail.change` (connected or turned on from the IAM lab page) |
 | 100462 | 3 | 100400 | - | the directory deactivated `user.name` |
 | 100470 | 12 | 100400 | T1556 | signing keys changed at `idp.key` outside any declared rotation |
 | 100471 | 3 | 100400 | - | scheduled rotation, `detail.drill`: `detail.step` |
