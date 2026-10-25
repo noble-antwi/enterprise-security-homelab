@@ -110,12 +110,17 @@ Custom rules must be 100000 or above. Blocks in use:
 Every suppression pins at least two independent fields, so the exclusion
 cannot be entered by copying a single filename or username.
 
-### Stock Copilot identity (100400-100499): written and tested, deploy pending
+### Stock Copilot identity (100400-100499): deployed 2026-10-23
 
 Tested with `wazuh-logtest` 4.14.7: 61 of 61 sample events reach their rule,
 and a replay of the lab's real audit log (676 events from the Stage 10
 scenarios, Stage 12 rotation drills and Stage 13 attack probe) lands every
-refusal on its rule. Waiting on the Wazuh agent on APP01.
+refusal on its rule.
+
+**Live since 2026-10-23.** The Wazuh agent on APP01 (agent 005) reads the
+Stock Copilot lab's audit log (`log_format json`). The app's attack probe
+was fired at 19:42 that evening, and all 18 events reached SIEM01 decoded, as
+alerts under `rule.groups: stock_copilot`.
 
 | ID | Level | Parent | MITRE | Effect |
 |---|---|---|---|---|
