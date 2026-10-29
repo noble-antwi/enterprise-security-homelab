@@ -63,6 +63,7 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 | **[19-vulnerability-scanning-scan01](docs/19-vulnerability-scanning-scan01.md)** ([PDF](docs/19-vulnerability-scanning-scan01.pdf)) | SCAN01 and Greenbone: the tool choice, three build failures recovered without data loss, and a least-privilege scan identity delivered by a scoped Group Policy that excludes domain controllers by design | In Progress |
 | **[20-detection-engineering-tuning-and-archives](docs/20-detection-engineering-tuning-and-archives.md)** ([PDF](docs/20-detection-engineering-tuning-and-archives.pdf)) | The lab's first custom Wazuh rules: a level 15 false positive found, understood and tuned without creating a blind spot, the two silent failures met writing it, and archives enabled so a suppressed alert still leaves an event on the record | Current |
 | **[21-find-fix-prove-tls-on-wks01](docs/21-find-fix-prove-tls-on-wks01.md)** ([PDF](docs/21-find-fix-prove-tls-on-wks01.pdf)) | The first full remediation loop: deprecated TLS found on WKS01's Remote Desktop by a credentialed scan, removed by a scoped and reversible Group Policy change, verified on the machine, and proven gone from three angles by a rescan | Complete |
+| **[22-certificate-authority-ca01-and-ldaps](docs/22-certificate-authority-ca01-and-ldaps.md)** ([PDF](docs/22-certificate-authority-ca01-and-ldaps.pdf)) | CA01, the lab's enterprise root CA: the design choices and what each trades away, DC01 enrolling for its own certificate without its private key ever leaving it, and LDAPS proven from inside the domain and from a machine that never joined it, with and without the trusted root | Complete |
 | **[ssh-configuration](docs/ssh-configuration.md)** ([PDF](docs/ssh-configuration.pdf)) | SSH configuration and key management guide | Complete |
 | **[troubleshooting](troubleshooting/)** | Comprehensive troubleshooting guides by component | Complete |
 
@@ -100,7 +101,8 @@ Machines follow a role-based naming convention, `<ROLE><NN>`: servers such as `D
 | SCAN01 | `192.168.20.3` | BlueTeam | Ubuntu 26.04 (Proxmox VM 104) | Vulnerability scanning, Greenbone Community Edition | Active, feeds loaded (`docs/19`) |
 | KALI01 | `192.168.30.2` | RedTeam | Kali Linux 2026.2 | Attack simulation (Proxmox VM 103) | Active, containment validated |
 | APP01 | `192.168.40.2` | DevOps | Ubuntu | DevOps application host, two web apps behind Tailscale Serve, Wazuh agent 005 | Active (agent since 2026-10-23). VAULT01 will be a separate Proxmox guest |
-| DC01 | `192.168.50.2` | EnterpriseLAN | Windows Server 2025 | Domain controller for `corp.biirabank.com` (AD DS + DNS) | Active, rebuilt 2026-09-07 (`docs/17`) |
+| DC01 | `192.168.50.2` | EnterpriseLAN | Windows Server 2025 | Domain controller for `corp.biirabank.com` (AD DS + DNS), LDAPS on 636 | Active, rebuilt 2026-09-07 (`docs/17`), LDAPS since 2026-10-23 (`docs/22`) |
+| CA01 | `192.168.50.3` | EnterpriseLAN | Windows Server 2025 (Proxmox VM 105) | Enterprise root certificate authority, `Biira Bank Root CA` (AD CS) | Active, built 2026-10-23 (`docs/22`) |
 | WKS01 | DHCP, VLAN 50 | EnterpriseLAN | Windows 11 Pro (Proxmox VM 100) | First domain-joined workstation, scan target, Wazuh agent 004 | Active, joined 2026-09-11 |
 | MON01 (Grafana + Prometheus) | `192.168.60.2` | Monitoring | Ubuntu | Observability dashboards | To be rebuilt as a Proxmox guest |
 
@@ -138,7 +140,8 @@ The host is an 8 core / 32 GiB / 2.67 TiB node with nightly backups to a dedicat
 | SCAN01 (VM 104) | vmbr0 | 20 | 192.168.20.3 | Greenbone vulnerability scanner, a Tier 0 VM | Active |
 | ANS01 | vmbr0 | 10 | 192.168.10.2 (same IP) | Fresh rebuild of the automation controller | Planned |
 | MON01 | vmbr0 | 60 | 192.168.60.2 | Grafana and Prometheus, rebuilt fresh | Planned |
-| DC02, CA01, WKS02 | vmbr0 | 50 / client | see `docs/12` | AD estate expansion for security training | Roadmap |
+| CA01 (VM 105) | vmbr0 | 50 | 192.168.50.3 | Enterprise root certificate authority (`docs/22`) | Active |
+| DC02, WKS02 | vmbr0 | 50 / client | see `docs/12` | AD estate expansion for security training | Roadmap |
 
 ---
 
