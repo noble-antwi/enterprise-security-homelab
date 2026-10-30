@@ -5,30 +5,28 @@
     msedge --headless=new --disable-gpu --no-first-run --user-data-dir=<tmp>
       --hide-scrollbars --virtual-time-budget=4000
       --run-all-compositor-stages-before-draw --force-device-scale-factor=2
-      --window-size=1450,900 --screenshot=network-architecture.png <file uri>
+      --window-size=1450,912 --screenshot=network-architecture.png <file uri>
 
   Zone hues are the dataviz reference categorical steps, validated on the
-  adjacent pairlist (worst adjacent normal-vision delta E 20.8, CVD 8.6). The
-  previous palette put #dc2626 next to #d97706, which failed the normal-vision
-  floor at 14.4: red and amber zones were genuinely hard to tell apart. Colour
-  is reinforcement here, never the sole encoding: every zone carries its VLAN
-  number, name, subnet and switch port as text.
+  adjacent pairlist (worst adjacent normal-vision delta E 20.8, CVD 8.6).
+  Colour is reinforcement here, never the sole encoding: every zone carries its
+  VLAN number, name, subnet and switch port as text. Flat fills only: some PDF
+  and print pipelines render gradients as solid black.
 -->
 <style>
-  html,body{margin:0;padding:0;background:#ffffff;}
+  html,body{margin:0;padding:0;background:#F5F7FA;}
   svg{display:block;font-family:"Segoe UI",system-ui,Arial,sans-serif;}
   .t{font-weight:600;}
   .mono{font-family:"Cascadia Code",Consolas,monospace;}
 </style></head><body>
-<svg width="1440" height="878" viewBox="0 0 1440 878" xmlns="http://www.w3.org/2000/svg">
+<svg width="1440" height="902" viewBox="0 0 1440 902" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <filter id="sh" x="-4%" y="-4%" width="108%" height="112%">
-      <feDropShadow dx="0" dy="1.5" stdDeviation="2.2" flood-color="#94a3b8" flood-opacity="0.45"/>
+    <filter id="sh" x="-6%" y="-6%" width="112%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#0F172A" flood-opacity="0.08"/>
     </filter>
     <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#1B2F5E"/>
+      <path d="M0,1 L9,5 L0,9 z" fill="#1B2F5E"/>
     </marker>
-    <!-- Biira Bank mark, inlined so the diagram is self-contained -->
     <g id="bbmark">
       <path fill="#08152F" d="M12 20C12 14 16 10 22 10h76c6 0 10 4 10 10v54c0 29-20 48-48 58C32 122 12 103 12 74Z"/>
       <path fill="none" stroke="#2DD4E8" stroke-width="3.4" d="M20.5 24c0-4 2.6-6.6 6.6-6.6h65.8c4 0 6.6 2.6 6.6 6.6v49c0 24.5-17 40.5-39.5 49.5C37.5 113.5 20.5 97.5 20.5 73Z"/>
@@ -45,222 +43,216 @@
     </g>
   </defs>
 
-  <rect x="0" y="0" width="1440" height="878" fill="#ffffff"/>
+  <rect x="0" y="0" width="1440" height="902" fill="#F5F7FA"/>
 
   <!-- ===== Masthead ===== -->
-  <use href="#bbmark" transform="translate(40,14) scale(0.42)"/>
-  <text x="98" y="38" font-size="16" class="t" fill="#08152F" letter-spacing="1.6">BIIRA BANK</text>
-  <text x="99" y="53" font-size="9" fill="#5A6478" letter-spacing="2.2">ENTERPRISE SECURITY ENGINEERING</text>
-  <text x="330" y="40" font-size="21" class="t" fill="#08152F">Network Architecture</text>
-  <text x="330" y="60" font-size="12" fill="#5A6478">As of 2026-09-14 · pfSense router-on-a-stick · 6 VLANs · Proxmox VE · Tailscale remote admin · domain corp.biirabank.com</text>
-  <rect x="40" y="70" width="1390" height="2.5" fill="#08152F"/>
-  <rect x="40" y="72.5" width="1390" height="2.5" fill="#2DD4E8"/>
+  <rect x="0" y="0" width="1440" height="80" fill="#ffffff"/>
+  <use href="#bbmark" transform="translate(40,12) scale(0.44)"/>
+  <text x="100" y="37" font-size="16" class="t" fill="#08152F" letter-spacing="1.6">BIIRA BANK</text>
+  <text x="101" y="53" font-size="9" fill="#5A6478" letter-spacing="2.2">ENTERPRISE SECURITY ENGINEERING</text>
+  <text x="340" y="38" font-size="22" class="t" fill="#08152F">Network Architecture</text>
+  <text x="340" y="58" font-size="12" fill="#5A6478">As of 2026-10-30 · pfSense router-on-a-stick · six VLANs · Proxmox VE · Tailscale remote admin · domain corp.biirabank.com</text>
+  <rect x="0" y="77" width="1440" height="3" fill="#08152F"/>
+  <rect x="0" y="80" width="1440" height="2" fill="#2DD4E8"/>
 
   <!-- ===== Internet ===== -->
-  <rect x="600" y="90" width="160" height="42" rx="21" fill="#F1F5F9" stroke="#94a3b8" stroke-width="1.5" filter="url(#sh)"/>
-  <text x="680" y="116" font-size="14" text-anchor="middle" class="t" fill="#08152F">Internet / ISP</text>
-  <line x1="680" y1="132" x2="680" y2="170" stroke="#1B2F5E" stroke-width="1.6" marker-end="url(#ar)"/>
-  <text x="690" y="156" font-size="11" fill="#5A6478" class="mono">WAN 10.0.0.105</text>
+  <rect x="640" y="100" width="160" height="38" rx="19" fill="#ffffff" stroke="#CBD5E1" stroke-width="1.4" filter="url(#sh)"/>
+  <text x="720" y="124" font-size="13.5" text-anchor="middle" class="t" fill="#08152F">Internet / ISP</text>
+  <line x1="720" y1="138" x2="720" y2="166" stroke="#1B2F5E" stroke-opacity="0.6" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="730" y="157" font-size="10" class="mono" fill="#64748B">WAN 10.0.0.105</text>
 
-  <!-- ===== Tailscale (left) ===== -->
-  <rect x="290" y="190" width="200" height="62" rx="8" fill="#F6F3FF" stroke="#4a3aa7" stroke-width="1.5" filter="url(#sh)"/>
-  <text x="302" y="212" font-size="12.5" class="t" fill="#4a3aa7">Tailscale mesh (WireGuard)</text>
-  <text x="302" y="230" font-size="10.5" fill="#5A6478">subnet router · remote admin</text>
-  <text x="302" y="245" font-size="10" fill="#4a3aa7">4 owner devices · bypasses VLAN tabs</text>
-  <line x1="490" y1="221" x2="518" y2="221" stroke="#4a3aa7" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <!-- ===== Tailscale ===== -->
+  <rect x="300" y="182" width="210" height="70" rx="12" fill="#ffffff" stroke="#DDD6FE" stroke-width="1.3" filter="url(#sh)"/>
+  <rect x="300" y="182" width="5" height="70" rx="2.5" fill="#4a3aa7"/>
+  <text x="318" y="204" font-size="12.5" class="t" fill="#4a3aa7">Tailscale · WireGuard mesh</text>
+  <text x="318" y="221" font-size="10.5" fill="#64748B">Subnet router on pfSense</text>
+  <text x="318" y="237" font-size="10.5" fill="#64748B">Remote admin · 4 owner devices</text>
+  <path d="M510 217 H546" stroke="#4a3aa7" stroke-width="1.5" stroke-dasharray="5 4" fill="none"/>
 
   <!-- ===== pfSense ===== -->
-  <rect x="520" y="174" width="320" height="104" rx="8" fill="#F3F8FC" stroke="#08152F" stroke-width="1.8" filter="url(#sh)"/>
-  <rect x="520" y="174" width="320" height="6" rx="3" fill="#2DD4E8"/>
-  <text x="536" y="202" font-size="15" class="t" fill="#08152F">pfSense Firewall</text>
-  <text x="536" y="223" font-size="11" fill="#5A6478" class="mono">router-on-a-stick · gateways .10.1–.60.1</text>
-  <text x="536" y="240" font-size="11" fill="#5A6478">Hybrid NAT · default-deny per interface · unbound resolver</text>
-  <rect x="536" y="249" width="286" height="20" rx="10" fill="#E8F6EC" stroke="#008300" stroke-width="1"/>
-  <text x="546" y="263" font-size="10.5" fill="#065F27">✓ MGMT + VLAN 30 + VLAN 50 rulesets · AD zone forwarded to DC01</text>
+  <rect x="548" y="170" width="344" height="98" rx="12" fill="#ffffff" stroke="#E2E8F0" stroke-width="1.3" filter="url(#sh)"/>
+  <rect x="548" y="170" width="344" height="5" rx="2.5" fill="#2DD4E8"/>
+  <text x="566" y="198" font-size="15" class="t" fill="#08152F">pfSense Firewall · FW01</text>
+  <text x="566" y="217" font-size="10.5" class="mono" fill="#64748B">router-on-a-stick · gateways .10.1 to .60.1</text>
+  <text x="566" y="233" font-size="10.5" fill="#64748B">Hybrid NAT · default deny per interface · Unbound DNS</text>
+  <rect x="566" y="241" width="306" height="19" rx="9.5" fill="#ECFDF3" stroke="#16A34A" stroke-width="1"/>
+  <text x="719" y="254.5" font-size="10" text-anchor="middle" fill="#166534">✓ MGMT, VLAN 30, VLAN 50 rulesets · AD zone → DC01</text>
 
-  <!-- ===== Proxmox (right) ===== -->
-  <rect x="1000" y="174" width="400" height="152" rx="8" fill="#F8FAFC" stroke="#1B2F5E" stroke-width="1.8" filter="url(#sh)"/>
-  <rect x="1000" y="174" width="400" height="6" rx="3" fill="#1B2F5E"/>
-  <text x="1016" y="202" font-size="14.5" class="t" fill="#08152F">Proxmox VE · proxmox-01 (PVE01)</text>
-  <text x="1016" y="222" font-size="11" fill="#5A6478" class="mono">192.168.10.6 · 8 core · 32 GB · 2.67 TB · Wazuh agent 003</text>
-  <text x="1016" y="239" font-size="11" fill="#5A6478">VLAN-aware bridge vmbr0 · trunk uplink via Switch 2</text>
-  <text x="1016" y="256" font-size="10.5" fill="#5A6478">Guests tagged per VLAN · nightly backups → 2nd disk</text>
-  <g font-size="9" text-anchor="middle">
-    <rect x="1016" y="266" width="70" height="30" rx="5" fill="#FDECEC" stroke="#e34948"/><text x="1051" y="279" fill="#96201F">KALI01</text><text x="1051" y="290" fill="#96201F">VM 103 · 30</text>
-    <rect x="1090" y="266" width="70" height="30" rx="5" fill="#EAF7F1" stroke="#1baf7a"/><text x="1125" y="279" fill="#0A3D2B">SCAN01</text><text x="1125" y="290" fill="#0A3D2B">VM 104 · 20</text>
-    <rect x="1164" y="266" width="70" height="30" rx="5" fill="#F0EEFB" stroke="#4a3aa7"/><text x="1199" y="279" fill="#2E2470">WKS01</text><text x="1199" y="290" fill="#2E2470">VM 100 · 50</text>
-    <rect x="1238" y="266" width="70" height="30" rx="5" fill="#F1F5F9" stroke="#94a3b8" stroke-dasharray="4 3"/><text x="1273" y="279" fill="#5A6478">MON01</text><text x="1273" y="290" fill="#8A93A5">VM 102 · 60</text>
-    <rect x="1312" y="266" width="70" height="30" rx="5" fill="#F1F5F9" stroke="#94a3b8" stroke-dasharray="4 3"/><text x="1347" y="279" fill="#5A6478">ANS01</text><text x="1347" y="290" fill="#8A93A5">rebuild</text>
+  <!-- ===== Proxmox ===== -->
+  <rect x="1000" y="156" width="400" height="152" rx="12" fill="#ffffff" stroke="#E2E8F0" stroke-width="1.3" filter="url(#sh)"/>
+  <rect x="1000" y="156" width="400" height="5" rx="2.5" fill="#1B2F5E"/>
+  <text x="1018" y="184" font-size="14.5" class="t" fill="#08152F">Proxmox VE · PVE01 (proxmox-01)</text>
+  <text x="1018" y="203" font-size="10.5" class="mono" fill="#64748B">192.168.10.6 · 8 cores · 32 GB · 2.67 TB · agent 003</text>
+  <text x="1018" y="220" font-size="10.5" fill="#64748B">VLAN-aware bridge vmbr0 · guests tagged per VLAN · nightly backups</text>
+  <g font-size="9.5" text-anchor="middle">
+    <rect x="1018" y="232" width="68" height="34" rx="7" fill="#FEF2F2" stroke="#e34948"/><text x="1052" y="246" class="t" fill="#991B1B">KALI01</text><text x="1052" y="259" fill="#991B1B">VM 103 · 30</text>
+    <rect x="1093" y="232" width="68" height="34" rx="7" fill="#ECFDF5" stroke="#1baf7a"/><text x="1127" y="246" class="t" fill="#065F46">SCAN01</text><text x="1127" y="259" fill="#065F46">VM 104 · 20</text>
+    <rect x="1168" y="232" width="68" height="34" rx="7" fill="#F5F3FF" stroke="#4a3aa7"/><text x="1202" y="246" class="t" fill="#2E2470">WKS01</text><text x="1202" y="259" fill="#2E2470">VM 100 · 50</text>
+    <rect x="1243" y="232" width="68" height="34" rx="7" fill="#F5F3FF" stroke="#4a3aa7"/><text x="1277" y="246" class="t" fill="#2E2470">CA01</text><text x="1277" y="259" fill="#2E2470">VM 105 · 50</text>
+    <rect x="1318" y="232" width="68" height="34" rx="7" fill="#F5F3FF" stroke="#4a3aa7"/><text x="1352" y="246" class="t" fill="#2E2470">IDP01</text><text x="1352" y="259" fill="#2E2470">VM 106 · 50</text>
   </g>
-  <text x="1016" y="316" font-size="10.5" fill="#8A93A5">Dashed = planned or being rebuilt</text>
+  <text x="1018" y="292" font-size="10" fill="#94A3B8">MON01 and ANS01 return as guests when rebuilt</text>
 
-  <!-- pfSense -> switch -->
-  <line x1="600" y1="278" x2="600" y2="334" stroke="#1B2F5E" stroke-width="2" marker-end="url(#ar)"/>
-  <text x="610" y="304" font-size="11" fill="#08152F">Port 1 · 802.1Q trunk (tagged 10–60)</text>
-
-  <!-- ===== Switch 2 ===== -->
-  <rect x="1000" y="348" width="400" height="58" rx="8" fill="#F8FAFC" stroke="#1B2F5E" stroke-width="1.6" filter="url(#sh)"/>
-  <text x="1016" y="368" font-size="13" class="t" fill="#08152F">Switch 2 · secondary switch</text>
-  <text x="1016" y="384" font-size="10.5" fill="#5A6478">Uplink: Switch 1 Port 2 trunk (tagged VLANs 10–60)</text>
-  <text x="1016" y="398" font-size="10.5" fill="#5A6478">Tagged frames pass through to Proxmox vmbr0</text>
-  <line x1="960" y1="377" x2="998" y2="377" stroke="#1B2F5E" stroke-width="2" marker-end="url(#ar)"/>
-  <line x1="1200" y1="348" x2="1200" y2="328" stroke="#1B2F5E" stroke-width="1.8" marker-end="url(#ar)"/>
-  <text x="1210" y="342" font-size="10" fill="#08152F">trunk → vmbr0</text>
+  <!-- pfSense -> Switch 1 -->
+  <path d="M640 268 V328" stroke="#1B2F5E" stroke-opacity="0.6" stroke-width="1.8" fill="none" marker-end="url(#ar)"/>
+  <text x="650" y="302" font-size="10.5" fill="#334155">Port 1 · 802.1Q trunk (tagged 10 to 60)</text>
 
   <!-- ===== Switch 1 ===== -->
-  <rect x="360" y="336" width="600" height="88" rx="8" fill="#F8FAFC" stroke="#1B2F5E" stroke-width="1.8" filter="url(#sh)"/>
-  <text x="376" y="362" font-size="14" class="t" fill="#08152F">TP-Link TL-SG108E · 8-port managed switch</text>
+  <rect x="360" y="332" width="600" height="84" rx="12" fill="#ffffff" stroke="#E2E8F0" stroke-width="1.3" filter="url(#sh)"/>
+  <text x="378" y="356" font-size="13.5" class="t" fill="#08152F">TP-Link TL-SG108E · 8-port managed switch</text>
   <g font-size="10" text-anchor="middle">
-    <rect x="376" y="374" width="64" height="34" rx="4" fill="#E3F1FB" stroke="#08152F"/><text x="408" y="388" class="t" fill="#08152F">P1 trunk</text><text x="408" y="401" fill="#5A6478">pfSense</text>
-    <rect x="446" y="374" width="64" height="34" rx="4" fill="#E3F1FB" stroke="#08152F"/><text x="478" y="388" class="t" fill="#08152F">P2 trunk</text><text x="478" y="401" fill="#5A6478">→ Switch 2</text>
-    <rect x="516" y="374" width="64" height="34" rx="4" fill="#F8FAFC" stroke="#94a3b8"/><text x="548" y="388" fill="#08152F">P3 acc</text><text x="548" y="401" class="t" fill="#2a78d6">V10</text>
-    <rect x="586" y="374" width="64" height="34" rx="4" fill="#F8FAFC" stroke="#94a3b8"/><text x="618" y="388" fill="#08152F">P4 acc</text><text x="618" y="401" class="t" fill="#127C56">V20</text>
-    <rect x="656" y="374" width="64" height="34" rx="4" fill="#F8FAFC" stroke="#94a3b8"/><text x="688" y="388" fill="#08152F">P5 acc</text><text x="688" y="401" class="t" fill="#C43230">V30</text>
-    <rect x="726" y="374" width="64" height="34" rx="4" fill="#F8FAFC" stroke="#94a3b8"/><text x="758" y="388" fill="#08152F">P6 acc</text><text x="758" y="401" class="t" fill="#8A5E00">V40</text>
-    <rect x="796" y="374" width="64" height="34" rx="4" fill="#F8FAFC" stroke="#94a3b8"/><text x="828" y="388" fill="#08152F">P7 acc</text><text x="828" y="401" class="t" fill="#4a3aa7">V50</text>
-    <rect x="866" y="374" width="64" height="34" rx="4" fill="#F8FAFC" stroke="#94a3b8"/><text x="898" y="388" fill="#08152F">P8 acc</text><text x="898" y="401" class="t" fill="#008300">V60</text>
+    <rect x="378" y="368" width="64" height="36" rx="7" fill="#EFF6FF" stroke="#1B2F5E" stroke-width="1"/><text x="410" y="383" class="t" fill="#08152F">P1 trunk</text><text x="410" y="397" fill="#64748B">pfSense</text>
+    <rect x="448" y="368" width="64" height="36" rx="7" fill="#EFF6FF" stroke="#1B2F5E" stroke-width="1"/><text x="480" y="383" class="t" fill="#08152F">P2 trunk</text><text x="480" y="397" fill="#64748B">→ Switch 2</text>
+    <rect x="518" y="368" width="64" height="36" rx="7" fill="#ffffff" stroke="#CBD5E1"/><text x="550" y="383" fill="#334155">P3 access</text><text x="550" y="397" class="t" fill="#1D5FAF">VLAN 10</text>
+    <rect x="588" y="368" width="64" height="36" rx="7" fill="#ffffff" stroke="#CBD5E1"/><text x="620" y="383" fill="#334155">P4 access</text><text x="620" y="397" class="t" fill="#127C56">VLAN 20</text>
+    <rect x="658" y="368" width="64" height="36" rx="7" fill="#ffffff" stroke="#CBD5E1"/><text x="690" y="383" fill="#334155">P5 access</text><text x="690" y="397" class="t" fill="#C43230">VLAN 30</text>
+    <rect x="728" y="368" width="64" height="36" rx="7" fill="#ffffff" stroke="#CBD5E1"/><text x="760" y="383" fill="#334155">P6 access</text><text x="760" y="397" class="t" fill="#8A5E00">VLAN 40</text>
+    <rect x="798" y="368" width="64" height="36" rx="7" fill="#ffffff" stroke="#CBD5E1"/><text x="830" y="383" fill="#334155">P7 access</text><text x="830" y="397" class="t" fill="#4a3aa7">VLAN 50</text>
+    <rect x="868" y="368" width="64" height="36" rx="7" fill="#ffffff" stroke="#CBD5E1"/><text x="900" y="383" fill="#334155">P8 access</text><text x="900" y="397" class="t" fill="#006B00">VLAN 60</text>
   </g>
 
-  <!-- distribution bus -->
-  <line x1="660" y1="424" x2="660" y2="448" stroke="#1B2F5E" stroke-width="1.6"/>
-  <line x1="147" y1="448" x2="1322" y2="448" stroke="#1B2F5E" stroke-width="1.6"/>
-  <text x="1332" y="445" font-size="10" fill="#5A6478">access ports 3–8</text>
-  <text x="1332" y="458" font-size="10" fill="#5A6478">(untagged, 1 VLAN each)</text>
+  <!-- ===== Switch 2 ===== -->
+  <path d="M960 374 H996" stroke="#1B2F5E" stroke-opacity="0.6" stroke-width="1.8" fill="none" marker-end="url(#ar)"/>
+  <rect x="1000" y="342" width="400" height="64" rx="12" fill="#ffffff" stroke="#E2E8F0" stroke-width="1.3" filter="url(#sh)"/>
+  <text x="1018" y="364" font-size="13" class="t" fill="#08152F">Switch 2 · secondary switch</text>
+  <text x="1018" y="381" font-size="10.5" fill="#64748B">Uplink from Switch 1 port 2 · trunk, VLANs 10 to 60</text>
+  <text x="1018" y="396" font-size="10.5" fill="#64748B">Tagged frames pass straight through to vmbr0</text>
+  <path d="M1200 342 V312" stroke="#1B2F5E" stroke-opacity="0.6" stroke-width="1.8" fill="none" marker-end="url(#ar)"/>
+  <text x="1210" y="331" font-size="10" fill="#334155">trunk → vmbr0</text>
+
+  <!-- ===== Distribution to the access ports ===== -->
+  <path d="M660 416 V444" stroke="#1B2F5E" stroke-opacity="0.6" stroke-width="1.6" fill="none"/>
+  <path d="M147 444 H1322" stroke="#1B2F5E" stroke-opacity="0.6" stroke-width="1.6" fill="none"/>
+  <g stroke-width="1.6" fill="none">
+    <path d="M147 444 V466" stroke="#2a78d6" marker-end="url(#ar)"/>
+    <path d="M382 444 V466" stroke="#1baf7a" marker-end="url(#ar)"/>
+    <path d="M617 444 V466" stroke="#e34948" marker-end="url(#ar)"/>
+    <path d="M852 444 V466" stroke="#eda100" marker-end="url(#ar)"/>
+    <path d="M1087 444 V466" stroke="#4a3aa7" marker-end="url(#ar)"/>
+    <path d="M1322 444 V466" stroke="#008300" marker-end="url(#ar)"/>
+  </g>
+  <g>
+    <circle cx="147" cy="444" r="3.5" fill="#2a78d6"/><circle cx="382" cy="444" r="3.5" fill="#1baf7a"/>
+    <circle cx="617" cy="444" r="3.5" fill="#e34948"/><circle cx="852" cy="444" r="3.5" fill="#eda100"/>
+    <circle cx="1087" cy="444" r="3.5" fill="#4a3aa7"/><circle cx="1322" cy="444" r="3.5" fill="#008300"/>
+  </g>
+  <text x="1332" y="438" font-size="9.5" fill="#64748B">access ports 3 to 8</text>
 
   <!-- ===== VLAN 10 · Management ===== -->
   <g>
-    <line x1="147" y1="448" x2="147" y2="474" stroke="#2a78d6" stroke-width="1.6" marker-end="url(#ar)"/>
-    <rect x="40" y="478" width="215" height="300" rx="8" fill="#F7FBFE" stroke="#2a78d6" stroke-width="1.5" filter="url(#sh)"/>
-    <rect x="40" y="478" width="215" height="44" rx="8" fill="#2a78d6"/>
-    <text x="52" y="499" font-size="13" class="t" fill="#ffffff">VLAN 10 · Management</text>
-    <text x="52" y="515" font-size="10.5" class="mono" fill="#E3F1FB">192.168.10.0/24 · Port 3</text>
-    <rect x="52" y="532" width="191" height="22" rx="11" fill="#E8F6EC" stroke="#008300"/><text x="147" y="547" font-size="10.5" text-anchor="middle" fill="#065F27">✓ Firewalled (MGMT-01…10)</text>
-    <rect x="52" y="564" width="191" height="38" rx="6" fill="#fff" stroke="#D3DEE6"/><text x="62" y="581" font-size="11.5" class="t" fill="#08152F">ADM01 · admin laptop</text><text x="62" y="595" font-size="10" class="mono" fill="#5A6478">192.168.10.3 · 002 · Sysmon</text>
-    <rect x="52" y="606" width="191" height="38" rx="6" fill="#fff" stroke="#D3DEE6"/><text x="62" y="623" font-size="11.5" class="t" fill="#08152F">pfSense mgmt</text><text x="62" y="637" font-size="10" class="mono" fill="#5A6478">192.168.10.1 (gateway)</text>
-    <rect x="52" y="648" width="191" height="38" rx="6" fill="#fff" stroke="#D3DEE6"/><text x="62" y="665" font-size="11.5" class="t" fill="#08152F">PVE01 · Proxmox mgmt</text><text x="62" y="679" font-size="10" class="mono" fill="#5A6478">192.168.10.6 · agent 003</text>
-    <rect x="52" y="690" width="191" height="38" rx="6" fill="#fff" stroke="#D3DEE6"/><text x="62" y="707" font-size="11.5" class="t" fill="#08152F">LAB01 · practice host</text><text x="62" y="721" font-size="10" class="mono" fill="#5A6478">192.168.10.4 · no agent</text>
-    <rect x="52" y="732" width="191" height="38" rx="6" fill="#F8FAFC" stroke="#D3DEE6" stroke-dasharray="4 3"/><text x="62" y="749" font-size="11.5" class="t" fill="#5A6478">ANS01 · Ansible</text><text x="62" y="763" font-size="10" fill="#8A93A5">destroyed · rebuild pending</text>
+    <rect x="40" y="470" width="215" height="348" rx="12" fill="#ffffff" stroke="#E2E8F0" stroke-width="1.3" filter="url(#sh)"/>
+    <path d="M52 470 H243 A12 12 0 0 1 255 482 V520 H40 V482 A12 12 0 0 1 52 470 Z" fill="#2a78d6"/>
+    <text x="54" y="492" font-size="13.5" class="t" fill="#ffffff">VLAN 10 · Management</text>
+    <text x="54" y="509" font-size="10.5" class="mono" fill="#DBEAFE">192.168.10.0/24 · Port 3</text>
+    <rect x="52" y="530" width="191" height="22" rx="11" fill="#ECFDF3" stroke="#16A34A"/><text x="147" y="545" font-size="10.5" text-anchor="middle" fill="#166534">✓ Firewalled (MGMT-01 to 10)</text>
+    <g>
+      <rect x="52" y="564" width="191" height="46" rx="8" fill="#ffffff" stroke="#E5EAF1"/><rect x="52" y="564" width="4" height="46" rx="2" fill="#2a78d6"/>
+      <text x="64" y="580" font-size="11.5" class="t" fill="#0F172A">ADM01 · admin laptop</text><text x="64" y="593" font-size="10" class="mono" fill="#64748B">192.168.10.3</text><text x="64" y="605" font-size="10" fill="#15803D">● agent 002 · Sysmon</text>
+      <rect x="52" y="614" width="191" height="46" rx="8" fill="#ffffff" stroke="#E5EAF1"/><rect x="52" y="614" width="4" height="46" rx="2" fill="#2a78d6"/>
+      <text x="64" y="630" font-size="11.5" class="t" fill="#0F172A">pfSense management</text><text x="64" y="643" font-size="10" class="mono" fill="#64748B">192.168.10.1</text><text x="64" y="655" font-size="10" fill="#64748B">gateway for every VLAN</text>
+      <rect x="52" y="664" width="191" height="46" rx="8" fill="#ffffff" stroke="#E5EAF1"/><rect x="52" y="664" width="4" height="46" rx="2" fill="#2a78d6"/>
+      <text x="64" y="680" font-size="11.5" class="t" fill="#0F172A">PVE01 · Proxmox host</text><text x="64" y="693" font-size="10" class="mono" fill="#64748B">192.168.10.6</text><text x="64" y="705" font-size="10" fill="#15803D">● agent 003</text>
+      <rect x="52" y="714" width="191" height="46" rx="8" fill="#ffffff" stroke="#E5EAF1"/><rect x="52" y="714" width="4" height="46" rx="2" fill="#2a78d6"/>
+      <text x="64" y="730" font-size="11.5" class="t" fill="#0F172A">LAB01 · practice host</text><text x="64" y="743" font-size="10" class="mono" fill="#64748B">192.168.10.4</text><text x="64" y="755" font-size="10" fill="#64748B">training</text>
+      <rect x="52" y="764" width="191" height="46" rx="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-dasharray="4 3"/>
+      <text x="64" y="780" font-size="11.5" class="t" fill="#64748B">ANS01 · Ansible</text><text x="64" y="793" font-size="10" class="mono" fill="#94A3B8">192.168.10.2</text><text x="64" y="805" font-size="10" fill="#B45309">● rebuild planned</text>
+    </g>
   </g>
 
   <!-- ===== VLAN 20 · BlueTeam ===== -->
   <g>
-    <line x1="382" y1="448" x2="382" y2="474" stroke="#1baf7a" stroke-width="1.6" marker-end="url(#ar)"/>
-    <rect x="275" y="478" width="215" height="300" rx="8" fill="#F5FCF9" stroke="#1baf7a" stroke-width="1.5" filter="url(#sh)"/>
-    <rect x="275" y="478" width="215" height="44" rx="8" fill="#1baf7a"/>
-    <text x="287" y="499" font-size="13" class="t" fill="#062B1E">VLAN 20 · BlueTeam</text>
-    <text x="287" y="515" font-size="10.5" class="mono" fill="#0A3D2B">192.168.20.0/24 · Port 4</text>
-    <rect x="287" y="532" width="191" height="22" rx="11" fill="#FCF3DC" stroke="#eda100"/><text x="382" y="547" font-size="10.5" text-anchor="middle" fill="#7A5300">⚠ any→any (to tighten)</text>
-    <rect x="287" y="564" width="191" height="66" rx="6" fill="#fff" stroke="#1baf7a" stroke-width="1.3"/>
-    <text x="297" y="581" font-size="11.5" class="t" fill="#08152F">SIEM01 · Wazuh 4.14.7</text>
-    <text x="297" y="596" font-size="10" class="mono" fill="#5A6478">192.168.20.2 · Ubuntu 24.04</text>
-    <text x="297" y="609" font-size="10" fill="#5A6478">physical · Dell OptiPlex 9020</text>
-    <text x="297" y="623" font-size="10" fill="#065F27">● manager · 4 agents reporting</text>
-    <rect x="287" y="638" width="191" height="66" rx="6" fill="#fff" stroke="#1baf7a" stroke-width="1.3"/>
-    <text x="297" y="655" font-size="11.5" class="t" fill="#08152F">SCAN01 · Greenbone CE</text>
-    <text x="297" y="670" font-size="10" class="mono" fill="#5A6478">192.168.20.3 · Ubuntu 26.04</text>
-    <text x="297" y="683" font-size="10" fill="#5A6478">Proxmox VM 104 · Tier 0</text>
-    <text x="297" y="697" font-size="10" fill="#065F27">● 186,567 tests · 4 feeds loaded</text>
-    <text x="287" y="722" font-size="10.5" fill="#5A6478">Scanner is a VM, not a</text>
-    <text x="287" y="738" font-size="10.5" fill="#5A6478">container: it stores admin</text>
-    <text x="287" y="754" font-size="10.5" fill="#5A6478">credentials for every host.</text>
+    <rect x="275" y="470" width="215" height="348" rx="12" fill="#ffffff" stroke="#E2E8F0" stroke-width="1.3" filter="url(#sh)"/>
+    <path d="M287 470 H478 A12 12 0 0 1 490 482 V520 H275 V482 A12 12 0 0 1 287 470 Z" fill="#1baf7a"/>
+    <text x="289" y="492" font-size="13.5" class="t" fill="#052E1F">VLAN 20 · BlueTeam</text>
+    <text x="289" y="509" font-size="10.5" class="mono" fill="#064E35">192.168.20.0/24 · Port 4</text>
+    <rect x="287" y="530" width="191" height="22" rx="11" fill="#F1F5F9" stroke="#CBD5E1"/><text x="382" y="545" font-size="10.5" text-anchor="middle" fill="#475569">Defensive tooling</text>
+    <rect x="287" y="564" width="191" height="46" rx="8" fill="#ffffff" stroke="#E5EAF1"/><rect x="287" y="564" width="4" height="46" rx="2" fill="#1baf7a"/>
+    <text x="299" y="580" font-size="11.5" class="t" fill="#0F172A">SIEM01 · Wazuh 4.14.7</text><text x="299" y="593" font-size="10" class="mono" fill="#64748B">192.168.20.2 · physical</text><text x="299" y="605" font-size="10" fill="#15803D">● manager · 6 agents</text>
+    <rect x="287" y="614" width="191" height="46" rx="8" fill="#ffffff" stroke="#E5EAF1"/><rect x="287" y="614" width="4" height="46" rx="2" fill="#1baf7a"/>
+    <text x="299" y="630" font-size="11.5" class="t" fill="#0F172A">SCAN01 · Greenbone CE</text><text x="299" y="643" font-size="10" class="mono" fill="#64748B">192.168.20.3 · VM 104</text><text x="299" y="655" font-size="10" fill="#15803D">● 186,567 tests loaded</text>
+    <text x="289" y="688" font-size="10.5" fill="#64748B">SIEM01 has dedicated</text>
+    <text x="289" y="704" font-size="10.5" fill="#64748B">hardware. SCAN01 is a full</text>
+    <text x="289" y="720" font-size="10.5" fill="#64748B">VM, treated as Tier 0: it holds</text>
+    <text x="289" y="736" font-size="10.5" fill="#64748B">the scan identity's credential.</text>
   </g>
 
   <!-- ===== VLAN 30 · RedTeam ===== -->
   <g>
-    <line x1="617" y1="448" x2="617" y2="474" stroke="#e34948" stroke-width="1.6" marker-end="url(#ar)"/>
-    <rect x="510" y="478" width="215" height="300" rx="8" fill="#FEF8F8" stroke="#e34948" stroke-width="1.5" filter="url(#sh)"/>
-    <rect x="510" y="478" width="215" height="44" rx="8" fill="#e34948"/>
-    <text x="522" y="499" font-size="13" class="t" fill="#ffffff">VLAN 30 · RedTeam</text>
-    <text x="522" y="515" font-size="10.5" class="mono" fill="#FDECEC">192.168.30.0/24 · Port 5</text>
-    <rect x="522" y="532" width="191" height="22" rx="11" fill="#E8F6EC" stroke="#008300"/><text x="617" y="547" font-size="10.5" text-anchor="middle" fill="#065F27">✓ Contained (RED-01…03)</text>
-    <rect x="522" y="564" width="191" height="66" rx="6" fill="#fff" stroke="#D3DEE6"/>
-    <text x="532" y="581" font-size="11.5" class="t" fill="#08152F">KALI01</text>
-    <text x="532" y="596" font-size="10" class="mono" fill="#5A6478">192.168.30.2 · Kali 2026.2</text>
-    <text x="532" y="609" font-size="10" fill="#5A6478">Proxmox VM 103 (tag 30)</text>
-    <text x="532" y="623" font-size="10" fill="#065F27">● active · snapshot taken</text>
-    <text x="522" y="650" font-size="10.5" fill="#5A6478">Attack simulation.</text>
-    <text x="522" y="674" font-size="10.5" fill="#065F27">Cannot reach DC01 or</text>
-    <text x="522" y="690" font-size="10.5" fill="#065F27">pfSense admin · proven</text>
-    <text x="522" y="706" font-size="10.5" fill="#065F27">by test (docs/15).</text>
+    <rect x="510" y="470" width="215" height="348" rx="12" fill="#ffffff" stroke="#E2E8F0" stroke-width="1.3" filter="url(#sh)"/>
+    <path d="M522 470 H713 A12 12 0 0 1 725 482 V520 H510 V482 A12 12 0 0 1 522 470 Z" fill="#e34948"/>
+    <text x="524" y="492" font-size="13.5" class="t" fill="#ffffff">VLAN 30 · RedTeam</text>
+    <text x="524" y="509" font-size="10.5" class="mono" fill="#FEE2E2">192.168.30.0/24 · Port 5</text>
+    <rect x="522" y="530" width="191" height="22" rx="11" fill="#ECFDF3" stroke="#16A34A"/><text x="617" y="545" font-size="10.5" text-anchor="middle" fill="#166534">✓ Contained (RED-01 to 03)</text>
+    <rect x="522" y="564" width="191" height="46" rx="8" fill="#ffffff" stroke="#E5EAF1"/><rect x="522" y="564" width="4" height="46" rx="2" fill="#e34948"/>
+    <text x="534" y="580" font-size="11.5" class="t" fill="#0F172A">KALI01 · Kali 2026.2</text><text x="534" y="593" font-size="10" class="mono" fill="#64748B">192.168.30.2 · VM 103</text><text x="534" y="605" font-size="10" fill="#15803D">● active · snapshot taken</text>
+    <text x="524" y="638" font-size="10.5" fill="#64748B">Attack simulation.</text>
+    <text x="524" y="662" font-size="10.5" fill="#15803D">Cannot reach DC01 or the</text>
+    <text x="524" y="678" font-size="10.5" fill="#15803D">pfSense admin interface,</text>
+    <text x="524" y="694" font-size="10.5" fill="#15803D">proven by test (docs/15).</text>
   </g>
 
   <!-- ===== VLAN 40 · DevOps ===== -->
   <g>
-    <line x1="852" y1="448" x2="852" y2="474" stroke="#eda100" stroke-width="1.6" marker-end="url(#ar)"/>
-    <rect x="745" y="478" width="215" height="300" rx="8" fill="#FEFBF4" stroke="#eda100" stroke-width="1.5" filter="url(#sh)"/>
-    <rect x="745" y="478" width="215" height="44" rx="8" fill="#eda100"/>
-    <text x="757" y="499" font-size="13" class="t" fill="#3D2B00">VLAN 40 · DevOps</text>
-    <text x="757" y="515" font-size="10.5" class="mono" fill="#5A3F00">192.168.40.0/24 · Port 6</text>
-    <rect x="757" y="532" width="191" height="22" rx="11" fill="#FCF3DC" stroke="#eda100"/><text x="852" y="547" font-size="10.5" text-anchor="middle" fill="#7A5300">⚠ any→any (to tighten)</text>
-    <rect x="757" y="564" width="191" height="66" rx="6" fill="#fff" stroke="#D3DEE6"/>
-    <text x="767" y="581" font-size="11.5" class="t" fill="#08152F">APP01</text>
-    <text x="767" y="596" font-size="10" class="mono" fill="#5A6478">192.168.40.2 · physical</text>
-    <text x="767" y="609" font-size="10" fill="#5A6478">2 web apps · Tailscale Serve</text>
-    <text x="767" y="623" font-size="10" fill="#C43230">● no Wazuh agent yet</text>
-    <rect x="757" y="638" width="191" height="54" rx="6" fill="#F8FAFC" stroke="#D3DEE6" stroke-dasharray="4 3"/>
-    <text x="767" y="655" font-size="11.5" class="t" fill="#5A6478">VAULT01</text>
-    <text x="767" y="670" font-size="10" fill="#8A93A5">HashiCorp Vault · not built</text>
-    <text x="767" y="684" font-size="10" fill="#8A5E00">● blocks the scan-credential fix</text>
-    <text x="757" y="712" font-size="10.5" fill="#5A6478">The only unmonitored host</text>
-    <text x="757" y="728" font-size="10.5" fill="#5A6478">in the estate. DEV-01 rule</text>
-    <text x="757" y="744" font-size="10.5" fill="#5A6478">and an agent are next.</text>
+    <rect x="745" y="470" width="215" height="348" rx="12" fill="#ffffff" stroke="#E2E8F0" stroke-width="1.3" filter="url(#sh)"/>
+    <path d="M757 470 H948 A12 12 0 0 1 960 482 V520 H745 V482 A12 12 0 0 1 757 470 Z" fill="#eda100"/>
+    <text x="759" y="492" font-size="13.5" class="t" fill="#2E2000">VLAN 40 · DevOps</text>
+    <text x="759" y="509" font-size="10.5" class="mono" fill="#4A3500">192.168.40.0/24 · Port 6</text>
+    <rect x="757" y="530" width="191" height="22" rx="11" fill="#F1F5F9" stroke="#CBD5E1"/><text x="852" y="545" font-size="10.5" text-anchor="middle" fill="#475569">Application hosting</text>
+    <rect x="757" y="564" width="191" height="46" rx="8" fill="#ffffff" stroke="#E5EAF1"/><rect x="757" y="564" width="4" height="46" rx="2" fill="#eda100"/>
+    <text x="769" y="580" font-size="11.5" class="t" fill="#0F172A">APP01 · application host</text><text x="769" y="593" font-size="10" class="mono" fill="#64748B">192.168.40.2 · physical</text><text x="769" y="605" font-size="10" fill="#15803D">● agent 005</text>
+    <rect x="757" y="614" width="191" height="46" rx="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-dasharray="4 3"/>
+    <text x="769" y="630" font-size="11.5" class="t" fill="#64748B">VAULT01 · HashiCorp Vault</text><text x="769" y="643" font-size="10" class="mono" fill="#94A3B8">not built</text><text x="769" y="655" font-size="10" fill="#B45309">● planned · secrets engine</text>
+    <text x="759" y="688" font-size="10.5" fill="#64748B">Internal web applications,</text>
+    <text x="759" y="704" font-size="10.5" fill="#64748B">published to the owner's</text>
+    <text x="759" y="720" font-size="10.5" fill="#64748B">devices with Tailscale Serve.</text>
   </g>
 
   <!-- ===== VLAN 50 · EnterpriseLAN ===== -->
   <g>
-    <line x1="1087" y1="448" x2="1087" y2="474" stroke="#4a3aa7" stroke-width="1.6" marker-end="url(#ar)"/>
-    <rect x="980" y="478" width="215" height="300" rx="8" fill="#FAF9FE" stroke="#4a3aa7" stroke-width="1.5" filter="url(#sh)"/>
-    <rect x="980" y="478" width="215" height="44" rx="8" fill="#4a3aa7"/>
-    <text x="992" y="499" font-size="13" class="t" fill="#ffffff">VLAN 50 · EnterpriseLAN</text>
-    <text x="992" y="515" font-size="10.5" class="mono" fill="#E0DCF5">192.168.50.0/24 · Port 7</text>
-    <rect x="992" y="532" width="191" height="22" rx="11" fill="#E8F6EC" stroke="#008300"/><text x="1087" y="547" font-size="10.5" text-anchor="middle" fill="#065F27">✓ Firewalled + isolated</text>
-    <rect x="992" y="564" width="191" height="66" rx="6" fill="#fff" stroke="#4a3aa7" stroke-width="1.3"/>
-    <text x="1002" y="581" font-size="11.5" class="t" fill="#08152F">★ DC01 · WS 2025</text>
-    <text x="1002" y="596" font-size="10" class="mono" fill="#5A6478">192.168.50.2 · physical</text>
-    <text x="1002" y="609" font-size="10" fill="#5A6478">AD DS + DNS · corp.biirabank.com</text>
-    <text x="1002" y="623" font-size="10" fill="#065F27">● agent 001 · Sysmon</text>
-    <rect x="992" y="638" width="191" height="66" rx="6" fill="#fff" stroke="#4a3aa7" stroke-width="1.3"/>
-    <text x="1002" y="655" font-size="11.5" class="t" fill="#08152F">WKS01 · Windows 11 Pro</text>
-    <text x="1002" y="670" font-size="10" class="mono" fill="#5A6478">192.168.50.56 (DHCP) · VM 100</text>
-    <text x="1002" y="683" font-size="10" fill="#5A6478">domain member · SEC-Scanner-Access</text>
-    <text x="1002" y="697" font-size="10" fill="#065F27">● agent 004 · Sysmon · CIS 26%</text>
-    <text x="992" y="722" font-size="10.5" fill="#5A6478">ENT-01…05 permit DNS/NTP,</text>
-    <text x="992" y="738" font-size="10.5" fill="#5A6478">ICMP, internet and the</text>
-    <text x="992" y="754" font-size="10.5" fill="#5A6478">Wazuh agent to SIEM01.</text>
+    <rect x="980" y="470" width="215" height="348" rx="12" fill="#ffffff" stroke="#E2E8F0" stroke-width="1.3" filter="url(#sh)"/>
+    <path d="M992 470 H1183 A12 12 0 0 1 1195 482 V520 H980 V482 A12 12 0 0 1 992 470 Z" fill="#4a3aa7"/>
+    <text x="994" y="492" font-size="13.5" class="t" fill="#ffffff">VLAN 50 · EnterpriseLAN</text>
+    <text x="994" y="509" font-size="10.5" class="mono" fill="#E0DCF5">192.168.50.0/24 · Port 7</text>
+    <rect x="992" y="530" width="191" height="22" rx="11" fill="#ECFDF3" stroke="#16A34A"/><text x="1087" y="545" font-size="10.5" text-anchor="middle" fill="#166534">✓ Firewalled + isolated</text>
+    <!-- Tier 0 identity group -->
+    <rect x="986" y="558" width="203" height="174" rx="10" fill="#F0FAFC" stroke="#0E7490" stroke-width="1.2" stroke-dasharray="5 3"/>
+    <text x="996" y="573" font-size="9.5" class="t" fill="#0E7490" letter-spacing="1.2">TIER 0 · IDENTITY</text>
+    <rect x="992" y="580" width="191" height="46" rx="8" fill="#ffffff" stroke="#E5EAF1"/><rect x="992" y="580" width="4" height="46" rx="2" fill="#4a3aa7"/>
+    <text x="1004" y="596" font-size="11.5" class="t" fill="#0F172A">DC01 · AD DS + DNS</text><text x="1004" y="609" font-size="10" class="mono" fill="#64748B">192.168.50.2 · LDAPS</text><text x="1004" y="621" font-size="10" fill="#15803D">● agent 001 · Sysmon</text>
+    <rect x="992" y="630" width="191" height="46" rx="8" fill="#ffffff" stroke="#E5EAF1"/><rect x="992" y="630" width="4" height="46" rx="2" fill="#4a3aa7"/>
+    <text x="1004" y="646" font-size="11.5" class="t" fill="#0F172A">CA01 · root CA (AD CS)</text><text x="1004" y="659" font-size="10" class="mono" fill="#64748B">192.168.50.3 · VM 105</text><text x="1004" y="671" font-size="10" fill="#B45309">● Wazuh agent planned</text>
+    <rect x="992" y="680" width="191" height="46" rx="8" fill="#ffffff" stroke="#E5EAF1"/><rect x="992" y="680" width="4" height="46" rx="2" fill="#4a3aa7"/>
+    <text x="1004" y="696" font-size="11.5" class="t" fill="#0F172A">IDP01 · Keycloak IdP</text><text x="1004" y="709" font-size="10" class="mono" fill="#64748B">192.168.50.4 · VM 106</text><text x="1004" y="721" font-size="10" fill="#15803D">● agent 006 · being built</text>
+    <rect x="992" y="740" width="191" height="46" rx="8" fill="#ffffff" stroke="#E5EAF1"/><rect x="992" y="740" width="4" height="46" rx="2" fill="#4a3aa7"/>
+    <text x="1004" y="756" font-size="11.5" class="t" fill="#0F172A">WKS01 · Windows 11 Pro</text><text x="1004" y="769" font-size="10" class="mono" fill="#64748B">DHCP · VM 100</text><text x="1004" y="781" font-size="10" fill="#15803D">● agent 004 · Sysmon</text>
   </g>
 
   <!-- ===== VLAN 60 · Monitoring ===== -->
   <g>
-    <line x1="1322" y1="448" x2="1322" y2="474" stroke="#008300" stroke-width="1.6" marker-end="url(#ar)"/>
-    <rect x="1215" y="478" width="215" height="300" rx="8" fill="#F5FBF5" stroke="#008300" stroke-width="1.5" filter="url(#sh)"/>
-    <rect x="1215" y="478" width="215" height="44" rx="8" fill="#008300"/>
-    <text x="1227" y="499" font-size="13" class="t" fill="#ffffff">VLAN 60 · Monitoring</text>
-    <text x="1227" y="515" font-size="10.5" class="mono" fill="#D9EFD9">192.168.60.0/24 · Port 8</text>
-    <rect x="1227" y="532" width="191" height="22" rx="11" fill="#FCF3DC" stroke="#eda100"/><text x="1322" y="547" font-size="10.5" text-anchor="middle" fill="#7A5300">⚠ any→any (to tighten)</text>
-    <rect x="1227" y="564" width="191" height="66" rx="6" fill="#F8FAFC" stroke="#D3DEE6" stroke-dasharray="4 3"/>
-    <text x="1237" y="581" font-size="11.5" class="t" fill="#5A6478">MON01</text>
-    <text x="1237" y="596" font-size="10" class="mono" fill="#8A93A5">192.168.60.2 · Proxmox VM 102</text>
-    <text x="1237" y="609" font-size="10" fill="#8A93A5">Grafana + Prometheus</text>
-    <text x="1237" y="623" font-size="10" fill="#8A5E00">● not yet rebuilt</text>
-    <text x="1227" y="650" font-size="10.5" fill="#5A6478">Metrics and dashboards.</text>
-    <text x="1227" y="674" font-size="10.5" fill="#5A6478">Removed from the old host</text>
-    <text x="1227" y="690" font-size="10.5" fill="#5A6478">during the SIEM01 rebuild;</text>
-    <text x="1227" y="706" font-size="10.5" fill="#5A6478">no metrics stack today.</text>
+    <rect x="1215" y="470" width="215" height="348" rx="12" fill="#ffffff" stroke="#E2E8F0" stroke-width="1.3" filter="url(#sh)"/>
+    <path d="M1227 470 H1418 A12 12 0 0 1 1430 482 V520 H1215 V482 A12 12 0 0 1 1227 470 Z" fill="#008300"/>
+    <text x="1229" y="492" font-size="13.5" class="t" fill="#ffffff">VLAN 60 · Monitoring</text>
+    <text x="1229" y="509" font-size="10.5" class="mono" fill="#D9EFD9">192.168.60.0/24 · Port 8</text>
+    <rect x="1227" y="530" width="191" height="22" rx="11" fill="#F1F5F9" stroke="#CBD5E1"/><text x="1322" y="545" font-size="10.5" text-anchor="middle" fill="#475569">Metrics</text>
+    <rect x="1227" y="564" width="191" height="46" rx="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-dasharray="4 3"/>
+    <text x="1239" y="580" font-size="11.5" class="t" fill="#64748B">MON01 · Grafana + Prometheus</text><text x="1239" y="593" font-size="10" class="mono" fill="#94A3B8">192.168.60.2 · VM 102</text><text x="1239" y="605" font-size="10" fill="#B45309">● rebuild planned</text>
+    <text x="1229" y="638" font-size="10.5" fill="#64748B">Metrics and dashboards.</text>
+    <text x="1229" y="654" font-size="10.5" fill="#64748B">Moved off the old host in the</text>
+    <text x="1229" y="670" font-size="10.5" fill="#64748B">SIEM01 rebuild; returns as a</text>
+    <text x="1229" y="686" font-size="10.5" fill="#64748B">Proxmox guest.</text>
   </g>
 
   <!-- ===== Legend ===== -->
-  <rect x="40" y="798" width="1390" height="36" rx="6" fill="#F8FAFC" stroke="#D3DEE6"/>
-  <text x="54" y="821" font-size="11" fill="#08152F">
-    <tspan class="t">Legend:</tspan>
-    <tspan dx="10" fill="#065F27">✓ ruleset built</tspan>
-    <tspan dx="12" fill="#7A5300">⚠ still any→any</tspan>
-    <tspan dx="12" fill="#065F27">● active</tspan>
-    <tspan dx="12" fill="#8A5E00">● planned</tspan>
-    <tspan dx="12" fill="#C43230">● gap</tspan>
-    <tspan dx="14" fill="#08152F">★ domain controller</tspan>
-    <tspan dx="14" fill="#5A6478">dashed = planned or rebuilding</tspan>
-    <tspan dx="14" fill="#4a3aa7">Tailscale reaches all VLANs, bypassing per-interface rules (hardening item H-02)</tspan>
+  <rect x="40" y="836" width="1390" height="34" rx="10" fill="#ffffff" stroke="#E2E8F0"/>
+  <text x="56" y="858" font-size="11" fill="#0F172A">
+    <tspan class="t">Legend</tspan>
+    <tspan dx="14" fill="#166534">✓ ruleset built</tspan>
+    <tspan dx="16" fill="#15803D">● active</tspan>
+    <tspan dx="16" fill="#B45309">● planned</tspan>
+    <tspan dx="16" fill="#64748B">dashed card = planned or being rebuilt</tspan>
+    <tspan dx="16" fill="#0E7490">dashed teal group = Tier 0 identity systems, kept together on VLAN 50</tspan>
+    <tspan dx="16" fill="#64748B">coloured bar = the host's VLAN</tspan>
   </text>
-  <text x="40" y="856" font-size="9.5" fill="#8A93A5">Zone colour is reinforcement only; every zone is labelled with its VLAN number, name, subnet and switch port. Hues validated for colour-vision deficiency on the adjacent pairlist.</text>
+  <text x="40" y="890" font-size="9.5" fill="#94A3B8">Zone colour is reinforcement only: every zone is labelled with its VLAN number, name, subnet and switch port. Hues validated for colour-vision deficiency on the adjacent pairlist.</text>
 </svg>
 </body></html>

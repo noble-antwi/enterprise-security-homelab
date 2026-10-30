@@ -73,7 +73,7 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 
 ![Network architecture](images/diagrams/network-architecture.png)
 
-*Current-state architecture: Internet to pfSense, Switch 1 (Port 1 trunk to pfSense, Port 2 trunk to Switch 2, Ports 3 to 8 single-VLAN access), Switch 2 carrying the tagged VLANs to Proxmox, and the six security zones with their firewall status.*
+*Current-state architecture: Internet to pfSense, Switch 1 (Port 1 trunk to pfSense, Port 2 trunk to Switch 2, Ports 3 to 8 single-VLAN access), Switch 2 carrying the tagged VLANs to Proxmox, the six security zones with every host and its monitoring, and the Tier 0 identity systems (DC01, CA01, IDP01) grouped on VLAN 50.*
 
 ### VLAN Architecture
 
