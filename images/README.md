@@ -10,6 +10,7 @@ Screenshots that prove each step in `docs/` was performed, grouped by subsystem.
 | `siem/` | Wazuh manager, dashboard and agents |
 | `scan/` | SCAN01, Greenbone, the scan identity and its Group Policy |
 | `pki/` | CA01, the certificate authority, and LDAPS on DC01 |
+| `idp/` | IDP01, the identity provider: Keycloak and its AD federation |
 | `pve/` | Proxmox VE |
 | `red/` | KALI01 and the RedTeam segment |
 | `sys/` | Windows and Linux endpoints |
