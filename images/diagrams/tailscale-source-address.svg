@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="400" viewBox="0 0 680 400" font-family="Segoe UI, Arial, sans-serif">
+  <rect width="680" height="400" fill="#FFFFFF"/>
+
+  <text x="24" y="32" font-size="17" font-weight="700" fill="#08152F">Who the lab sees when you connect over Tailscale</text>
+  <text x="24" y="52" font-size="12" fill="#0E7490">pfSense used to remake each connection. Now it routes it, so the real device address arrives.</text>
+
+  <!-- ===================== BEFORE ===================== -->
+  <text x="24" y="84" font-size="11" font-weight="700" fill="#B0422A" letter-spacing="1">BEFORE</text>
+
+  <rect x="24" y="92" width="150" height="96" rx="10" fill="#ECF6F9" stroke="#1B2F5E" stroke-width="1.5"/>
+  <rect x="24" y="92" width="150" height="28" rx="10" fill="#08152F"/>
+  <rect x="24" y="110" width="150" height="10" fill="#08152F"/>
+  <text x="99" y="111" font-size="12.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">Admin laptop</text>
+  <text x="99" y="142" font-size="11" fill="#1B2F5E" text-anchor="middle">Tailscale address</text>
+  <text x="99" y="162" font-size="12.5" font-weight="700" fill="#0E7490" text-anchor="middle">100.118.195.0</text>
+
+  <rect x="265" y="92" width="150" height="96" rx="10" fill="#ECF6F9" stroke="#1B2F5E" stroke-width="1.5"/>
+  <rect x="265" y="92" width="150" height="28" rx="10" fill="#08152F"/>
+  <rect x="265" y="110" width="150" height="10" fill="#08152F"/>
+  <text x="340" y="111" font-size="12.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">pfSense</text>
+  <text x="340" y="140" font-size="11" fill="#B0422A" text-anchor="middle">Tailscale accepts it,</text>
+  <text x="340" y="157" font-size="11" fill="#B0422A" text-anchor="middle">then opens a new one</text>
+  <text x="340" y="174" font-size="11" fill="#B0422A" text-anchor="middle">from the firewall</text>
+
+  <rect x="506" y="92" width="150" height="96" rx="10" fill="#ECF6F9" stroke="#1B2F5E" stroke-width="1.5"/>
+  <rect x="506" y="92" width="150" height="28" rx="10" fill="#08152F"/>
+  <rect x="506" y="110" width="150" height="10" fill="#08152F"/>
+  <text x="581" y="111" font-size="12.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">Lab server</text>
+  <text x="581" y="140" font-size="11" fill="#1B2F5E" text-anchor="middle">Its logs record</text>
+  <text x="581" y="160" font-size="12.5" font-weight="700" fill="#B0422A" text-anchor="middle">192.168.50.1</text>
+  <text x="581" y="177" font-size="11" fill="#1B2F5E" text-anchor="middle">(the firewall)</text>
+
+  <line x1="174" y1="140" x2="251" y2="140" stroke="#0E7490" stroke-width="2"/>
+  <polygon points="264,140 251,134 251,146" fill="#0E7490"/>
+  <text x="219" y="132" font-size="10" fill="#0E7490" text-anchor="middle">tunnel</text>
+  <line x1="415" y1="140" x2="492" y2="140" stroke="#B0422A" stroke-width="2" stroke-dasharray="5 4"/>
+  <polygon points="505,140 492,134 492,146" fill="#B0422A"/>
+  <text x="460" y="132" font-size="10" fill="#B0422A" text-anchor="middle">new connection</text>
+
+  <!-- ===================== AFTER ===================== -->
+  <text x="24" y="234" font-size="11" font-weight="700" fill="#0F6E56" letter-spacing="1">AFTER</text>
+
+  <rect x="24" y="242" width="150" height="96" rx="10" fill="#ECF6F9" stroke="#1B2F5E" stroke-width="1.5"/>
+  <rect x="24" y="242" width="150" height="28" rx="10" fill="#08152F"/>
+  <rect x="24" y="260" width="150" height="10" fill="#08152F"/>
+  <text x="99" y="261" font-size="12.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">Admin laptop</text>
+  <text x="99" y="292" font-size="11" fill="#1B2F5E" text-anchor="middle">Tailscale address</text>
+  <text x="99" y="312" font-size="12.5" font-weight="700" fill="#0E7490" text-anchor="middle">100.118.195.0</text>
+
+  <rect x="265" y="242" width="150" height="96" rx="10" fill="#ECF6F9" stroke="#1B2F5E" stroke-width="1.5"/>
+  <rect x="265" y="242" width="150" height="28" rx="10" fill="#08152F"/>
+  <rect x="265" y="260" width="150" height="10" fill="#08152F"/>
+  <text x="340" y="261" font-size="12.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">pfSense</text>
+  <text x="340" y="290" font-size="11" fill="#0F6E56" text-anchor="middle">Tailscale hands it on;</text>
+  <text x="340" y="307" font-size="11" fill="#0F6E56" text-anchor="middle">pfSense routes it under</text>
+  <text x="340" y="324" font-size="11" fill="#0F6E56" text-anchor="middle">its firewall rules</text>
+
+  <rect x="506" y="242" width="150" height="96" rx="10" fill="#ECF6F9" stroke="#1B2F5E" stroke-width="1.5"/>
+  <rect x="506" y="242" width="150" height="28" rx="10" fill="#08152F"/>
+  <rect x="506" y="260" width="150" height="10" fill="#08152F"/>
+  <text x="581" y="261" font-size="12.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">Lab server</text>
+  <text x="581" y="290" font-size="11" fill="#1B2F5E" text-anchor="middle">Its logs record</text>
+  <text x="581" y="310" font-size="12.5" font-weight="700" fill="#0F6E56" text-anchor="middle">100.118.195.0</text>
+  <text x="581" y="327" font-size="11" fill="#1B2F5E" text-anchor="middle">(the laptop)</text>
+
+  <line x1="174" y1="290" x2="251" y2="290" stroke="#0E7490" stroke-width="2"/>
+  <polygon points="264,290 251,284 251,296" fill="#0E7490"/>
+  <text x="219" y="282" font-size="10" fill="#0E7490" text-anchor="middle">tunnel</text>
+  <line x1="415" y1="290" x2="492" y2="290" stroke="#0F6E56" stroke-width="2"/>
+  <polygon points="505,290 492,284 492,296" fill="#0F6E56"/>
+  <text x="460" y="282" font-size="10" fill="#0F6E56" text-anchor="middle">same connection</text>
+
+  <!-- proof strip -->
+  <rect x="24" y="356" width="632" height="32" rx="8" fill="#E3F4EE"/>
+  <text x="340" y="377" font-size="11.5" fill="#0F6E56" text-anchor="middle"><tspan font-weight="700">Proof:</tspan> IDP01's $SSH_CLIENT and a Wazuh logon event on DC01 both show 100.118.195.0</text>
+</svg>

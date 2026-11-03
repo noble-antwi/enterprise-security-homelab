@@ -1,8 +1,8 @@
 # 23. IDP01: an identity provider, Keycloak, federated to Active Directory
 
-**Purpose**: Records the build of `IDP01`, the lab's identity provider: an Ubuntu server running Keycloak, which lets applications send people to one place to sign in while Active Directory stays the only place accounts and passwords live. The chapter covers why the lab needed it and why it sits in the identity tier, the hardening of the machine itself, the HTTPS certificate it obtained from `CA01` without its private key ever leaving it, Keycloak and its database in Docker Compose, the first administrator and the removal of the bootstrap one, and the read-only LDAPS connection to `DC01` proven by a Biira Bank employee signing in with her directory password. Written so a reader new to identity providers can follow every step, and a reviewer can check every claim against its evidence.
+**Purpose**: Records the build of `IDP01`, the lab's identity provider: an Ubuntu server running Keycloak, which lets applications send people to one place to sign in while Active Directory stays the only place accounts and passwords live. The chapter covers why the lab needed it and why it sits in the identity tier, the hardening of the machine itself, the HTTPS certificate it obtained from `CA01` without its private key ever leaving it, Keycloak and its database in Docker Compose, the first administrator and the removal of the bootstrap one, the read-only LDAPS connection to `DC01` proven by a Biira Bank employee signing in with her directory password, and the first machine identity: the AI agent from `ai-agent-identity-lab` proving who it is with short-lived tokens, and losing all access the moment it is switched off. Written so a reader new to identity providers can follow every step, and a reviewer can check every claim against its evidence.
 
-**Status**: Steps 1 to 5 complete: the machine, its hardening, its certificate, Keycloak, and Active Directory federation all work and are proven below. Step 6, the first machine client (the AI agent signing in with client credentials), is next (section 13).
+**Status**: Steps 1 to 6 complete: the machine, its hardening, its certificate, Keycloak, Active Directory federation, and the first machine client (the AI agent signing in with client credentials) all work and are proven below. Next steps in section 14.
 
 Related: `docs/22` (the certificate authority that issued IDP01's certificate, and LDAPS on `DC01`), `docs/17` (the `corp.biirabank.com` forest Keycloak reads), `docs/14` (the `<ROLE><NN>` naming), `docs/11` (the domain controller's firewall access), `docs/ssh-configuration` (the lab's SSH conventions).
 
@@ -308,7 +308,80 @@ A test employee, Emily Davis, was given a new password on DC01 with "must change
 
 That sign-in exercised the whole chain: the browser trusted IDP01's certificate, Keycloak found her with its read-only account over LDAPS, and DC01 checked her password. Keycloak stored none of it.
 
-## 11. What went wrong
+## 11. The agent's own identity
+
+### 11.1 Why a machine needs an identity
+
+The "Ask my SIEM" agent in `ai-agent-identity-lab` reads Wazuh alerts. Today it holds a static password in a file, which never expires and works for anyone who copies it. The goal is the same governance a person gets: one identity, owned by someone, that issues short-lived proof and can be switched off in one place.
+
+OpenID Connect has a grant made for exactly this, **client credentials**: no person and no browser, just a program that proves it is a registered client and receives a signed token valid for minutes. (SAML, which Keycloak also speaks, is built around a person in a browser, so it has no equivalent.)
+
+### 11.2 The client
+
+![General settings](../images/idp/idp-51-agent-client-general.png)
+*Figure 23.52: A new OpenID Connect client in the `biira` realm: client ID `agent-ask-siem`, display name "Ask my SIEM agent".*
+
+![Capability config](../images/idp/idp-52-agent-client-capability.png)
+*Figure 23.53: **Client authentication on** (a confidential client, which must prove itself with a secret) and **only Service account roles** ticked. Standard flow, direct access grants and the implicit flow are all off, so no person can ever sign in through this client and no password is ever sent to it.*
+
+![No redirect addresses](../images/idp/idp-53-agent-client-no-redirects.png)
+*Figure 23.54: Login settings left empty. With the browser flows off there is no redirect address to register, which also removes the open-redirect class of mistakes from this client.*
+
+| Setting | Choice | Why |
+|---|---|---|
+| Grant | Client credentials only | The agent is a program; there is no person to sign in |
+| Client authentication | On, client ID and secret | A confidential client: the token endpoint refuses anyone without the secret |
+| Browser and password flows | Off | Least functionality: nothing this client does needs them |
+| Description | Purpose, owner, project, creation date | A non-human identity needs an accountable owner, the same as a person |
+| Roles | None yet | It can prove who it is; what it may do is granted later, scoped to reading alerts |
+
+### 11.3 The secret
+
+![Credentials, secret masked](../images/idp/idp-54-agent-client-credentials.png)
+*Figure 23.55: The generated client secret, never displayed. It was copied straight into the password manager with the copy button.*
+
+This secret is the agent's **secret zero**: the one credential it must still hold to get everything else. Keycloak does not remove it; it moves it up one layer, so that everything downstream (the token, and later the Wazuh credential from Vault) is short-lived. Removing even this is a later project (workload identity).
+
+### 11.4 Proving it works without exposing anything
+
+The token was requested from the administrator's laptop in PowerShell. The secret is typed into a hidden prompt, held only for the one request, then cleared; the token itself is never printed.
+
+```powershell
+$sec = Read-Host -AsSecureString "agent-ask-siem client secret"
+$plain = [System.Net.NetworkCredential]::new("", $sec).Password
+$r = Invoke-RestMethod -Method Post -Uri "https://idp01.corp.biirabank.com:8443/realms/biira/protocol/openid-connect/token" `
+     -Body @{ grant_type = "client_credentials"; client_id = "agent-ask-siem"; client_secret = $plain }
+$plain = $null
+$r | Select-Object token_type, expires_in, scope
+```
+
+![A token issued](../images/idp/idp-55-agent-token-issued.png)
+*Figure 23.56: A `Bearer` token valid for **300 seconds**. Only its type, lifetime and scope are shown.*
+
+A token is three parts joined by dots: a header, a payload of claims, and a signature. The payload is only encoded, not encrypted, so anyone holding the token can read it and it must never carry secrets. What makes it trustworthy is the signature, which only Keycloak's private key can produce. Decoding just the payload shows what Keycloak asserted:
+
+![The claims](../images/idp/idp-56-agent-token-claims.png)
+*Figure 23.57: `iss` (issuer) is the `biira` realm on IDP01, `azp` (the client it was issued to) is `agent-ask-siem`, the identity is `service-account-agent-ask-siem`, and it expires five minutes after it was issued.*
+
+### 11.5 The off switch
+
+The point of a central identity is that turning it off works everywhere at once. The client was disabled in Keycloak and the same request repeated.
+
+![Client disabled](../images/idp/idp-57-agent-client-disabled.png)
+*Figure 23.58: The client switched to **Disabled**; its description records the owner and purpose.*
+
+![invalid_client](../images/idp/idp-58-agent-invalid-client.png)
+*Figure 23.59: First request issued a token; after disabling, every request is refused with `invalid_client`; after re-enabling, tokens are issued again. The "Bearer 300" lines under each refusal are the previous value of `$r`, printed again because a failed call does not overwrite the variable; no token was issued for them.*
+
+![client_disabled in the events](../images/idp/idp-59-agent-client-disabled-event.png)
+*Figure 23.60: Keycloak's own record. The caller is only told `invalid_client`, which reveals nothing; the event log keeps the real reason, **`client_disabled`**, with the grant type. Successful requests appear as `CLIENT_LOGIN` under the service account's ID. (The source address shows the firewall, `192.168.50.1`: at the time, Tailscale on pfSense was relabelling remote connections. That was fixed afterwards, see `docs/05`.)*
+
+![Re-enabled](../images/idp/idp-60-agent-client-reenabled.png)
+*Figure 23.61: Re-enabled once the test was complete.*
+
+Two facts make the off switch strong. A token already issued stays valid until it expires, at most five minutes, because services check its signature without calling Keycloak; that is the trade-off of short-lived tokens, and why the lifetime is short. And every new request is refused the moment the client is disabled, so an agent that misbehaves loses all access within one token lifetime, from one place.
+
+## 12. What went wrong
 
 | What happened | Cause | Lesson |
 |---|---|---|
@@ -320,33 +393,35 @@ That sign-in exercised the whole chain: the browser trusted IDP01's certificate,
 | OTP QR code captured | Screenshot during enrolment | Treat as burned, re-enrol, screenshot after |
 | Sync imported 0 users | Trailing spaces in a pasted DN | Read the saved configuration in the log, not the form |
 | Connection trace on | Left on in the provider form | Off, and the old log discarded |
+| Refused requests seemed to return a token | A failed `Invoke-RestMethod` does not overwrite `$r`, so the old value printed again | Clear the variable before each attempt, or read the error, not the table |
 
-## 12. Control mapping
+## 13. Control mapping
 
 | Control | How this chapter satisfies it |
 |---|---|
 | NIST SP 800-53 `IA-2(1)` | Multi-factor authentication for the privileged Keycloak administrator from first sign-in |
 | NIST SP 800-53 `IA-5` | Authenticator management: SSH keys with passphrases, generated service secrets never displayed, the bootstrap password removed, OTP secrets protected |
-| NIST SP 800-53 `AC-2` | Accounts managed in one place: AD remains the source of truth, deletion and disablement propagate, a dedicated service account for the integration |
+| NIST SP 800-53 `AC-2` | Accounts managed in one place: AD remains the source of truth, deletion and disablement propagate, a dedicated service account for the integration; the agent's client has a recorded owner and purpose and is disabled from one place |
+| NIST SP 800-53 `IA-9` | Service identification and authentication: the agent authenticates as a confidential client and receives signed, five-minute tokens instead of holding a long-lived password |
 | NIST SP 800-53 `AC-6` | Least privilege: read-only federation scoped to one OU, no `docker` group, root-only secrets, unprivileged container user, staff realm separate from `master` |
 | NIST SP 800-53 `SC-8` | HTTPS only to Keycloak; LDAPS (TLS 1.3) to the directory |
 | NIST SP 800-53 `SC-12`, `SC-17` | The private key generated on IDP01 and never moved; the certificate issued by the organisation's CA; the root distributed by verified fingerprint |
 | NIST SP 800-53 `SC-23` | Session authenticity: every client (browser, IDP01, Keycloak's container) validates the certificate and name it connects to |
 | NIST SP 800-53 `AU-2`, `AU-12` | Keycloak user and admin events recorded in both realms; the host reports to Wazuh as agent 006 |
 | NIST SP 800-53 `CM-2`, `CM-6` | A pinned, version-controlled baseline (Compose recipe, exact image versions) and hardened SSH settings verified from the effective configuration |
-| NIST SP 800-53 `CM-7` | Least functionality: only 8443 published, plain HTTP and password SSH disabled, the database unreachable from the network |
+| NIST SP 800-53 `CM-7` | Least functionality: only 8443 published, plain HTTP and password SSH disabled, the database unreachable from the network; the agent's client allows one grant and no browser flows |
 | NIST SP 800-53 `CP-10` | Recovery: containers restart on boot, proven by reboot; the whole service rebuilds from one file |
 | CIS Controls v8 `5.4`, `6.5` | Administrative privileges restricted to dedicated accounts; MFA for administrative access |
 | CIS Controls v8 `6.7` | Centralised access control through an identity provider |
 | CIS Controls v8 `12.x` | Network infrastructure: the IdP placed in the identity tier, its database on a private network |
 
-## 13. Scope and next steps
+## 14. Scope and next steps
 
-Done in this chapter: the machine, its hardening and monitoring, its certificate, Keycloak with its database, a protected administrator, event recording, and AD federation proven with a real sign-in.
+Done in this chapter: the machine, its hardening and monitoring, its certificate, Keycloak with its database, a protected administrator, event recording, AD federation proven with a real sign-in, and the first machine identity with a proven off switch.
 
 Next:
 
-1. **The first machine client.** The AI agent from `ai-agent-identity-lab` gets a Keycloak client using the client-credentials grant, so a program proves its identity with short-lived tokens instead of a stored password.
+1. **Vault behind Keycloak.** `VAULT01` accepts the agent's Keycloak token through its JWT auth method and releases a short-lived, read-only Wazuh credential, retiring the static password. People sign in to Vault through Keycloak as well.
 2. **Applications behind Keycloak**, each with a scoped pfSense rule to 8443 added when it is connected, and periodic synchronisation switched on (changed users every 15 minutes, a full pass daily) once applications need to see people before they first sign in.
 3. **Keycloak events into Wazuh**, so sign-in failures on the IdP are detected alongside the domain controller's.
 4. **Windows integrated sign-in (Kerberos)** for domain-joined workstations, tested from `WKS01`.

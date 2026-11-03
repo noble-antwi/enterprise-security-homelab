@@ -120,21 +120,21 @@ curl http://100.81.37.60  # pfSense GUI via mesh
 # SSH to pfSense
 ssh admin@192.168.10.1
 
-# Check Tailscale process
-ps aux | grep tailscale
+# Exactly one tailscaled, started by the package (-statedir /usr/local/pkg/tailscale/state)
+ps axww -o pid,ppid,command | grep "[t]ailscaled"
 
 # Check Tailscale status
 /usr/local/bin/tailscale status
 
-# Restart Tailscale if needed
-/usr/local/bin/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/var/run/tailscale/tailscaled.sock &
+# Real-source-IP setting present on the running daemon (docs/05 section 6)
+procstat -e $(pgrep -x tailscaled) | grep -o "TS_DEBUG[^ ]*"
 
-# Re-authenticate with mesh
-/usr/local/bin/tailscale up \
-  --advertise-routes=192.168.10.0/24,192.168.20.0/24,192.168.30.0/24,192.168.40.0/24,192.168.50.0/24,192.168.60.0/24 \
-  --accept-routes \
-  --hostname=pfsense-homelab
+# Restart through the package, never by starting tailscaled by hand
+# (a hand-started copy is what broke the router's identity in November 2026, docs/05 section 5)
+service pfsense_tailscaled restart
 ```
+
+Routes, DNS and sign-in are managed in **VPN > Tailscale** on pfSense, not with `tailscale up` from the shell.
 
 ### Client-Side Diagnostics
 ```bash
