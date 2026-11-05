@@ -18,6 +18,10 @@ The sibling repository [enterprise-iam-lab](https://github.com/noble-antwi/enter
 
 **Start here:** [SKILLS.md](SKILLS.md) maps every capability this lab has taught me to the document and the screenshots that prove it, and is honest about the ones I am still building.
 
+[![A short tour of the Biira Bank estate in 3D: remote access, the firewall, the hypervisor, Tier 0 identity and secrets, and every host reporting to the SIEM](images/diagrams/biira-estate-tour.gif)](https://nobleantwi.com/architecture/)
+
+**[Walk through the lab in 3D →](https://nobleantwi.com/architecture/)** The tour above is recorded from a living architecture page, rendered from the same host list as this documentation. Click any building there for its role, address, monitoring and connections. The static diagram, with every switch port, is under [Current Lab Infrastructure](#current-lab-infrastructure).
+
 ---
 
 ## Project Overview
@@ -74,7 +78,9 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 
 ![Network architecture](images/diagrams/network-architecture.png)
 
-*Current-state architecture: Internet to pfSense, Switch 1 (Port 1 trunk to pfSense, Port 2 trunk to Switch 2, Ports 3 to 8 single-VLAN access), Switch 2 carrying the tagged VLANs to Proxmox, the six security zones with every host and its monitoring, and the Tier 0 identity systems (DC01, CA01, IDP01) grouped on VLAN 50.*
+*Current-state architecture: Internet to pfSense, Switch 1 (Port 1 trunk to pfSense, Port 2 trunk to Switch 2, Ports 3 to 8 single-VLAN access), Switch 2 carrying the tagged VLANs to Proxmox, the six security zones with every host and its monitoring, and the Tier 0 identity and secrets systems (DC01, CA01, IDP01, VAULT01) grouped on VLAN 50.*
+
+*Prefer to move through it? The same estate as a [3D walkthrough](https://nobleantwi.com/architecture/).*
 
 ### VLAN Architecture
 
