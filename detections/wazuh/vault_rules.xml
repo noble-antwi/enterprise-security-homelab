@@ -1,0 +1,102 @@
+<!--
+  Biira Bank lab, HashiCorp Vault audit log rules.
+  Deploys to SIEM01 at /var/ossec/etc/rules/vault_rules.xml
+
+  Source: the Vault file audit device on VAULT01 (agent 007), read by the
+  Wazuh agent through the "vault" agent group (log_format json, see
+  groups/vault/agent.conf). Vault writes two lines for every action, a
+  request and a response. Errors appear only on the response, so every rule
+  below that looks at an error also requires type "response".
+
+  Field names are the JSON keys as Wazuh decodes them, without the "data."
+  prefix the dashboard shows.
+
+  Numbering: 100500-100599.
+-->
+
+<group name="vault,">
+
+  <!-- 100500: claims every line of the Vault audit log. Silent on its own;
+       the parent for everything below. -->
+  <rule id="100500" level="0">
+    <decoded_as>json</decoded_as>
+    <location>/var/log/vault/audit.log</location>
+    <description>Vault audit event</description>
+  </rule>
+
+  <!--
+    100501: a failed login. Vault answers "invalid credentials" for a wrong
+    username and a wrong password alike, so it never reveals which accounts
+    exist. The text comes from a real event (2026-11-05), not from the web
+    UI, which words the same failure differently. Scoped to userpass, the
+    login method in use; when another method is enabled, cause a failure,
+    read its audit line and extend this rule from that.
+  -->
+  <rule id="100501" level="5">
+    <if_sid>100500</if_sid>
+    <field name="type">^response$</field>
+    <field name="error">invalid credentials</field>
+    <description>Vault: failed login on $(request.path) from $(request.remote_address)</description>
+  </rule>
+
+  <!--
+    100502: password guessing against Vault. Fires when 100501 has fired 5
+    times within 120 seconds from the same address. Level 10, as Wazuh's own
+    built-in rules use for repeated login failures. Counted on the real
+    source address, which the Tailscale real-IP fix on pfSense (2026-11)
+    made trustworthy.
+  -->
+  <rule id="100502" level="10" frequency="5" timeframe="120">
+    <if_matched_sid>100501</if_matched_sid>
+    <same_field>request.remote_address</same_field>
+    <description>Vault: 5 failed logins in 2 minutes from $(request.remote_address), possible password guessing</description>
+    <mitre>
+      <id>T1110</id>
+    </mitre>
+  </rule>
+
+  <!--
+    100503: an invalid (expired, revoked or made-up) token was presented.
+    Real text seen 2026-11-05: "2 errors occurred: * permission denied
+    * invalid token". Matched as words inside, not fenced, because the error
+    arrives combined with "permission denied".
+  -->
+  <rule id="100503" level="5">
+    <if_sid>100500</if_sid>
+    <field name="type">^response$</field>
+    <field name="error">invalid token</field>
+    <description>Vault: invalid or expired token used on $(request.path) from $(request.remote_address)</description>
+  </rule>
+
+  <!--
+    100504: tuning for 100503. The Vault web UI checks its saved token on
+    auth/token/lookup-self every time the page opens, so an expired browser
+    session answers "invalid token" there. That check reveals nothing and
+    changes nothing, so it is quieted. A bad token on any other path
+    (reading secrets, changing settings) still alerts through 100503.
+
+    Level 1, not 0: Wazuh drops level 0 matches before counting rules can
+    see them, so 100505 could never fire. Level 1 is still below the alert
+    threshold (3).
+  -->
+  <rule id="100504" level="1">
+    <if_sid>100503</if_sid>
+    <field name="request.path">^auth/token/lookup-self$</field>
+    <description>Vault: expired session checked itself (UI on load). Expected, not alerted.</description>
+  </rule>
+
+  <!--
+    100505: the loud path for 100504. One expired browser session makes one
+    or two invalid lookups; someone testing a list of stolen tokens makes
+    many, fast. 10 quieted lookups in 2 minutes from the same address alerts.
+  -->
+  <rule id="100505" level="10" frequency="10" timeframe="120">
+    <if_matched_sid>100504</if_matched_sid>
+    <same_field>request.remote_address</same_field>
+    <description>Vault: 10 invalid token checks in 2 minutes from $(request.remote_address), possible stolen-token testing</description>
+    <mitre>
+      <id>T1550.001</id>
+    </mitre>
+  </rule>
+
+</group>

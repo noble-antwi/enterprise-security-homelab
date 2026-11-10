@@ -8,6 +8,9 @@ detections/
   wazuh/
     local_rules.xml                    deploys to SIEM01:/var/ossec/etc/rules/local_rules.xml
     stock_copilot_identity_rules.xml   deploys to SIEM01:/var/ossec/etc/rules/stock_copilot_identity_rules.xml
+    vault_rules.xml                    deploys to SIEM01:/var/ossec/etc/rules/vault_rules.xml
+    groups/
+      vault/agent.conf                 deploys to SIEM01:/var/ossec/etc/shared/vault/agent.conf
 ```
 
 `stock_copilot_identity_rules.xml` watches the identity audit log of Stock
@@ -97,6 +100,7 @@ Custom rules must be 100000 or above. Blocks in use:
 | 100010-100019 | Sysmon noise suppression |
 | 100020-100029 | Authorised scanner activity |
 | 100400-100499 | Stock Copilot identity audit log (APP01) |
+| 100500-100599 | HashiCorp Vault audit log (VAULT01) |
 
 ## Rules currently deployed
 
@@ -167,6 +171,40 @@ Two lessons from building it:
   expired" (clock skew) as forgery at level 12. It now matches only the
   signature failures, and a test in the app repo checks every rule against
   the app's real refusal wording.
+
+### HashiCorp Vault (100500-100599): deployed 2026-11-09
+
+The Wazuh agent on VAULT01 (agent 007) reads Vault's file audit log through
+the `vault` agent group (`groups/vault/agent.conf`, `log_format json`).
+Vault writes a request line and a response line for every action, with
+tokens and secrets replaced by HMAC fingerprints, and it refuses any request
+it cannot record, so the log is rotated daily (or at 100 MB) with a reload
+that makes Vault reopen the file without resealing.
+
+Every rule was proven live by causing the event on VAULT01 and finding the
+alert on SIEM01, and rotation was proven by forcing one and seeing the next
+alert arrive from the new file.
+
+| ID | Level | Parent | MITRE | Effect |
+|---|---|---|---|---|
+| 100500 | 0 | json decoder | - | Claims every line of `/var/log/vault/audit.log`; silent on its own |
+| 100501 | 5 | 100500 | - | failed login on `request.path` from `request.remote_address` |
+| 100502 | 10 | 100501 | T1110 | 5 failed logins in 2 minutes from the same `request.remote_address` |
+| 100503 | 5 | 100500 | - | invalid or expired token used on `request.path` |
+| 100504 | 1 | 100503 | - | the web UI checking its own expired session (`auth/token/lookup-self`); recorded, not alerted |
+| 100505 | 10 | 100504 | T1550.001 | 10 of those in 2 minutes from the same `request.remote_address` (stolen-token testing) |
+
+Three lessons from building it:
+- **Write the rule from the log, not the screen.** The web UI reports a bad
+  password as "invalid username or password"; the audit log says "invalid
+  credentials". A rule written from the UI wording would never fire.
+- **A level 0 rule cannot be counted.** Wazuh drops a level 0 match before
+  the memory that `if_matched_sid` counting rules read, so 100505 stayed
+  silent through 20 test lookups. 100504 is level 1 instead: still below the
+  alert threshold, but remembered.
+- **Every quiet path gets a loud one.** One expired session makes one or two
+  invalid lookups, which is noise. Many in a burst is someone testing tokens,
+  which is the attack the quieted rule would otherwise hide.
 
 ### Gotcha: Sysmon backslashes arrive doubled
 
