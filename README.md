@@ -18,9 +18,18 @@ The sibling repository [enterprise-iam-lab](https://github.com/noble-antwi/enter
 
 **Start here:** [SKILLS.md](SKILLS.md) maps every capability this lab has taught me to the document and the screenshots that prove it, and is honest about the ones I am still building.
 
+<a href="https://nobleantwi.com/architecture/diagram/">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="images/diagrams/network-architecture-dark.png">
+    <img src="images/diagrams/network-architecture.png" alt="Biira Bank network architecture: internet and Tailscale into the pfSense firewall, Switch 1 with its eight ports, Switch 2 trunking to the Proxmox hypervisor and its guests, six VLAN security zones with every host and its Wazuh agent, the Tier 0 identity and secrets group, and the trust flows between them">
+  </picture>
+</a>
+
+**[Open the interactive diagram →](https://nobleantwi.com/architecture/diagram/)** Hover a host to trace what it talks to, select any host, VLAN or switch for its role, address and monitoring, and zoom in until you can read a single switch port. It is also a [vector SVG](https://nobleantwi.com/architecture/diagram.svg) you can save or print.
+
 [![A short tour of the Biira Bank estate in 3D: remote access, the firewall, the hypervisor, Tier 0 identity and secrets, and every host reporting to the SIEM](images/diagrams/biira-estate-tour.gif)](https://nobleantwi.com/architecture/)
 
-**[Walk through the lab in 3D →](https://nobleantwi.com/architecture/)** The tour above is recorded from a living architecture page, rendered from the same host list as this documentation. Click any building there for its role, address, monitoring and connections. The static diagram, with every switch port, is under [Current Lab Infrastructure](#current-lab-infrastructure).
+**[Walk through the lab in 3D →](https://nobleantwi.com/architecture/)** The same estate as a short tour, recorded from a living architecture page. Click any building there for its role, address, monitoring and connections. The diagram and the 3D model are both drawn from one host list, the same one this documentation follows.
 
 ---
 
@@ -76,11 +85,9 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 
 ## Current Lab Infrastructure
 
-![Network architecture](images/diagrams/network-architecture.png)
+The [architecture diagram](images/diagrams/network-architecture.png) at the top of this page is the current state: Internet to pfSense, Switch 1 (Port 1 trunk to pfSense, Port 2 trunk to Switch 2, Ports 3 to 8 single-VLAN access), Switch 2 carrying the tagged VLANs to Proxmox, the six security zones with every host and its monitoring, and the Tier 0 identity and secrets systems (DC01, CA01, IDP01, VAULT01) grouped on VLAN 50. The arrows show who signs in to, issues certificates for or calls whom.
 
-*Current-state architecture: Internet to pfSense, Switch 1 (Port 1 trunk to pfSense, Port 2 trunk to Switch 2, Ports 3 to 8 single-VLAN access), Switch 2 carrying the tagged VLANs to Proxmox, the six security zones with every host and its monitoring, and the Tier 0 identity and secrets systems (DC01, CA01, IDP01, VAULT01) grouped on VLAN 50.*
-
-*Prefer to move through it? The same estate as a [3D walkthrough](https://nobleantwi.com/architecture/).*
+*Prefer to explore it? Open the [interactive diagram](https://nobleantwi.com/architecture/diagram/), or move through the same estate as a [3D walkthrough](https://nobleantwi.com/architecture/).*
 
 ### VLAN Architecture
 
@@ -89,8 +96,8 @@ A comprehensive, enterprise-grade cybersecurity homelab implementing professiona
 | **10 - Management** | Admin and Control | `192.168.10.0/24` | `.1` | pfSense, Ansible, Windows Systems, Proxmox |
 | **20 - BlueTeam** | Security Monitoring | `192.168.20.0/24` | `.1` | SIEM01 (`192.168.20.2`), Wazuh 4.14.7 manager, indexer and dashboard |
 | **30 - RedTeam** | Attack Simulation | `192.168.30.0/24` | `.1` | Kali Linux (Proxmox VM) |
-| **40 - DevOps** | CI/CD Pipeline | `192.168.40.0/24` | `.1` | APP01 (`192.168.40.2`), application host. VAULT01 planned |
-| **50 - EnterpriseLAN** | Business Services | `192.168.50.0/24` | `.1` | Windows Server 2025 domain controller (`192.168.50.2`) |
+| **40 - DevOps** | CI/CD Pipeline | `192.168.40.0/24` | `.1` | APP01 (`192.168.40.2`), application host and home of the AI agent |
+| **50 - EnterpriseLAN** | Business Services | `192.168.50.0/24` | `.1` | DC01 (`192.168.50.2`) Windows Server 2025 domain controller, CA01 (`.3`) root CA, IDP01 (`.4`) Keycloak, VAULT01 (`.5`) HashiCorp Vault, WKS01 Windows 11 workstation |
 | **60 - Monitoring** | Observability | `192.168.60.0/24` | `.1` | Grafana and Prometheus, moving to a Proxmox guest |
 
 ### Deployed Systems

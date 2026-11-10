@@ -28,16 +28,17 @@ Internet ↔ Home Router ↔ pfSense (WAN/LAN) ↔ Managed Switch ↔ VLAN Segme
 
 ![Network Infrastructure Architecture](../images/diagrams/network-architecture.png)
 
-*Current-state architecture (2026-08-30): Internet → pfSense → Switch 1 (trunk Port 1); Switch 1 Port 2 trunks to Switch 2, which carries the tagged VLANs to Proxmox; Ports 3–8 are single-VLAN access ports feeding the six security zones. Firewall status per zone is shown (green = ruleset built, amber = still any→any).*
+*Current-state architecture (4 November 2026): Internet → pfSense → Switch 1 (trunk Port 1); Switch 1 Port 2 trunks to Switch 2, which carries the tagged VLANs to Proxmox; Ports 3–8 are single-VLAN access ports feeding the six security zones. Each zone shows its hosts, which of them report to the SIEM, and the rulesets that are written and tested.*
 
 ### Interactive Architecture Diagram
-For a detailed interactive view with hover effects and clickable elements, see the [Interactive Network Architecture Diagram](../network-architecture.html).
+Open the [interactive architecture diagram](https://nobleantwi.com/architecture/diagram/) to explore it:
 
-        **Interactive Features:**
-        -  **Hover Effects**: Mouse over elements for enhanced visibility
-        -  **Clickable VLANs**: Click on VLAN segments for detailed information
-        -  **Live Configuration Data**: Real-time display of IP ranges and port assignments
-        -  **Color-Coded Zones**: Visual distinction between security domains
+- **Trace**: hover a host to light up everything it talks to
+- **Details**: select any host, VLAN or switch for its role, address, monitoring and connections
+- **Zoom**: go from the whole estate down to a single switch port
+- **Layers**: switch the network wiring, trust flows, planned hosts and monitoring on and off
+
+The same estate is also a [3D walkthrough](https://nobleantwi.com/architecture/).
 
 ### Architecture Highlights
 - **pfSense Firewall**: Enterprise-grade routing and security with 2 NICs
