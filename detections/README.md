@@ -9,6 +9,9 @@ detections/
     local_rules.xml                    deploys to SIEM01:/var/ossec/etc/rules/local_rules.xml
     stock_copilot_identity_rules.xml   deploys to SIEM01:/var/ossec/etc/rules/stock_copilot_identity_rules.xml
     vault_rules.xml                    deploys to SIEM01:/var/ossec/etc/rules/vault_rules.xml
+    ufw_rules.xml                      deploys to SIEM01:/var/ossec/etc/rules/ufw_rules.xml
+    decoders/
+      ufw_decoders.xml                 deploys to SIEM01:/var/ossec/etc/decoders/ufw_decoders.xml
     groups/
       vault/agent.conf                 deploys to SIEM01:/var/ossec/etc/shared/vault/agent.conf
 ```
@@ -60,7 +63,8 @@ Run on SIEM01.
    A **new** rules file (the first `stock_copilot_identity_rules.xml`) has no
    file to match, so set it the way Wazuh sets its own rules: owned by
    `wazuh:wazuh`, mode 660. Anything in `etc/rules/` ending in `.xml` is
-   loaded; no change to `ossec.conf` is needed.
+   loaded; no change to `ossec.conf` is needed. The same holds for decoder
+   files in `etc/decoders/`.
 
    ```bash
    sudo install -o wazuh -g wazuh -m 660 stock_copilot_identity_rules.xml /var/ossec/etc/rules/
@@ -101,6 +105,7 @@ Custom rules must be 100000 or above. Blocks in use:
 | 100020-100029 | Authorised scanner activity |
 | 100400-100499 | Stock Copilot identity audit log (APP01) |
 | 100500-100599 | HashiCorp Vault audit log (VAULT01) |
+| 100600-100699 | Host firewall (ufw), any Linux host; Vault and SSH on VAULT01 |
 
 ## Rules currently deployed
 
@@ -205,6 +210,51 @@ Three lessons from building it:
 - **Every quiet path gets a loud one.** One expired session makes one or two
   invalid lookups, which is noise. Many in a burst is someone testing tokens,
   which is the attack the quieted rule would otherwise hide.
+
+### Host firewall, ufw (100600-100699): deployed 2026-11-24
+
+VAULT01 runs ufw: incoming traffic is denied by default, and SSH (22) and
+Vault (8200) are open only to the management network and the admin laptop.
+The machines that share its network segment (the domain controller and the
+certificate authority among them) are refused like everyone else, because
+traffic inside one segment never passes the network firewall. ufw logs each
+refused packet to the kernel log, and the Wazuh agent reads it from the
+systemd journal.
+
+Every rule was proven live: a browser on CA01 knocking on Vault (100601), a
+port sweep from WKS01 (100602), three machines knocking within five minutes
+(100603), and `ufw disable` and a rule added and deleted on VAULT01 (100604,
+100605).
+
+| ID | Level | Parent | MITRE | Effect |
+|---|---|---|---|---|
+| 100600 | 1 | 4100 | - | every ufw block; recorded, not alerted, so it can be counted |
+| 100601 | 6 | 100600 | - | a machine not on the allow list knocked on Vault or SSH on VAULT01; rests 60 s after firing |
+| 100602 | 10 | `ufw_block` group | T1046 | one source blocked on 8 different ports within 60 s (port scan) |
+| 100603 | 10 | `ufw_block` group | T1046 | 3 different machines blocked from Vault or SSH within 5 minutes |
+| 100604 | 12 | 5402 | T1562.004 | the firewall switched off with sudo (`ufw disable`/`reset`, `systemctl stop`/`disable`/`mask ufw`), any host |
+| 100605 | 8 | 5402 | T1562.004 | a firewall rule changed with sudo (`ufw allow`/`deny`/`delete`/...), any host |
+
+Four lessons from building it:
+- **Same event, different road, different format.** Wazuh ships a ufw
+  decoder, but it expects the kernel uptime stamp that syslog files carry
+  (`kernel: [12345.678901] [UFW BLOCK] ...`). The journal stores that stamp
+  separately, so a journald line starts `kernel: [UFW BLOCK]` and arrives as
+  a bare kernel message: no fields, no rule, no error. `decoders/ufw_decoders.xml`
+  reads the journald form and captures the action in the same shape as the
+  built-in, so one set of rules covers both.
+- **Ask the engine, not the dashboard.** Uploading the first decoder through
+  the dashboard failed twice with "XML syntax error". The file was valid XML;
+  `wazuh-analysisd -t` on SIEM01 gave the real cause, `Duplicated decoder
+  with prematch: 'ufw'`, a name collision with the built-in decoder.
+- **Address fields take addresses.** `<dstip>` compares IP addresses and
+  networks, so an anchored pattern such as `^192.168.50.5$` is a load error
+  (1237). Patterns belong in text fields such as `<dstport>`.
+- **A retry is not a scan.** One browser refresh on a dropped port sends the
+  same connection attempt several times, so the first version of 100601
+  raised ten alerts for one knock. A 60 second rest on 100601 brings that to
+  one, while 100600 still records every retry; and 100602 counts *different*
+  ports, so a retrying browser never looks like a sweep.
 
 ### Gotcha: Sysmon backslashes arrive doubled
 

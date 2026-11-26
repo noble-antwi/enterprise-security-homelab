@@ -1,0 +1,87 @@
+<!--
+  Host firewall (ufw), block 100600-100699.
+
+  Deploys to SIEM01:/var/ossec/etc/rules/ufw_rules.xml (wazuh:wazuh, 660).
+  Needs decoders/ufw_decoders.xml for the journald format.
+
+  VAULT01 runs ufw with incoming denied by default; SSH (22) and Vault (8200)
+  are open only to the management network and the admin laptop. Anything else
+  that knocks is dropped and logged by the kernel as UFW BLOCK.
+
+  100600  every block, level 1: below the alert threshold, but remembered,
+          so the correlation rules below can count it (a level 0 match is
+          dropped before that memory).
+  100601  a blocked knock on Vault or SSH. One browser refresh sends several
+          retries of the same connection, so the rule rests for 60 seconds
+          after firing; retries in that minute stay at 100600, still recorded
+          and still counted.
+  100602  one source blocked on 8 different ports within a minute: a scan.
+          Counting different ports keeps a retrying browser from looking like
+          a scan. Threshold set from a measured test scan.
+  100603  3 different machines blocked from Vault or SSH within 5 minutes,
+          so several sources are never folded into one alert.
+  100604  the firewall switched off with sudo, on any host.
+  100605  a firewall rule changed with sudo, on any host. Often legitimate,
+          so a lower level than 100604, but every change gets a record.
+
+  100604 and 100605 build on the built-in sudo rule 5402, which already
+  decodes the command into data.command.
+-->
+
+<group name="firewall,ufw,">
+
+  <rule id="100600" level="1">
+    <if_sid>4100</if_sid>
+    <action>UFW BLOCK</action>
+    <group>ufw_block,</group>
+    <description>Host firewall blocked $(srcip) to $(dstip) port $(dstport)</description>
+  </rule>
+
+  <rule id="100601" level="6" ignore="60">
+    <if_sid>100600</if_sid>
+    <dstip>192.168.50.5</dstip>
+    <dstport>^8200$|^22$</dstport>
+    <group>ufw_block,</group>
+    <description>VAULT01 firewall blocked $(srcip) on port $(dstport): not on the allow list</description>
+  </rule>
+
+  <rule id="100602" level="10" frequency="8" timeframe="60">
+    <if_matched_group>ufw_block</if_matched_group>
+    <same_srcip />
+    <different_dstport />
+    <description>Host firewall blocked $(srcip) on 8 different ports in 60 seconds: possible port scan</description>
+    <mitre>
+      <id>T1046</id>
+    </mitre>
+  </rule>
+
+  <rule id="100603" level="10" frequency="3" timeframe="300">
+    <if_matched_group>ufw_block</if_matched_group>
+    <dstip>192.168.50.5</dstip>
+    <dstport>^8200$|^22$</dstport>
+    <different_srcip />
+    <description>3 different machines blocked from Vault or SSH on VAULT01 within 5 minutes: possible lateral movement</description>
+    <mitre>
+      <id>T1046</id>
+    </mitre>
+  </rule>
+
+  <rule id="100604" level="12">
+    <if_sid>5402</if_sid>
+    <field name="command" type="pcre2">ufw\s+(disable|reset)|systemctl\s+(stop|disable|mask)\s+ufw</field>
+    <description>Host firewall switched off with sudo by $(srcuser): $(command)</description>
+    <mitre>
+      <id>T1562.004</id>
+    </mitre>
+  </rule>
+
+  <rule id="100605" level="8">
+    <if_sid>5402</if_sid>
+    <field name="command" type="pcre2">ufw\s+(allow|deny|reject|limit|delete|insert|route)</field>
+    <description>Host firewall rule changed with sudo by $(srcuser): $(command)</description>
+    <mitre>
+      <id>T1562.004</id>
+    </mitre>
+  </rule>
+
+</group>

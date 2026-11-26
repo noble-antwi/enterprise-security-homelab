@@ -1,0 +1,40 @@
+<!--
+  UFW host firewall, as read from the systemd journal (VAULT01, and any Ubuntu
+  host whose Wazuh agent collects journald).
+
+  Deploys to SIEM01:/var/ossec/etc/decoders/ufw_decoders.xml (wazuh:wazuh, 660).
+
+  The built-in decoder named ufw (ruleset/decoders/0140-kernel_decoders.xml)
+  expects the kernel uptime stamp that syslog files carry, for example
+  kernel: [12345.678901] [UFW BLOCK] IN=...
+  The journal stores that stamp separately, so a journald line reads
+  kernel: [UFW BLOCK] IN=...
+  and the built-in decoder never matches it: the event arrives as a bare
+  kernel message with no fields and no rule.
+
+  These are sibling decoders: the first decides whether the line is UFW, the
+  other two keep reading fields from the same line. They use their own name,
+  because a second decoder named ufw with a prematch is a load error.
+  The action is captured as UFW BLOCK, the same shape as the built-in, so the
+  rules in ufw_rules.xml work for lines from either source.
+-->
+
+<decoder name="ufw-journald">
+  <parent>kernel</parent>
+  <type>firewall</type>
+  <prematch type="pcre2">^\[UFW </prematch>
+  <regex type="pcre2">^\[(UFW \w+)\]</regex>
+  <order>action</order>
+</decoder>
+
+<decoder name="ufw-journald">
+  <parent>kernel</parent>
+  <regex type="pcre2">SRC=(\S+) DST=(\S+) </regex>
+  <order>srcip,dstip</order>
+</decoder>
+
+<decoder name="ufw-journald">
+  <parent>kernel</parent>
+  <regex type="pcre2">PROTO=(\S+) SPT=(\d+) DPT=(\d+) </regex>
+  <order>protocol,srcport,dstport</order>
+</decoder>
